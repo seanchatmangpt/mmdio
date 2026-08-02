@@ -1,0 +1,4 @@
+[pack]
+name = "cyberpunk-2030"
+version = "0.1.0"
+description = "Dependency mapping for 845 packages across 12 projects (6 Nuxt, 6 Next.js) with conflict detection and unified strategies"

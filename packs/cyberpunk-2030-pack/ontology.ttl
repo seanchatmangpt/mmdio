@@ -1,0 +1,311 @@
+@prefix cyber: <http://cyberpunk.2030/> .
+@prefix pkg: <http://cyberpunk.2030/package/> .
+@prefix proj: <http://cyberpunk.2030/project/> .
+@prefix cat: <http://cyberpunk.2030/category/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ============================================================================
+# PROJECTS — 12 projects across Nuxt and Next.js ecosystem
+# ============================================================================
+
+proj:dashboard-bak a cyber:Project ;
+  rdfs:label "dashboard.bak" ;
+  cyber:framework "Nuxt" ;
+  cyber:version "4.0.3" ;
+  cyber:type "Dashboard" .
+
+proj:cns a cyber:Project ;
+  rdfs:label "cns" ;
+  cyber:framework "Nuxt" ;
+  cyber:version "3.8.0" ;
+  cyber:type "Backend" .
+
+proj:ai-chatbot a cyber:Project ;
+  rdfs:label "ai-chatbot" ;
+  cyber:framework "Next.js" ;
+  cyber:version "16.0.1" ;
+  cyber:type "AI Application" .
+
+proj:chat a cyber:Project ;
+  rdfs:label ".chat" ;
+  cyber:framework "Nuxt" ;
+  cyber:version "4.1.3" ;
+  cyber:type "Chat Application" .
+
+proj:app a cyber:Project ;
+  rdfs:label "app" ;
+  cyber:framework "Nuxt" ;
+  cyber:version "3.15.3" ;
+  cyber:type "Generic App" .
+
+proj:nuxt-layer a cyber:Project ;
+  rdfs:label "nuxt-layer" ;
+  cyber:framework "Nuxt" ;
+  cyber:version "3.14.1592" ;
+  cyber:type "Library" .
+
+proj:ai a cyber:Project ;
+  rdfs:label "ai" ;
+  cyber:framework "Next.js" ;
+  cyber:type "AI Application" .
+
+proj:optimus a cyber:Project ;
+  rdfs:label "optimus" ;
+  cyber:framework "Next.js" ;
+  cyber:version "15.5.5" ;
+  cyber:type "AI Platform" .
+
+proj:kgc-sidecar a cyber:Project ;
+  rdfs:label "kgc-sidecar" ;
+  cyber:framework "Next.js" ;
+  cyber:version "15.2.4" ;
+  cyber:type "Sidecar Service" .
+
+proj:full-stack-rubric a cyber:Project ;
+  rdfs:label "full-stack-rubric" ;
+  cyber:framework "Nuxt" ;
+  cyber:version "4.0.3" ;
+  cyber:type "Full Stack" .
+
+proj:clap-web a cyber:Project ;
+  rdfs:label "clap-noun-verb/web" ;
+  cyber:framework "Next.js" ;
+  cyber:version "16.2.9" ;
+  cyber:type "Web Application" .
+
+proj:benchmark-site a cyber:Project ;
+  rdfs:label "jotp/benchmark-site" ;
+  cyber:framework "Next.js" ;
+  cyber:type "Benchmarking" .
+
+# ============================================================================
+# PACKAGE CATEGORIES — Stratified by domain
+# ============================================================================
+
+cat:framework a cyber:Category ;
+  rdfs:label "Framework" ;
+  cyber:subcategories (cat:vue cat:react cat:angular) .
+
+cat:vue a cyber:Category ;
+  rdfs:label "Vue Ecosystem" ;
+  cyber:packages (pkg:nuxt pkg:vue pkg:vueuse pkg:shiki) .
+
+cat:react a cyber:Category ;
+  rdfs:label "React Ecosystem" ;
+  cyber:packages (pkg:next pkg:react pkg:react-dom pkg:react-query) .
+
+cat:angular a cyber:Category ;
+  rdfs:label "Angular Ecosystem" .
+
+cat:ai-llm a cyber:Category ;
+  rdfs:label "AI/LLM" ;
+  cyber:packages (pkg:ai-sdk-anthropic pkg:ai-sdk-openai pkg:ai-sdk-react pkg:ollama pkg:anthropic-ai-sdk) .
+
+cat:ui-components a cyber:Category ;
+  rdfs:label "UI Components" ;
+  cyber:packages (pkg:radix-ui pkg:lucide-react pkg:headlessui pkg:heroicons) .
+
+cat:observability a cyber:Category ;
+  rdfs:label "Observability & Tracing" ;
+  cyber:packages (pkg:opentelemetry-api pkg:opentelemetry-sdk-node pkg:vercel-otel) .
+
+cat:data-orm a cyber:Category ;
+  rdfs:label "Data/ORM" ;
+  cyber:packages (pkg:drizzle-orm pkg:prisma pkg:typeorm pkg:sequelize) .
+
+cat:rdf-semantic a cyber:Category ;
+  rdfs:label "RDF & Semantic Web" ;
+  cyber:packages (pkg:unrdf pkg:rdfjs pkg:comunica pkg:rdf-store) .
+
+cat:utilities a cyber:Category ;
+  rdfs:label "Utilities" ;
+  cyber:packages (pkg:zod pkg:date-fns pkg:nanoid pkg:clsx) .
+
+cat:visualization a cyber:Category ;
+  rdfs:label "Visualization & Graphics" ;
+  cyber:packages (pkg:deck-gl pkg:d3 pkg:recharts pkg:three pkg:xyflow) .
+
+cat:state-management a cyber:Category ;
+  rdfs:label "State Management" ;
+  cyber:packages (pkg:xstate pkg:zustand pkg:pinia pkg:redux) .
+
+cat:backend-framework a cyber:Category ;
+  rdfs:label "Backend Frameworks" ;
+  cyber:packages (pkg:express pkg:fastapi pkg:nestjs pkg:phoenix) .
+
+cat:types a cyber:Category ;
+  rdfs:label "TypeScript Definitions" .
+
+# ============================================================================
+# EXEMPLAR PACKAGES (representing each category)
+# ============================================================================
+
+# Framework packages
+pkg:nuxt a cyber:Package ;
+  rdfs:label "nuxt" ;
+  cyber:category cat:vue ;
+  cyber:description "Vue.js meta-framework for full-stack applications" ;
+  cyber:used-by (proj:dashboard-bak proj:cns proj:chat proj:app proj:full-stack-rubric) ;
+  cyber:versions ("^4.0.3" "^3.8.0" "^3.15.3" "^4.1.3" "^3.14.1592") .
+
+pkg:next a cyber:Package ;
+  rdfs:label "next" ;
+  cyber:category cat:react ;
+  cyber:description "React meta-framework for production-ready applications" ;
+  cyber:used-by (proj:ai-chatbot proj:ai proj:optimus proj:kgc-sidecar proj:clap-web proj:benchmark-site) ;
+  cyber:versions ("16.0.1" "16.2.9" "15.5.5" "15.2.4" "~15.2.4") .
+
+pkg:react a cyber:Package ;
+  rdfs:label "react" ;
+  cyber:category cat:react ;
+  cyber:used-by (proj:ai-chatbot proj:optimus proj:kgc-sidecar proj:clap-web proj:benchmark-site) ;
+  cyber:versions ("19.2.0" "19.1.0" "19.0.0" "19.2.4") .
+
+pkg:react-dom a cyber:Package ;
+  rdfs:label "react-dom" ;
+  cyber:category cat:react ;
+  cyber:used-by (proj:ai-chatbot proj:optimus proj:kgc-sidecar proj:clap-web proj:benchmark-site) .
+
+pkg:vue a cyber:Package ;
+  rdfs:label "vue" ;
+  cyber:category cat:vue ;
+  cyber:used-by (proj:cns proj:app) ;
+  cyber:versions ("^3.3.0" "^3.5.13") .
+
+# AI/LLM packages
+pkg:ai-sdk-anthropic a cyber:Package ;
+  rdfs:label "@ai-sdk/anthropic" ;
+  cyber:category cat:ai-llm ;
+  cyber:used-by (proj:optimus) ;
+  cyber:versions ("^2.0.38") .
+
+pkg:ai-sdk-openai a cyber:Package ;
+  rdfs:label "@ai-sdk/openai" ;
+  cyber:category cat:ai-llm ;
+  cyber:used-by (proj:chat proj:optimus proj:benchmark-site) ;
+  cyber:versions ("^2.0.52" "^1.0.0") .
+
+pkg:ai-sdk-react a cyber:Package ;
+  rdfs:label "@ai-sdk/react" ;
+  cyber:category cat:ai-llm ;
+  cyber:used-by (proj:optimus proj:benchmark-site) ;
+  cyber:versions ("^2.0.73" "^3.0.118") .
+
+pkg:ai-sdk-vue a cyber:Package ;
+  rdfs:label "@ai-sdk/vue" ;
+  cyber:category cat:ai-llm ;
+  cyber:used-by (proj:chat) ;
+  cyber:versions ("^2.0.68") .
+
+pkg:ai a cyber:Package ;
+  rdfs:label "ai" ;
+  cyber:category cat:ai-llm ;
+  cyber:description "Unified AI SDK for multiple providers" ;
+  cyber:used-by (proj:ai-chatbot proj:chat proj:optimus proj:benchmark-site) ;
+  cyber:versions ("^5.0.81" "^5.0.68" "^5.0.73") .
+
+# UI Component packages
+pkg:radix-ui a cyber:Package ;
+  rdfs:label "@radix-ui/react-*" ;
+  cyber:category cat:ui-components ;
+  cyber:description "Unstyled, accessible UI components for React (30+ variants)" ;
+  cyber:used-by (proj:ai-chatbot proj:optimus) ;
+  cyber:versions ("^1.1.10" "^1.2.6" "^2.2.6") ;
+  cyber:count 30 .
+
+pkg:lucide-react a cyber:Package ;
+  rdfs:label "lucide-react" ;
+  cyber:category cat:ui-components ;
+  cyber:used-by (proj:ai-chatbot proj:optimus) ;
+  cyber:versions ("^0.548.0" "^0.545.0") .
+
+pkg:tailwind-css a cyber:Package ;
+  rdfs:label "tailwindcss" ;
+  cyber:category cat:ui-components ;
+  cyber:description "Utility-first CSS framework" ;
+  cyber:used-by (proj:ai-chatbot proj:optimus proj:kgc-sidecar) .
+
+pkg:shadcn-ui a cyber:Package ;
+  rdfs:label "shadcn-ui" ;
+  cyber:category cat:ui-components ;
+  cyber:description "Re-usable components built on Radix UI and Tailwind CSS" ;
+  cyber:used-by (proj:ai-chatbot proj:optimus) .
+
+# Observability
+pkg:opentelemetry-api a cyber:Package ;
+  rdfs:label "@opentelemetry/api" ;
+  cyber:category cat:observability ;
+  cyber:used-by (proj:cns proj:optimus) ;
+  cyber:versions ("^1.9.0") ;
+  cyber:related (pkg:opentelemetry-sdk-node) .
+
+pkg:opentelemetry-sdk-node a cyber:Package ;
+  rdfs:label "@opentelemetry/sdk-node" ;
+  cyber:category cat:observability ;
+  cyber:used-by (proj:cns proj:optimus) ;
+  cyber:versions ("^0.203.0" "^0.206.0") .
+
+pkg:vercel-otel a cyber:Package ;
+  rdfs:label "@vercel/otel" ;
+  cyber:category cat:observability ;
+  cyber:used-by (proj:optimus) ;
+  cyber:versions ("^2.1.0") .
+
+# Data/ORM
+pkg:drizzle-orm a cyber:Package ;
+  rdfs:label "drizzle-orm" ;
+  cyber:category cat:data-orm ;
+  cyber:used-by (proj:chat) ;
+  cyber:versions ("^0.44.6") .
+
+pkg:zod a cyber:Package ;
+  rdfs:label "zod" ;
+  cyber:category cat:utilities ;
+  cyber:description "TypeScript-first schema validation with static type inference" ;
+  cyber:used-by (proj:dashboard-bak proj:app proj:optimus) ;
+  cyber:versions ("^3.25.76" "^3.24.2" "^4.1.12") .
+
+# RDF/Semantic Web
+pkg:unrdf a cyber:Package ;
+  rdfs:label "@unrdf/*" ;
+  cyber:category cat:rdf-semantic ;
+  cyber:description "RDF toolkit for JavaScript" ;
+  cyber:used-by (proj:optimus) ;
+  cyber:count 13 .
+
+pkg:rdfjs a cyber:Package ;
+  rdfs:label "@rdfjs/*" ;
+  cyber:category cat:rdf-semantic ;
+  cyber:used-by (proj:optimus) ;
+  cyber:versions ("^2.1.1") .
+
+# ============================================================================
+# DEPENDENCY RELATIONSHIPS
+# ============================================================================
+
+# Version conflict detection
+cyber:has-version-conflict
+  rdfs:label "Has version conflict" ;
+  rdfs:domain cyber:Package ;
+  rdfs:range cyber:Package .
+
+# Project usage tracking
+cyber:used-by
+  rdfs:label "Used by projects" ;
+  rdfs:domain cyber:Package ;
+  rdfs:range cyber:Project .
+
+# ============================================================================
+# SUMMARY STATISTICS
+# ============================================================================
+
+cyber:DependencySpace a cyber:Statistic ;
+  cyber:total-packages 845 ;
+  cyber:total-projects 12 ;
+  cyber:total-package-instances 0 ;  # To be calculated
+  cyber:framework-distribution "{nuxt: 6, next: 6}" ;
+  cyber:top-scopes "@opentelemetry:32, @radix-ui:30, @unrdf:13, @angular:12" ;
+  cyber:categories-defined 12 ;
+  cyber:exemplar-packages-defined 25 .

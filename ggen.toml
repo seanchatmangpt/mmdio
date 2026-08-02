@@ -13,6 +13,7 @@ rdfs = "http://www.w3.org/2000/01/rdf-schema#"
 
 [packs]
 mmdio-pack = { path = "packs/mmdio-pack" }
+cyberpunk-2030-pack = { path = "packs/cyberpunk-2030-pack" }
 
 [templates]
 dir = "templates"

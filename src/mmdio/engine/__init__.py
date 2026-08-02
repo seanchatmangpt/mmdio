@@ -13,9 +13,9 @@ from mmdio.engine.models import (
     ClassMember,
     ClassMethod,
     ClassRelationship,
-    Entity,
-    EntityAttribute,
+    ERAttribute as EntityAttribute,
     ERDiagram,
+    EREntity as Entity,
     ERRelationship,
     FlowchartDiagram,
     FlowchartEdge,
@@ -39,10 +39,10 @@ from mmdio.engine.models import (
     SequenceDiagram,
     SequenceMessage,
     SequenceParticipant,
-    State,
+    StateNode as State,
     StateDiagram,
     TaskStatus,
-    Transition,
+    StateTransition as Transition,
 )
 from mmdio.engine.ops import diff, merge, validate_topology
 from mmdio.engine.parser import (
@@ -61,9 +61,8 @@ from mmdio.engine.parser import (
     parse_sequence,
     parse_state,
 )
-from mmdio.engine.render_dispatch import render_diagram, render_model
-from mmdio.engine.schemas import schema_for_type
-from mmdio.engine.supported import SUPPORTED_TYPES, is_supported
+from mmdio.engine.render import render_diagram
+from mmdio.engine.ops import merge, diff, validate_topology
 
 __all__ = [
     "C4Diagram",

@@ -1,228 +1,882 @@
-"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`."""
+"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+
+Source: packs/mmdio-pack/templates/generated_models.py.tmpl
+Derived from: packs/mmdio-pack/ontology.ttl (mer:PythonModel / mer:PythonField)
+
+Every diagram-type AST model is a projection of the same (type, field)
+matrix — see the field-shape vocabulary comment at the top of
+packs/mmdio-pack/ontology.ttl before editing the source facts.
+"""
+
 from __future__ import annotations
-from typing import List,Literal,Optional
-from pydantic import AliasChoices,BaseModel,ConfigDict,Field
-from mmdio.engine.enums import *  # noqa: F401,F403
 
-class FlowchartNode(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    id:str=Field(...)
-    label:str=Field(...)
-    shape:NodeShape=Field(default=NodeShape.RECTANGLE,validation_alias=AliasChoices("shape","node_type"))
+from typing import List, Literal, Optional
+from pydantic import BaseModel, Field
+from mmdio.engine.enums import *  # noqa: F401,F403 — enum classes referenced by fieldPyType below
 
-class FlowchartEdge(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    source:str=Field(...)
-    target:str=Field(...)
-    label:Optional[str]=Field(default=None)
-    style:Optional[str]=Field(default=None,validation_alias=AliasChoices("style","edge_type"))
 
-class FlowchartDiagram(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    type:Literal["flowchart"]="flowchart"
-    direction:str=Field(default="TB")
-    nodes:List[FlowchartNode]=Field(default_factory=list)
-    edges:List[FlowchartEdge]=Field(default_factory=list)
+class Block(BaseModel):
 
-class SequenceParticipant(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    id:str=Field(...)
-    name:str=Field(...)
-    type:ParticipantType=Field(default=ParticipantType.PARTICIPANT,validation_alias=AliasChoices("type","participant_type"))
+    """Block — generated from packs/mmdio-pack/ontology.ttl."""
 
-class SequenceMessage(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    from_participant:str=Field(...,validation_alias=AliasChoices("from_participant","from_id"))
-    to_participant:str=Field(...,validation_alias=AliasChoices("to_participant","to_id"))
-    label:str=Field(...)
-    type:MessageType=Field(default=MessageType.SYNC,validation_alias=AliasChoices("type","message_type"))
-    sequence_number:Optional[int]=Field(default=None)
 
-class SequenceDiagram(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    type:Literal["sequence"]="sequence"
-    participants:List[SequenceParticipant]=Field(default_factory=list)
-    messages:List[SequenceMessage]=Field(default_factory=list)
-    title:Optional[str]=Field(default=None)
 
-class ClassMember(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    name:str=Field(...)
-    type:Optional[str]=Field(default=None)
-    visibility:str=Field(default="+")
 
-class ClassMethod(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    name:str=Field(...)
-    signature:Optional[str]=Field(default=None)
-    return_type:Optional[str]=Field(default=None,validation_alias=AliasChoices("return_type","type"))
-    visibility:str=Field(default="+")
+    id: str = Field(..., description="Block identifier")
 
-class ClassDefinition(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    name:str=Field(...)
-    members:List[ClassMember]=Field(default_factory=list)
-    methods:List[ClassMethod]=Field(default_factory=list)
-    is_interface:bool=Field(default=False)
-    is_abstract:bool=Field(default=False)
 
-class ClassRelationship(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    from_class:str=Field(...)
-    to_class:str=Field(...)
-    type:RelationshipType=Field(default=RelationshipType.ASSOCIATION,validation_alias=AliasChoices("type","relation_type"))
-    label:Optional[str]=Field(default=None)
 
-class ClassDiagram(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    type:Literal["class"]="class"
-    classes:List[ClassDefinition]=Field(default_factory=list)
-    relationships:List[ClassRelationship]=Field(default_factory=list)
+    label: str = Field(..., description="Block label text")
 
-class State(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    id:str=Field(...)
-    label:str=Field(...)
-    is_initial:bool=Field(default=False)
-    is_final:bool=Field(default=False)
-    entry_action:Optional[str]=Field(default=None)
-    exit_action:Optional[str]=Field(default=None)
 
-class Transition(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    from_state:str=Field(...)
-    to_state:str=Field(...)
-    event:Optional[str]=Field(default=None)
-    action:Optional[str]=Field(default=None)
-    guard:Optional[str]=Field(default=None)
 
-class StateDiagram(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    type:Literal["state"]="state"
-    states:List[State]=Field(default_factory=list)
-    transitions:List[Transition]=Field(default_factory=list)
-    root_state:Optional[str]=Field(default=None)
+class BlockDiagram(BaseModel):
 
-class EntityAttribute(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    name:str=Field(...)
-    type:Optional[str]=Field(default=None)
-    is_key:bool=Field(default=False)
-    is_nullable:bool=Field(default=True)
+    """BlockDiagram — generated from packs/mmdio-pack/ontology.ttl."""
 
-class Entity(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    name:str=Field(...)
-    attributes:List[EntityAttribute]=Field(default_factory=list)
 
-class ERRelationship(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    from_entity:str=Field(...)
-    to_entity:str=Field(...)
-    cardinality:CardinityType=Field(default=CardinityType.ONE_TO_MANY)
-    label:Optional[str]=Field(default=None)
+    type: Literal["block"] = "block"
 
-class ERDiagram(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    type:Literal["er"]="er"
-    entities:List[Entity]=Field(default_factory=list)
-    relationships:List[ERRelationship]=Field(default_factory=list)
-    title:Optional[str]=Field(default=None)
 
-class GanttTask(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    id:str=Field(...)
-    title:str=Field(...)
-    start_date:str=Field(...)
-    end_date:str=Field(...)
-    status:TaskStatus=Field(default=TaskStatus.ACTIVE)
-    dependencies:List[str]=Field(default_factory=list)
-    milestone:bool=Field(default=False)
 
-class GanttChart(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    type:Literal["gantt"]="gantt"
-    tasks:List[GanttTask]=Field(default_factory=list)
-    title:Optional[str]=Field(default=None)
+    columns: Optional[int] = Field(default=None, description="Optional column count for layout")
 
-class PieSlice(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    label:str=Field(...)
-    value:float=Field(...)
 
-class PieChart(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    type:Literal["pie"]="pie"
-    title:Optional[str]=Field(default=None)
-    slices:List[PieSlice]=Field(default_factory=list)
 
-class GitCommit(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    id:str=Field(...)
-    message:str=Field(...)
-    tag:Optional[str]=Field(default=None)
-    branch_points:List[str]=Field(default_factory=list)
+    blocks: List[Block] = Field(default_factory=list, description="List of blocks in the diagram")
 
-class GitBranch(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    name:str=Field(...)
-    commit_ids:List[str]=Field(default_factory=list,validation_alias=AliasChoices("commit_ids","commits"))
-    is_main:bool=Field(default=False)
 
-class GitGraph(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    type:Literal["git"]="git"
-    commits:List[GitCommit]=Field(default_factory=list)
-    branches:List[GitBranch]=Field(default_factory=list)
 
-class C4Element(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    id:str=Field(...)
-    name:str=Field(...)
-    level:C4Level=Field(...)
-    description:Optional[str]=Field(default=None)
-    technology:Optional[str]=Field(default=None)
-    element_type:str=Field(default="generic")
+    connections: List[Connection] = Field(default_factory=list, description="List of connections between blocks")
 
-class C4Relationship(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    from_element:str=Field(...,validation_alias=AliasChoices("from_element","from_id"))
-    to_element:str=Field(...,validation_alias=AliasChoices("to_element","to_id"))
-    description:str=Field(...)
-    technology:Optional[str]=Field(default=None)
+
 
 class C4Diagram(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    type:Literal["c4"]="c4"
-    elements:List[C4Element]=Field(default_factory=list)
-    relationships:List[C4Relationship]=Field(default_factory=list)
-    title:Optional[str]=Field(default=None)
 
-class MindmapNode(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    id:str=Field(...)
-    label:str=Field(...)
-    children:List[MindmapNode]=Field(default_factory=list)
+    """C4Diagram — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+    type: Literal["c4"] = "c4"
+
+
+
+    title: Optional[str] = Field(default=None, description="Diagram title")
+
+
+
+    level: C4Level = Field(..., description="C4 level (C1, C2, C3, C4)")
+
+
+
+    elements: List[C4Element] = Field(default_factory=list, description="Systems, containers, or components")
+
+
+
+    relationships: List[C4Relationship] = Field(default_factory=list, description="Relationships between elements")
+
+
+
+class C4Element(BaseModel):
+
+    """C4Element — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    id: str = Field(..., description="Element identifier")
+
+
+
+    name: str = Field(..., description="Element name")
+
+
+
+    description: Optional[str] = Field(default=None, description="Element description")
+
+
+
+    type: str = Field(..., description="Element type (System, Person, Container, etc.)")
+
+
+
+class C4Relationship(BaseModel):
+
+    """C4Relationship — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    source: str = Field(..., description="Source element ID")
+
+
+
+    target: str = Field(..., description="Target element ID")
+
+
+
+    label: Optional[str] = Field(default=None, description="Relationship description")
+
+
+
+class ClassDefinition(BaseModel):
+
+    """ClassDefinition — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    name: str = Field(..., description="Class/interface name")
+
+
+
+    members: List[ClassMember] = Field(default_factory=list, description="List of class members")
+
+
+
+    methods: List[ClassMethod] = Field(default_factory=list, description="List of class methods")
+
+
+
+class ClassDiagram(BaseModel):
+
+    """ClassDiagram — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+    type: Literal["class"] = "class"
+
+
+
+    classes: List[ClassDefinition] = Field(default_factory=list, description="List of class definitions")
+
+
+
+    relationships: List[ClassRelationship] = Field(default_factory=list, description="List of relationships between classes")
+
+
+
+class ClassMember(BaseModel):
+
+    """ClassMember — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    name: str = Field(..., description="Member name")
+
+
+
+    type: Optional[str] = Field(default=None, description="Type annotation")
+
+
+
+    visibility: str = Field(default="+", description="Visibility modifier (+, -, #, ~)")
+
+
+
+class ClassMethod(BaseModel):
+
+    """ClassMethod — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    name: str = Field(..., description="Method name")
+
+
+
+    signature: Optional[str] = Field(default=None, description="Full method signature")
+
+
+
+    return_type: Optional[str] = Field(default=None, description="Return type annotation")
+
+
+
+    visibility: str = Field(default="+", description="Visibility modifier")
+
+
+
+class ClassRelationship(BaseModel):
+
+    """ClassRelationship — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    from_class: str = Field(..., description="Source class name")
+
+
+
+    to_class: str = Field(..., description="Target class name")
+
+
+
+    type: RelationshipType = Field(..., description="Type of relationship")
+
+
+
+    label: Optional[str] = Field(default=None, description="Optional relationship label")
+
+
+
+class Connection(BaseModel):
+
+    """Connection — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    source: str = Field(..., description="Source block ID")
+
+
+
+    target: str = Field(..., description="Target block ID")
+
+
+
+    arrow_type: str = Field(default="-->", description="Arrow type (-->, <--, <-->, ===, --x, o--)")
+
+
+
+    label: Optional[str] = Field(default=None, description="Optional connection label")
+
+
+
+class DataSeries(BaseModel):
+
+    """DataSeries — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    series_type: str = Field(..., description="Series type: line, bar, scatter, bubble")
+
+
+
+    values: List[float | str] = Field(default_factory=list, description="Series data values")
+
+
+
+class ERAttribute(BaseModel):
+
+    """ERAttribute — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    name: str = Field(..., description="Attribute name")
+
+
+
+    attr_type: str = Field(..., description="Attribute type (int, string, etc.)")
+
+
+
+class ERDiagram(BaseModel):
+
+    """ERDiagram — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+    type: Literal["er"] = "er"
+
+
+
+    entities: List[EREntity] = Field(default_factory=list, description="List of entities")
+
+
+
+    relationships: List[ERRelationship] = Field(default_factory=list, description="List of entity relationships")
+
+
+
+class EREntity(BaseModel):
+
+    """EREntity — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    name: str = Field(..., description="Entity name")
+
+
+
+    attributes: List[ERAttribute] = Field(default_factory=list, description="Entity attributes")
+
+
+
+class ERRelationship(BaseModel):
+
+    """ERRelationship — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    entity_a: str = Field(..., description="First entity name")
+
+
+
+    entity_b: str = Field(..., description="Second entity name")
+
+
+
+    cardinality_a: str = Field(..., description="Cardinality of entity_a side")
+
+
+
+    cardinality_b: str = Field(..., description="Cardinality of entity_b side")
+
+
+
+    relation_type: RelationshipType = Field(..., description="Type of relationship")
+
+
+
+class FlowchartDiagram(BaseModel):
+
+    """FlowchartDiagram — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+    type: Literal["flowchart"] = "flowchart"
+
+
+
+    direction: str = Field(default="TD", description="Layout direction: TD, LR, BT, RL")
+
+
+
+    nodes: List[FlowchartNode] = Field(default_factory=list, description="List of nodes in the flowchart")
+
+
+
+    edges: List[FlowchartEdge] = Field(default_factory=list, description="List of edges/connections between nodes")
+
+
+
+class FlowchartEdge(BaseModel):
+
+    """FlowchartEdge — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    source: str = Field(..., description="Source node ID")
+
+
+
+    target: str = Field(..., description="Target node ID")
+
+
+
+    label: Optional[str] = Field(default=None, description="Optional edge label")
+
+
+
+    edge_type: str = Field(default="solid", description="Edge style: solid, dotted, thick")
+
+
+
+class FlowchartNode(BaseModel):
+
+    """FlowchartNode — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    id: str = Field(..., description="Node identifier")
+
+
+
+    label: str = Field(..., description="Node display label")
+
+
+
+    node_type: NodeShape = Field(default=NodeShape.RECTANGLE, description="Node shape (rectangle, circle, diamond, etc.)")
+
+
+
+class GanttChart(BaseModel):
+
+    """GanttChart — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+    type: Literal["gantt"] = "gantt"
+
+
+
+    title: Optional[str] = Field(default=None, description="Chart title")
+
+
+
+    date_format: str = Field(default="YYYY-MM-DD", description="Date format (YYYY-MM-DD, etc.)")
+
+
+
+    tasks: List[GanttTask] = Field(default_factory=list, description="List of tasks")
+
+
+
+class GanttDependency(BaseModel):
+
+    """GanttDependency — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    task_id: str = Field(..., description="ID of dependent task")
+
+
+
+class GanttTask(BaseModel):
+
+    """GanttTask — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    id: str = Field(..., description="Task identifier")
+
+
+
+    title: str = Field(..., description="Task title/name")
+
+
+
+    status: TaskStatus = Field(..., description="Task status (active, done, milestone, crit, etc.)")
+
+
+
+    start_date: str = Field(..., description="Task start date")
+
+
+
+    end_date: str = Field(..., description="Task end date")
+
+
+
+    dependencies: List[GanttDependency] = Field(default_factory=list, description="Task dependencies")
+
+
+
+class GitBranch(BaseModel):
+
+    """GitBranch — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    name: str = Field(..., description="Branch name")
+
+
+
+class GitCommit(BaseModel):
+
+    """GitCommit — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    id: str = Field(..., description="Commit identifier (hash)")
+
+
+
+    message: Optional[str] = Field(default=None, description="Commit message")
+
+
+
+class GitGraph(BaseModel):
+
+    """GitGraph — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+    type: Literal["git"] = "git"
+
+
+
+    main_branch: str = Field(default="main", description="Main branch name")
+
+
+
+    commits: List[GitCommit] = Field(default_factory=list, description="List of commits")
+
+
+
+class KanbanCard(BaseModel):
+
+    """KanbanCard — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    title: str = Field(..., description="Card title/task name")
+
+
+
+class KanbanDiagram(BaseModel):
+
+    """KanbanDiagram — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+    type: Literal["kanban"] = "kanban"
+
+
+
+    sections: List[KanbanSection] = Field(default_factory=list, description="List of Kanban sections/columns")
+
+
+
+class KanbanSection(BaseModel):
+
+    """KanbanSection — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    name: str = Field(..., description="Section name (e.g., To Do, In Progress)")
+
+
+
+    cards: List[KanbanCard] = Field(default_factory=list, description="Cards in this section")
+
+
 
 class Mindmap(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    type:Literal["mindmap"]="mindmap"
-    root:MindmapNode=Field(...)
-    title:Optional[str]=Field(default=None)
-    nodes:List[MindmapNode]=Field(default_factory=list)
 
-class SankeyFlow(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    source:str=Field(...)
-    target:str=Field(...)
-    value:float=Field(...)
-    label:Optional[str]=Field(default=None)
+    """Mindmap — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+    type: Literal["mindmap"] = "mindmap"
+
+
+
+    root: MindmapNode = Field(..., description="Root node of the mindmap tree")
+
+
+
+    title: Optional[str] = Field(default=None, description="Optional mindmap title")
+
+
+
+class MindmapNode(BaseModel):
+
+    """MindmapNode — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    id: str = Field(..., description="Unique node identifier")
+
+
+
+    label: str = Field(..., description="Node label/text")
+
+
+
+class PieChart(BaseModel):
+
+    """PieChart — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+    type: Literal["pie"] = "pie"
+
+
+
+    title: Optional[str] = Field(default=None, description="Optional chart title")
+
+
+
+    slices: List[PieSlice] = Field(default_factory=list, description="List of pie slices")
+
+
+
+class PieSlice(BaseModel):
+
+    """PieSlice — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    label: str = Field(..., description="Slice label")
+
+
+
+    value: float = Field(..., description="Numeric value (percentage, count, or amount)")
+
+
 
 class SankeyDiagram(BaseModel):
-    model_config=ConfigDict(populate_by_name=True)
-    type:Literal["sankey"]="sankey"
-    flows:List[SankeyFlow]=Field(default_factory=list)
-    title:Optional[str]=Field(default=None)
 
-MindmapNode.model_rebuild()
-MermaidDiagram=FlowchartDiagram|SequenceDiagram|ClassDiagram|StateDiagram|ERDiagram|GanttChart|PieChart|GitGraph|C4Diagram|Mindmap|SankeyDiagram
+    """SankeyDiagram — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+    type: Literal["sankey"] = "sankey"
+
+
+
+    flows: List[SankeyFlow] = Field(default_factory=list, description="List of flows in the diagram")
+
+
+
+class SankeyFlow(BaseModel):
+
+    """SankeyFlow — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    source: str = Field(..., description="Source node identifier")
+
+
+
+    target: str = Field(..., description="Target node identifier")
+
+
+
+    value: float = Field(..., description="Flow value (determines width/thickness of flow)")
+
+
+
+class SequenceDiagram(BaseModel):
+
+    """SequenceDiagram — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+    type: Literal["sequence"] = "sequence"
+
+
+
+    title: Optional[str] = Field(default=None, description="Optional diagram title")
+
+
+
+    participants: List[SequenceParticipant] = Field(default_factory=list, description="List of sequence participants")
+
+
+
+    messages: List[SequenceMessage] = Field(default_factory=list, description="List of messages between participants")
+
+
+
+class SequenceMessage(BaseModel):
+
+    """SequenceMessage — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    from_id: str = Field(..., description="Source participant ID")
+
+
+
+    to_id: str = Field(..., description="Target participant ID")
+
+
+
+    label: Optional[str] = Field(default=None, description="Message text/label")
+
+
+
+    message_type: MessageType = Field(..., description="Message type: sync, async, return, autonumber")
+
+
+
+    sequence_number: int = Field(..., description="Auto-assigned message sequence number")
+
+
+
+class SequenceParticipant(BaseModel):
+
+    """SequenceParticipant — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    id: str = Field(..., description="Participant identifier")
+
+
+
+    name: str = Field(..., description="Participant display name")
+
+
+
+    participant_type: ParticipantType = Field(..., description="Participant type: actor, participant")
+
+
+
+class StateDiagram(BaseModel):
+
+    """StateDiagram — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+    type: Literal["state"] = "state"
+
+
+
+    initial_state: Optional[str] = Field(default=None, description="Initial state identifier")
+
+
+
+    states: List[StateNode] = Field(default_factory=list, description="List of states")
+
+
+
+    transitions: List[StateTransition] = Field(default_factory=list, description="List of transitions between states")
+
+
+
+class StateNode(BaseModel):
+
+    """StateNode — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    id: str = Field(..., description="State identifier")
+
+
+
+    label: Optional[str] = Field(default=None, description="State display label")
+
+
+
+class StateTransition(BaseModel):
+
+    """StateTransition — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    source: str = Field(..., description="Source state ID")
+
+
+
+    target: str = Field(..., description="Target state ID")
+
+
+
+    label: Optional[str] = Field(default=None, description="Transition label/trigger")
+
+
+
+class TimelineDiagram(BaseModel):
+
+    """TimelineDiagram — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+    type: Literal["timeline"] = "timeline"
+
+
+
+    title: Optional[str] = Field(default=None, description="Optional timeline title")
+
+
+
+    events: List[TimelineEvent] = Field(default_factory=list, description="List of timeline events")
+
+
+
+class TimelineEvent(BaseModel):
+
+    """TimelineEvent — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    time: str = Field(..., description="Event time/date (e.g., 2024-01-01, January, Q1)")
+
+
+
+    description: str = Field(..., description="Event description or label")
+
+
+
+class XYAxis(BaseModel):
+
+    """XYAxis — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+
+
+    label: Optional[str] = Field(default=None, description="Axis label")
+
+
+
+    values: List[float | str] = Field(default_factory=list, description="Axis values or tick marks")
+
+
+
+    range_min: Optional[float] = Field(default=None, description="Minimum range (y-axis)")
+
+
+
+    range_max: Optional[float] = Field(default=None, description="Maximum range (y-axis)")
+
+
+
+class XYChartDiagram(BaseModel):
+
+    """XYChartDiagram — generated from packs/mmdio-pack/ontology.ttl."""
+
+
+    type: Literal["xychart"] = "xychart"
+
+
+
+    title: Optional[str] = Field(default=None, description="Chart title")
+
+
+
+    x_axis: XYAxis = Field(..., description="X-axis configuration")
+
+
+
+    y_axis: XYAxis = Field(..., description="Y-axis configuration")
+
+
+
+    series: List[DataSeries] = Field(default_factory=list, description="Data series to plot")
+
+
+
+
+MermaidDiagram = (
+    BlockDiagram |
+
+    C4Diagram |
+
+    ClassDiagram |
+
+    ERDiagram |
+
+    FlowchartDiagram |
+
+    GanttChart |
+
+    GitGraph |
+
+    KanbanDiagram |
+
+    Mindmap |
+
+    PieChart |
+
+    SankeyDiagram |
+
+    SequenceDiagram |
+
+    StateDiagram |
+
+    TimelineDiagram |
+
+    XYChartDiagram
+
+
+)
+"""Union type for all supported Mermaid diagram types. Use with Pydantic discriminated unions."""
+
+# Legacy class aliases for backwards compatibility
+Entity = EREntity
+EntityAttribute = ERAttribute
+State = StateNode
+Transition = StateTransition
+
+

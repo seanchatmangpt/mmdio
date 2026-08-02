@@ -1,0 +1,32 @@
+--- a/packs/mmdio-pack/templates/generated_models.py.tmpl
++++ b/packs/mmdio-pack/templates/generated_models.py.tmpl
+@@ -28,9 +28,12 @@
+   union_models: |
+     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+     SELECT ?internalId ?modelModule ?modelClass WHERE {
+       ?type a mer:DiagramType ;
+             mer:pythonInternalId ?internalId ;
+             mer:pythonSupport true ;
++            mer:hasModel ?model ;
+             mer:pythonModelModule ?modelModule ;
+             mer:pythonModelClass ?modelClass .
++      ?model a mer:PythonModel ;
++             mer:isTopLevel true .
+     } ORDER BY ?internalId
+--- a/packs/mmdio-pack/templates/generated_render_dispatch.py.tmpl
++++ b/packs/mmdio-pack/templates/generated_render_dispatch.py.tmpl
+@@ -5,11 +5,14 @@
+   rows: |
+     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+     SELECT ?internalId ?modelModule ?modelClass ?renderModule ?renderFunction WHERE {
+       ?type a mer:DiagramType ;
+             mer:pythonInternalId ?internalId ;
+             mer:pythonSupport true ;
++            mer:hasModel ?model ;
+             mer:pythonModelModule ?modelModule ;
+             mer:pythonModelClass ?modelClass ;
+             mer:pythonRenderModule ?renderModule ;
+             mer:pythonRenderFunction ?renderFunction .
++      ?model a mer:PythonModel ;
++             mer:isTopLevel true .
+     } ORDER BY ?internalId
