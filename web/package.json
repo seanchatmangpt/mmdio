@@ -1,0 +1,22 @@
+{
+  "name": "@mmdio/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@nuxt/ui": "4.0.1",
+    "mermaid": "11.16.0",
+    "nuxt": "4.1.2"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vue-tsc": "3.1.0"
+  },
+  "packageManager": "pnpm@10.18.0"
+}
