@@ -1,0 +1,31 @@
+---
+to: "src/mmdio/engine/parser_registry.py"
+force: true
+sparql:
+  rows: |
+    PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+    SELECT ?internalId ?transformerModule ?transformerClass ?grammarFile WHERE {
+      ?type a mer:DiagramType ;
+            mer:pythonInternalId ?internalId ;
+            mer:pythonSupport true ;
+            mer:pythonTransformerModule ?transformerModule ;
+            mer:pythonTransformerClass ?transformerClass ;
+            mer:grammarFile ?grammarFile .
+    } ORDER BY ?internalId
+---
+"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+
+Source: packs/mmdio-pack/templates/generated_parser_registry.py.tmpl
+"""
+
+{% for row in rows %}from {{ row.transformerModule }} import {{ row.transformerClass }}
+{% endfor %}
+GENERATED_TRANSFORMERS = {
+{% for row in rows %}    "{{ row.internalId }}": {{ row.transformerClass }}(),
+{% endfor %}
+}
+
+GENERATED_GRAMMAR_FILES = {
+{% for row in rows %}    "{{ row.internalId }}": "{{ row.grammarFile }}",
+{% endfor %}
+}

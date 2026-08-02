@@ -1,0 +1,7 @@
+PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+SELECT ?internalId (COUNT(?type) AS ?count) WHERE {
+  ?type a mer:DiagramType ;
+        mer:pythonSupport true ;
+        mer:pythonInternalId ?internalId .
+} GROUP BY ?internalId
+HAVING (COUNT(?type) > 1)

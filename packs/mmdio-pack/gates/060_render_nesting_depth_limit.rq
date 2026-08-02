@@ -1,0 +1,14 @@
+PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+# The render-body and fixture-builder templates support exactly two levels
+# of list nesting (top-level model -> list field -> element model -> list
+# field). A third level would need `_r3`/deeper recursion neither template
+# implements — refuse it explicitly instead of silently emitting a render
+# function that never reaches the innermost list.
+SELECT ?topModel ?f1 ?f2 ?f3 WHERE {
+  ?topModel a mer:PythonModel ; mer:isTopLevel true ; mer:field ?f1 .
+  ?f1 mer:fieldKind "list" ; mer:fieldPyType ?type2 .
+  ?model2 a mer:PythonModel ; mer:className ?type2 ; mer:field ?f2 .
+  ?f2 mer:fieldKind "list" ; mer:fieldPyType ?type3 .
+  ?model3 a mer:PythonModel ; mer:className ?type3 ; mer:field ?f3 .
+  ?f3 mer:fieldKind "list" .
+}

@@ -1,0 +1,6 @@
+PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+SELECT ?model (MIN(?order) AS ?minOrder) (MAX(?order) AS ?maxOrder) (COUNT(?order) AS ?fieldCount) WHERE {
+  ?model a mer:PythonModel ; mer:field ?f .
+  ?f mer:fieldOrder ?order .
+} GROUP BY ?model
+HAVING (MIN(?order) != 1 || MAX(?order) != COUNT(?order))

@@ -64,7 +64,7 @@ from mmdio.engine.parser import (
     MermaidParser,
     ParsingError,
 )
-from mmdio.engine.render import render_diagram
+from mmdio.engine.render_dispatch import render_diagram
 from mmdio.engine.ops import merge, diff, validate_topology
 
 __all__ = [

@@ -1,0 +1,56 @@
+PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+SELECT ?type ?missing WHERE {
+  {
+    ?type a mer:DiagramType ; mer:pythonSupport true .
+    FILTER NOT EXISTS { ?type mer:pythonInternalId ?x }
+    BIND("pythonInternalId" AS ?missing)
+  }
+  UNION
+  {
+    ?type a mer:DiagramType ; mer:pythonSupport true .
+    FILTER NOT EXISTS { ?type mer:pythonModelModule ?x }
+    BIND("pythonModelModule" AS ?missing)
+  }
+  UNION
+  {
+    ?type a mer:DiagramType ; mer:pythonSupport true .
+    FILTER NOT EXISTS { ?type mer:pythonModelClass ?x }
+    BIND("pythonModelClass" AS ?missing)
+  }
+  UNION
+  {
+    ?type a mer:DiagramType ; mer:pythonSupport true .
+    FILTER NOT EXISTS { ?type mer:pythonTransformerModule ?x }
+    BIND("pythonTransformerModule" AS ?missing)
+  }
+  UNION
+  {
+    ?type a mer:DiagramType ; mer:pythonSupport true .
+    FILTER NOT EXISTS { ?type mer:pythonTransformerClass ?x }
+    BIND("pythonTransformerClass" AS ?missing)
+  }
+  UNION
+  {
+    ?type a mer:DiagramType ; mer:pythonSupport true .
+    FILTER NOT EXISTS { ?type mer:pythonRenderModule ?x }
+    BIND("pythonRenderModule" AS ?missing)
+  }
+  UNION
+  {
+    ?type a mer:DiagramType ; mer:pythonSupport true .
+    FILTER NOT EXISTS { ?type mer:pythonRenderFunction ?x }
+    BIND("pythonRenderFunction" AS ?missing)
+  }
+  UNION
+  {
+    ?type a mer:DiagramType ; mer:pythonSupport true .
+    FILTER NOT EXISTS { ?type mer:grammarFile ?x }
+    BIND("grammarFile" AS ?missing)
+  }
+  UNION
+  {
+    ?type a mer:DiagramType ; mer:pythonSupport true .
+    FILTER NOT EXISTS { ?type mer:detectPattern ?x }
+    BIND("detectPattern" AS ?missing)
+  }
+}

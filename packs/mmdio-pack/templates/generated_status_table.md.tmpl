@@ -1,0 +1,35 @@
+---
+to: "docs/diagram_status.md"
+force: true
+sparql:
+  rows: |
+    PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+    SELECT ?diagramId ?displayName (COALESCE(?supported, false) AS ?isSupported) WHERE {
+      ?type a mer:DiagramType ;
+            mer:diagramId ?diagramId .
+      OPTIONAL { ?type mer:displayName ?displayName }
+      OPTIONAL { ?type mer:pythonSupport ?supported }
+    } ORDER BY ?diagramId
+---
+<!-- GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+
+Source: packs/mmdio-pack/templates/generated_status_table.md.tmpl
+Derived from: src/mmdio/engine/registry.ttl (all 39 mer:DiagramType) +
+packs/mmdio-pack/ontology.ttl (mer:pythonSupport for the implemented subset)
+
+PRD R6 requires "README lists all 39 types with implementation status" —
+this file is the source table; README.md links to it rather than
+embedding it inline, since this ggen version's Merge-mode marker syntax
+for in-place README injection has not been verified against the installed
+CLI (26.8.2) and guessing at that mechanism risks silently corrupting
+hand-written README content. Wire this into README.md directly once
+Merge mode is confirmed working. -->
+
+# mmdio Diagram Type Support Status
+
+{{ rows | length }} diagram types catalogued from upstream mermaid-js.
+
+| Diagram Type | Display Name | Python Support |
+|---|---|---|
+{% for row in rows %}| `{{ row.diagramId }}` | {{ row.displayName }} | {% if row.isSupported %}✓{% else %}—{% endif %} |
+{% endfor %}

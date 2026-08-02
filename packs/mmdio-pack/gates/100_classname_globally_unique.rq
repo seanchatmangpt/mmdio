@@ -1,0 +1,9 @@
+PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+# _generated_pydantic_models.py is one flat namespace across all diagram
+# types. Two mer:PythonModel individuals sharing a className would
+# silently collide (Python class redefinition, last one wins, no error) —
+# refuse it at gate time instead.
+SELECT ?className (COUNT(?model) AS ?count) WHERE {
+  ?model a mer:PythonModel ; mer:className ?className .
+} GROUP BY ?className
+HAVING (COUNT(?model) > 1)

@@ -1,0 +1,25 @@
+---
+to: "src/mmdio/engine/supported.py"
+force: true
+sparql:
+  rows: |
+    PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+    SELECT ?diagramId WHERE {
+      ?type a mer:DiagramType ;
+            mer:diagramId ?diagramId ;
+            mer:pythonSupport true .
+    } ORDER BY ?diagramId
+---
+"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+
+Source: packs/mmdio-pack/templates/generated_python_supported.py.tmpl
+
+Uses mer:diagramId (the canonical upstream mermaid-js id, e.g. "classDiagram")
+rather than mer:pythonInternalId, matching the pre-existing convention of
+mmdio.engine.registry._PYTHON_SUPPORTED / is_python_supported().
+"""
+
+GENERATED_PYTHON_SUPPORTED = frozenset({
+{% for row in rows %}    "{{ row.diagramId }}",
+{% endfor %}
+})

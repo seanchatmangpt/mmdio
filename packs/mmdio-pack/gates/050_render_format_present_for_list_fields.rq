@@ -1,0 +1,7 @@
+PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+SELECT ?field ?fieldName WHERE {
+  ?field a mer:PythonField ;
+         mer:fieldKind "list" ;
+         mer:fieldName ?fieldName .
+  FILTER NOT EXISTS { ?field mer:fieldRenderFormat ?rf }
+}

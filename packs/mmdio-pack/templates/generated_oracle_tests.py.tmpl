@@ -1,0 +1,56 @@
+---
+to: "tests/test_oracle_generated.py"
+force: true
+sparql:
+  models: |
+    PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+    SELECT ?className ?diagramId WHERE {
+      ?type mer:pythonInternalId ?diagramId ;
+            mer:hasModel ?model .
+      ?model a mer:PythonModel ;
+             mer:className ?className ;
+             mer:isTopLevel true .
+    } ORDER BY ?className
+---
+"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+
+Source: packs/mmdio-pack/templates/generated_oracle_tests.py.tmpl
+Derived from: packs/mmdio-pack/ontology.ttl (mer:PythonModel, isTopLevel only)
+
+One TestOracle{ClassName} per top-level diagram model: build the
+ontology-derived example fixture, render it, validate against real
+mermaid-js. A new type needs zero hand-written test code — only the
+ontology.ttl facts that also drive its model/render/fixture generation.
+"""
+
+import sys
+from pathlib import Path
+
+test_dir = Path(__file__).parent
+sys.path.insert(0, str(test_dir))
+
+from test_oracle_roundtrip import validate_mermaid_source
+
+from mmdio.engine.fixtures import (
+{% for model in models %}
+    example_{{ model.diagramId }},
+{% endfor %}
+)
+from mmdio.engine.render import (
+{% for model in models %}
+    render_{{ model.diagramId }},
+{% endfor %}
+)
+
+
+{% for model in models %}
+class TestOracle{{ model.className }}:
+    """Test {{ model.className }} rendering against real mermaid-js (generated fixture)."""
+
+    def test_{{ model.diagramId }}_generated(self) -> None:
+        """Render the ontology-derived example {{ model.className }} and validate against mermaid-js."""
+        diagram = example_{{ model.diagramId }}()
+        source = render_{{ model.diagramId }}(diagram)
+        validate_mermaid_source(source)
+
+{% endfor %}

@@ -1,0 +1,15 @@
+PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+# A list/nested-ref field's fieldPyType must name a className that actually
+# has a mer:PythonModel definition — otherwise the generated code
+# references an undefined class, caught only at Python import time
+# (a typo silently passes ggen sync run today).
+SELECT ?field ?fieldName ?fieldPyType WHERE {
+  ?field a mer:PythonField ;
+         mer:fieldKind ?kind ;
+         mer:fieldName ?fieldName ;
+         mer:fieldPyType ?fieldPyType .
+  FILTER(?kind IN ("list", "nested-ref"))
+  FILTER NOT EXISTS {
+    ?model a mer:PythonModel ; mer:className ?fieldPyType .
+  }
+}

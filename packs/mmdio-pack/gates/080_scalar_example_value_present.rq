@@ -1,0 +1,16 @@
+PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+# Every scalar-required/enum field must carry a non-empty fieldExampleValue
+# — otherwise the fixture-builder template either omits a required kwarg
+# (SyntaxError, the exact class of bug fixed for `columns`) or emits a
+# bare "ClassName." for an enum with no member name. scalar-optional is
+# exempt (an empty example is legitimately "leave it at None").
+SELECT ?field ?fieldName ?fieldKind WHERE {
+  ?field a mer:PythonField ;
+         mer:fieldName ?fieldName ;
+         mer:fieldKind ?fieldKind .
+  FILTER(?fieldKind IN ("scalar-required", "enum"))
+  FILTER NOT EXISTS {
+    ?field mer:fieldExampleValue ?ev .
+    FILTER(?ev != "")
+  }
+}

@@ -1,0 +1,29 @@
+---
+to: "src/mmdio/engine/detect_patterns.py"
+force: true
+sparql:
+  rows: |
+    PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+    SELECT ?internalId ?detectPattern WHERE {
+      ?type a mer:DiagramType ;
+            mer:pythonInternalId ?internalId ;
+            mer:pythonSupport true ;
+            mer:detectPattern ?detectPattern .
+      FILTER(?internalId != "flowchart")
+    } ORDER BY ?internalId
+---
+"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+
+Source: packs/mmdio-pack/templates/generated_detect_patterns.py.tmpl
+
+Flowchart is deliberately excluded here: it is the documented default when
+no other pattern matches, and mmdio.detect appends its own literal
+graph/flowchart fallback patterns after this list. Keeping the "no real
+signal, this is the default" case out of RDF-driven data avoids a type
+whose ontology entry exists only to encode "I am the fallback."
+"""
+
+GENERATED_DETECT_PATTERNS = [
+{% for row in rows %}    (r"{{ row.detectPattern }}", "{{ row.internalId }}"),
+{% endfor %}
+]

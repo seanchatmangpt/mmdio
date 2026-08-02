@@ -1,0 +1,15 @@
+PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+# Every field of kind "enum" must reference (via fieldPyType) a
+# mer:PythonEnum that actually has at least one mer:enumMember — otherwise
+# the enum-class template has nothing to generate and the field's Python
+# type annotation would refer to a class that doesn't exist.
+SELECT ?field ?fieldPyType WHERE {
+  ?field a mer:PythonField ;
+         mer:fieldKind "enum" ;
+         mer:fieldPyType ?fieldPyType .
+  FILTER NOT EXISTS {
+    ?enum a mer:PythonEnum ;
+          mer:enumClassName ?fieldPyType ;
+          mer:enumMember ?m .
+  }
+}
