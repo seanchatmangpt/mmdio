@@ -4,15 +4,30 @@ force: true
 sparql:
   types: |
     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?modelClass ?renderFunction WHERE { ?type mer:pythonSupport true; mer:pythonModelClass ?modelClass; mer:pythonRenderFunction ?renderFunction. } ORDER BY ?modelClass
+    SELECT ?modelClass ?renderFunction WHERE {
+      ?type mer:pythonSupport true ;
+            mer:pythonModelClass ?modelClass ;
+            mer:pythonRenderFunction ?renderFunction .
+    } ORDER BY ?modelClass
 ---
 """GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`."""
+
+from mmdio.engine.models import MermaidDiagram
 {% for row in types %}from mmdio.engine.models import {{ row.modelClass }}
-from mmdio.engine.render import {{ row.renderFunction }}
+{% endfor %}{% for row in types %}from mmdio.engine.render import {{ row.renderFunction }}
 {% endfor %}
 GENERATED_RENDER_DISPATCH = {
 {% for row in types %}    {{ row.modelClass }}: {{ row.renderFunction }},
 {% endfor %}}
-def render_diagram(diagram):
-    try: return GENERATED_RENDER_DISPATCH[type(diagram)](diagram)
-    except KeyError as exc: raise ValueError(f"Unknown diagram type: {type(diagram)!r}") from exc
+
+
+def render_diagram(diagram: MermaidDiagram) -> str:
+    """Render one admitted Mermaid model through generated type dispatch."""
+{% for row in types %}    if isinstance(diagram, {{ row.modelClass }}):
+        return {{ row.renderFunction }}(diagram)
+{% endfor %}    raise ValueError(f"Unknown diagram type: {type(diagram)!r}")
+
+
+def render_model(diagram: MermaidDiagram) -> str:
+    """Compatibility name for generated render dispatch."""
+    return render_diagram(diagram)

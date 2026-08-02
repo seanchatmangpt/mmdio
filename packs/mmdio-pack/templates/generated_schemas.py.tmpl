@@ -4,11 +4,30 @@ force: true
 sparql:
   top_models: |
     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?diagramId ?modelClass WHERE { ?type mer:pythonSupport true ; mer:pythonInternalId ?diagramId ; mer:pythonModelClass ?modelClass . } ORDER BY ?diagramId
+    SELECT ?diagramId ?internalId ?modelClass WHERE {
+      ?type mer:pythonSupport true ;
+            mer:diagramId ?diagramId ;
+            mer:pythonInternalId ?internalId ;
+            mer:pythonModelClass ?modelClass .
+    } ORDER BY ?internalId
 ---
 """GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`."""
+
 {% for row in top_models %}from mmdio.engine.models import {{ row.modelClass }}
 {% endfor %}
 GENERATED_JSON_SCHEMAS = {
-{% for row in top_models %}    "{{ row.diagramId }}": {{ row.modelClass }}.model_json_schema(),
+{% for row in top_models %}    "{{ row.internalId }}": {{ row.modelClass }}.model_json_schema(),
 {% endfor %}}
+
+GENERATED_SCHEMA_ALIASES = {
+{% for row in top_models %}{% if row.diagramId != row.internalId %}    "{{ row.diagramId }}": "{{ row.internalId }}",
+{% endif %}{% endfor %}}
+
+
+def schema_for_type(diagram_type: str) -> dict[str, object]:
+    """Return the generated JSON schema for a canonical or parser type ID."""
+    schema_key = GENERATED_SCHEMA_ALIASES.get(diagram_type, diagram_type)
+    try:
+        return GENERATED_JSON_SCHEMAS[schema_key]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported diagram type: {diagram_type}") from exc

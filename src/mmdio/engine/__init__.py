@@ -1,20 +1,13 @@
-"""Mermaid diagram parsing, rendering, and operations."""
+"""Mermaid diagram parsing, rendering, schemas, and topology operations."""
 
 from __future__ import annotations
 
-from mmdio.engine.enums import (
-    C4Level,
-    CardinityType,
-    MessageType,
-    NodeShape,
-    ParticipantType,
-    RelationshipType,
-    TaskStatus,
-)
 from mmdio.engine.models import (
     C4Diagram,
     C4Element,
+    C4Level,
     C4Relationship,
+    CardinityType,
     ClassDefinition,
     ClassDiagram,
     ClassMember,
@@ -33,10 +26,14 @@ from mmdio.engine.models import (
     GitCommit,
     GitGraph,
     MermaidDiagram,
+    MessageType,
     Mindmap,
     MindmapNode,
+    NodeShape,
+    ParticipantType,
     PieChart,
     PieSlice,
+    RelationshipType,
     SankeyDiagram,
     SankeyFlow,
     SequenceDiagram,
@@ -44,6 +41,7 @@ from mmdio.engine.models import (
     SequenceParticipant,
     State,
     StateDiagram,
+    TaskStatus,
     Transition,
 )
 from mmdio.engine.ops import diff, merge, validate_topology
@@ -63,7 +61,9 @@ from mmdio.engine.parser import (
     parse_sequence,
     parse_state,
 )
-from mmdio.engine.render_dispatch import render_diagram
+from mmdio.engine.render_dispatch import render_diagram, render_model
+from mmdio.engine.schemas import schema_for_type
+from mmdio.engine.supported import SUPPORTED_TYPES, is_supported
 
 __all__ = [
     "C4Diagram",
@@ -99,6 +99,7 @@ __all__ = [
     "PieChart",
     "PieSlice",
     "RelationshipType",
+    "SUPPORTED_TYPES",
     "SankeyDiagram",
     "SankeyFlow",
     "SequenceDiagram",
@@ -109,6 +110,7 @@ __all__ = [
     "TaskStatus",
     "Transition",
     "diff",
+    "is_supported",
     "merge",
     "parse_c4",
     "parse_class",
@@ -123,5 +125,7 @@ __all__ = [
     "parse_sequence",
     "parse_state",
     "render_diagram",
+    "render_model",
+    "schema_for_type",
     "validate_topology",
 ]
