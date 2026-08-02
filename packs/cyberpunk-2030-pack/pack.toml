@@ -1,46 +1,4 @@
-[package]
+[pack]
 name = "cyberpunk-2030"
 version = "0.1.0"
-description = "Comprehensive combinatorial dependency mapping for 12 projects (6 Nuxt, 6 Next.js) and 845 unique packages. Generates dependency matrices, version conflict reports, and unified upgrade strategies."
-authors = ["Sean Chatman <xpointsh@gmail.com>"]
-
-[ggen]
-# RDF ontology source
-ontology = "ontology.ttl"
-
-# Code generation targets
-[[ggen.template]]
-name = "generated_dependency_matrix.py"
-source = "templates/generated_dependency_matrix.py.tmpl"
-output = "src/cyberpunk/dependency_matrix.py"
-description = "Combinatorial project × package matrix with version conflict detection"
-
-[[ggen.template]]
-name = "generated_dependency_report"
-source = "templates/generated_dependency_report.md.tmpl"
-output = "docs/DEPENDENCY_LANDSCAPE.md"
-description = "Complete dependency landscape documentation with category stratification"
-
-# Validation gates
-[[ggen.gate]]
-name = "project_completeness"
-source = "gates/010_all_projects_defined.rq"
-description = "Ensure all 12 projects have RDF definitions"
-
-[[ggen.gate]]
-name = "no_undefined_categories"
-source = "gates/020_categories_stratified.rq"
-description = "Validate all packages are categorized"
-
-[[ggen.gate]]
-name = "version_conflict_detection"
-source = "gates/030_detect_version_conflicts.rq"
-description = "Flag packages with multiple incompatible version ranges"
-
-[metadata]
-generated_files = 2
-total_packages = 845
-total_projects = 12
-framework_split = { nuxt = 6, nextjs = 6 }
-categories = 10
-gates = 3
+description = "Dependency mapping for 845 packages across 12 projects (6 Nuxt, 6 Next.js) with conflict detection and unified strategies"

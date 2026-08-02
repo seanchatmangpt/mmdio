@@ -1,6 +1,3 @@
----
-to: "src/cyberpunk/dependency_matrix.py"
----
 
 """GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
 
