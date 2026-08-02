@@ -1,137 +1,309 @@
-"""Specialized Mermaid renderers.
+"""Render admitted mmdio models as Mermaid source text.
 
-Models and dispatch metadata are generated from RDF. Rendering remains specialized
-because Mermaid syntax requires conditional branches, enum-to-token maps, escaping,
-and recursion that a fixed row-format template cannot lawfully reproduce.
+The model graph and dispatch metadata are generated from RDF. Renderers remain
+specialized because Mermaid syntax requires conditional tokens, escaping, and
+recursive traversal that fixed row-format templates cannot represent safely.
 """
+
 from __future__ import annotations
-from mmdio.engine.models import *  # noqa: F401,F403
+
+from typing import TYPE_CHECKING
+
+from mmdio.engine.enums import (
+    C4Level,
+    CardinityType,
+    MessageType,
+    NodeShape,
+    RelationshipType,
+)
+from mmdio.engine.models import GitBranch
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from mmdio.engine.models import (
+        C4Diagram,
+        ClassDiagram,
+        ERDiagram,
+        FlowchartDiagram,
+        GanttChart,
+        GitGraph,
+        Mindmap,
+        MindmapNode,
+        PieChart,
+        SankeyDiagram,
+        SequenceDiagram,
+        StateDiagram,
+    )
+
+_NODE_MARKERS: Mapping[NodeShape, tuple[str, str]] = {
+    NodeShape.RECTANGLE: ("[", "]"),
+    NodeShape.CIRCLE: ("((", "))"),
+    NodeShape.ELLIPSE: ("(", ")"),
+    NodeShape.DIAMOND: ("{", "}"),
+    NodeShape.HEXAGON: ("{{", "}}"),
+    NodeShape.PARALLELOGRAM: ("[\\", "\\]"),
+    NodeShape.TRAPEZOID: ("[/", "/]"),
+    NodeShape.DOCUMENT: ("[\\", "\\]"),
+    NodeShape.CYLINDER: ("[(", ")]"),
+    NodeShape.SUBROUTINE: ("[[", "]]"),
+}
+_EDGE_ARROWS: Mapping[str, str] = {
+    "solid": "-->",
+    "dotted": "-.->",
+    "thick": "==>",
+}
+_MESSAGE_ARROWS: Mapping[MessageType, str] = {
+    MessageType.SYNC: "->>",
+    MessageType.ASYNC: "-->>",
+    MessageType.RETURN: "-->>",
+    MessageType.AUTONUMBER: "->>",
+}
+_CLASS_ARROWS: Mapping[RelationshipType, str] = {
+    RelationshipType.INHERITANCE: "<|--",
+    RelationshipType.REALIZATION: "--|>",
+    RelationshipType.COMPOSITION: "*--",
+    RelationshipType.AGGREGATION: "o--",
+    RelationshipType.ASSOCIATION: "-->",
+    RelationshipType.DEPENDENCY: "..>",
+    RelationshipType.LINK: "--",
+}
+_ER_CARDINALITIES: Mapping[CardinityType, str] = {
+    CardinityType.ONE_TO_ONE: "||--||",
+    CardinityType.ONE_TO_MANY: "||--o{",
+    CardinityType.MANY_TO_ONE: "}o--||",
+    CardinityType.MANY_TO_MANY: "}o--o{",
+    CardinityType.MANY_TO_MANY_MARKED: "}|--{|",
+    CardinityType.ZERO_OR_ONE: "|o--o|",
+    CardinityType.ONE: "||--||",
+    CardinityType.ZERO_OR_MANY: "||--o{",
+    CardinityType.MANY: "}o--o{",
+}
+_C4_FUNCTIONS: Mapping[C4Level, str] = {
+    C4Level.C1: "System",
+    C4Level.C2: "Container",
+    C4Level.C3: "Component",
+    C4Level.C4: "System",
+}
 
 
-def _q(value: str) -> str:
+def _quote(value: str) -> str:
+    """Escape a value embedded in a double-quoted Mermaid token."""
     return value.replace('"', '\\"')
 
 
-def render_flowchart(d: FlowchartDiagram) -> str:
-    lines=[f"graph {d.direction}"]
-    markers={NodeShape.RECTANGLE:("[","]"),NodeShape.CIRCLE:("((","))"),NodeShape.ELLIPSE:("(",")"),NodeShape.DIAMOND:("{","}"),NodeShape.HEXAGON:("{{","}}"),NodeShape.TRAPEZOID:("[/","/]"),NodeShape.PARALLELOGRAM:("[\\","\\]"),NodeShape.DOCUMENT:("[\\","\\]"),NodeShape.CYLINDER:("[(",")]"),NodeShape.SUBROUTINE:("[[","]]"),}
-    arrows={"solid":"-->","dotted":"-.->","thick":"==>"}
-    for n in d.nodes:
-        op,cl=markers.get(n.shape,("[","]")); lines.append(f'{n.id}{op}{_q(n.label)}{cl}')
-    for e in d.edges:
-        arrow=arrows.get(e.style or "solid","-->")
-        lines.append(f'{e.source} {arrow}|{_q(e.label)}| {e.target}' if e.label else f'{e.source} {arrow} {e.target}')
+def render_flowchart(diagram: FlowchartDiagram) -> str:
+    """Render a flowchart diagram."""
+    lines = [f"graph {diagram.direction}"]
+    for node in diagram.nodes:
+        opening, closing = _NODE_MARKERS.get(node.shape, ("[", "]"))
+        lines.append(f"{node.id}{opening}{_quote(node.label)}{closing}")
+
+    for edge in diagram.edges:
+        arrow = _EDGE_ARROWS.get(edge.style or "solid", "-->")
+        if edge.label:
+            lines.append(
+                f"{edge.source} {arrow}|{_quote(edge.label)}| {edge.target}",
+            )
+        else:
+            lines.append(f"{edge.source} {arrow} {edge.target}")
     return "\n".join(lines)
 
 
-def render_sequence(d: SequenceDiagram) -> str:
-    lines=["sequenceDiagram"]
-    if d.title: lines.append(f"    title {d.title}")
-    for p in d.participants: lines.append(f"    {p.type} {p.id} as {p.name}")
-    arrows={MessageType.SYNC:"->>",MessageType.ASYNC:"-->>",MessageType.RETURN:"-->>",MessageType.AUTONUMBER:"->>"}
-    for msg in sorted(d.messages,key=lambda x:x.sequence_number or 0): lines.append(f"    {msg.from_participant}{arrows.get(msg.type,'->>')}{msg.to_participant}: {_q(msg.label)}")
+def render_sequence(diagram: SequenceDiagram) -> str:
+    """Render a sequence diagram."""
+    lines = ["sequenceDiagram"]
+    if diagram.title:
+        lines.append(f"    title {diagram.title}")
+    for participant in diagram.participants:
+        lines.append(
+            f"    {participant.type} {participant.id} as {participant.name}",
+        )
+    for message in sorted(
+        diagram.messages,
+        key=lambda item: item.sequence_number or 0,
+    ):
+        arrow = _MESSAGE_ARROWS.get(message.type, "->>")
+        lines.append(
+            f"    {message.from_participant}{arrow}{message.to_participant}: "
+            f"{_quote(message.label)}",
+        )
     return "\n".join(lines)
 
 
-def render_class(d: ClassDiagram) -> str:
-    lines=["classDiagram"]
-    for c in d.classes:
-        lines.append(f"    class {c.name} {{")
-        for a in c.members: lines.append(f"        {a.visibility}{(a.type+' ') if a.type else ''}{a.name}")
-        for op in c.methods:
-            sig=op.signature or f"{op.name}()"; suffix=f" {op.return_type}" if op.return_type else ""
-            lines.append(f"        {op.visibility}{sig}{suffix}")
+def render_class(diagram: ClassDiagram) -> str:
+    """Render a class diagram."""
+    lines = ["classDiagram"]
+    for class_definition in diagram.classes:
+        lines.append(f"    class {class_definition.name} {{")
+        for member in class_definition.members:
+            member_type = f"{member.type} " if member.type else ""
+            lines.append(f"        {member.visibility}{member_type}{member.name}")
+        for method in class_definition.methods:
+            signature = method.signature or f"{method.name}()"
+            return_type = f" {method.return_type}" if method.return_type else ""
+            lines.append(f"        {method.visibility}{signature}{return_type}")
         lines.append("    }")
-    arrows={RelationshipType.INHERITANCE:"<|--",RelationshipType.REALIZATION:"--|>",RelationshipType.COMPOSITION:"*--",RelationshipType.AGGREGATION:"o--",RelationshipType.ASSOCIATION:"-->",RelationshipType.DEPENDENCY:"..>",RelationshipType.LINK:"--"}
-    for r in d.relationships:
-        arrow=arrows.get(r.type,"-->"); lines.append(f"    {r.from_class} {arrow}|{_q(r.label)}| {r.to_class}" if r.label else f"    {r.from_class} {arrow} {r.to_class}")
+
+    for relationship in diagram.relationships:
+        arrow = _CLASS_ARROWS.get(relationship.type, "-->")
+        if relationship.label:
+            lines.append(
+                f"    {relationship.from_class} {arrow}|{_quote(relationship.label)}| "
+                f"{relationship.to_class}",
+            )
+        else:
+            lines.append(
+                f"    {relationship.from_class} {arrow} {relationship.to_class}",
+            )
     return "\n".join(lines)
 
 
-def render_state(d: StateDiagram) -> str:
-    lines=["stateDiagram-v2"]; sm={s.id:s for s in d.states}
-    for s in d.states:
-        if s.label != s.id: lines.append(f"    state \"{_q(s.label)}\" as {s.id}")
-    for tr in d.transitions:
-        src="[*]" if sm.get(tr.from_state) and sm[tr.from_state].is_initial else tr.from_state
-        dst="[*]" if sm.get(tr.to_state) and sm[tr.to_state].is_final else tr.to_state
-        bits=[]
-        if tr.event: bits.append(tr.event)
-        if tr.guard: bits.append(f"[{tr.guard}]")
-        if tr.action: bits.append(f"/ {tr.action}")
-        lines.append(f"    {src} --> {dst}" + (f" : {' '.join(bits)}" if bits else ""))
+def render_state(diagram: StateDiagram) -> str:
+    """Render a state diagram."""
+    lines = ["stateDiagram-v2"]
+    states_by_id = {state.id: state for state in diagram.states}
+    for state in diagram.states:
+        if state.label != state.id:
+            lines.append(f'    state "{_quote(state.label)}" as {state.id}')
+
+    for transition in diagram.transitions:
+        source_state = states_by_id.get(transition.from_state)
+        target_state = states_by_id.get(transition.to_state)
+        source = "[*]" if source_state and source_state.is_initial else transition.from_state
+        target = "[*]" if target_state and target_state.is_final else transition.to_state
+        details: list[str] = []
+        if transition.event:
+            details.append(transition.event)
+        if transition.guard:
+            details.append(f"[{transition.guard}]")
+        if transition.action:
+            details.append(f"/ {transition.action}")
+        suffix = f" : {' '.join(details)}" if details else ""
+        lines.append(f"    {source} --> {target}{suffix}")
     return "\n".join(lines)
 
 
-def render_er(d: ERDiagram) -> str:
-    lines=["erDiagram"]
-    cards={CardinityType.ONE_TO_ONE:"||--||",CardinityType.ONE_TO_MANY:"||--o{",CardinityType.MANY_TO_ONE:"}o--||",CardinityType.MANY_TO_MANY:"}o--o{",CardinityType.MANY_TO_MANY_MARKED:"}|--{|",CardinityType.ZERO_OR_ONE:"|o--o|",CardinityType.ONE:"||--||",CardinityType.ZERO_OR_MANY:"||--o{",CardinityType.MANY:"}o--o{"}
-    for r in d.relationships: lines.append(f"    {r.from_entity} {cards.get(r.cardinality,'||--||')} {r.to_entity}" + (f" : {r.label}" if r.label else ""))
-    for e in d.entities:
-        lines.append(f"    {e.name} {{")
-        for a in e.attributes: lines.append(f"        {a.type or 'string'} {a.name}" + (" PK" if a.is_key else ""))
+def render_er(diagram: ERDiagram) -> str:
+    """Render an entity-relationship diagram."""
+    lines = ["erDiagram"]
+    for relationship in diagram.relationships:
+        cardinality = _ER_CARDINALITIES.get(relationship.cardinality, "||--||")
+        label = f" : {relationship.label}" if relationship.label else ""
+        lines.append(
+            f"    {relationship.from_entity} {cardinality} "
+            f"{relationship.to_entity}{label}",
+        )
+
+    for entity in diagram.entities:
+        lines.append(f"    {entity.name} {{")
+        for attribute in entity.attributes:
+            key_marker = " PK" if attribute.is_key else ""
+            lines.append(f"        {attribute.type or 'string'} {attribute.name}{key_marker}")
         lines.append("    }")
     return "\n".join(lines)
 
 
-def render_gantt(d: GanttChart) -> str:
-    lines=["gantt"]
-    if d.title: lines.append(f"    title {d.title}")
+def render_gantt(diagram: GanttChart) -> str:
+    """Render a Gantt chart."""
+    lines = ["gantt"]
+    if diagram.title:
+        lines.append(f"    title {diagram.title}")
     lines.append("    dateFormat YYYY-MM-DD")
-    for t in d.tasks:
-        status="milestone" if t.milestone else str(t.status)
-        parts=[status]
-        if t.dependencies: parts.append("after "+" ".join(t.dependencies))
-        parts.extend([t.start_date,t.end_date]); lines.append(f"    {t.title} :{t.id}, "+", ".join(parts))
+    for task in diagram.tasks:
+        status = "milestone" if task.milestone else str(task.status)
+        parts = [status]
+        if task.dependencies:
+            parts.append(f"after {' '.join(task.dependencies)}")
+        parts.extend((task.start_date, task.end_date))
+        lines.append(f"    {task.title} :{task.id}, {', '.join(parts)}")
     return "\n".join(lines)
 
 
-def render_pie(d: PieChart) -> str:
-    lines=[f"pie title {d.title}" if d.title else "pie"]
-    lines.extend(f'    "{_q(s.label)}" : {s.value}' for s in d.slices)
+def render_pie(diagram: PieChart) -> str:
+    """Render a pie chart."""
+    lines = [f"pie title {diagram.title}" if diagram.title else "pie"]
+    lines.extend(f'    "{_quote(item.label)}" : {item.value}' for item in diagram.slices)
     return "\n".join(lines)
 
 
-def render_git(d: GitGraph) -> str:
-    lines=["gitGraph"]; cm={c.id:c for c in d.commits}
-    branches=d.branches or [GitBranch(name="main",commit_ids=[c.id for c in d.commits],is_main=True)]
-    for b in branches:
-        if not b.is_main and b.name!="main": lines.append(f"    branch {b.name}")
-        for cid in b.commit_ids:
-            if cid not in cm: continue
-            c=cm[cid]; line=f'    commit id: "{_q(c.id)}" message: "{_q(c.message)}"'
-            if c.tag: line += f' tag: "{_q(c.tag)}"'
+def render_git(diagram: GitGraph) -> str:
+    """Render a git graph."""
+    lines = ["gitGraph"]
+    commits_by_id = {commit.id: commit for commit in diagram.commits}
+    branches = diagram.branches or [
+        GitBranch(
+            name="main",
+            commit_ids=[commit.id for commit in diagram.commits],
+            is_main=True,
+        ),
+    ]
+    for branch in branches:
+        is_main = branch.is_main or branch.name == "main"
+        if not is_main:
+            lines.append(f"    branch {branch.name}")
+        for commit_id in branch.commit_ids:
+            commit = commits_by_id.get(commit_id)
+            if commit is None:
+                continue
+            line = (
+                f'    commit id: "{_quote(commit.id)}" '
+                f'message: "{_quote(commit.message)}"'
+            )
+            if commit.tag:
+                line += f' tag: "{_quote(commit.tag)}"'
             lines.append(line)
-        if not b.is_main and b.name!="main": lines.append("    checkout main")
+        if not is_main:
+            lines.append("    checkout main")
     return "\n".join(lines)
 
 
-def render_c4(d: C4Diagram) -> str:
-    lines=["C4Context"]
-    if d.title: lines.append(f"    title {d.title}")
-    funcs={C4Level.C1:"System",C4Level.C2:"Container",C4Level.C3:"Component",C4Level.C4:"System"}
-    for e in d.elements:
-        fn=funcs.get(e.level,"System"); args=[e.id,f'"{_q(e.name)}"']
-        if e.technology: args.append(f'"{_q(e.technology)}"')
-        if e.description: args.append(f'"{_q(e.description)}"')
-        lines.append(f"    {fn}({', '.join(args)})")
-    for r in d.relationships:
-        args=[r.from_element,r.to_element,f'"{_q(r.description)}"']
-        if r.technology: args.append(f'"{_q(r.technology)}"')
-        lines.append(f"    Rel({', '.join(args)})")
+def render_c4(diagram: C4Diagram) -> str:
+    """Render a C4 context projection."""
+    lines = ["C4Context"]
+    if diagram.title:
+        lines.append(f"    title {diagram.title}")
+    for element in diagram.elements:
+        function_name = _C4_FUNCTIONS.get(element.level, "System")
+        arguments = [element.id, f'"{_quote(element.name)}"']
+        if element.technology:
+            arguments.append(f'"{_quote(element.technology)}"')
+        if element.description:
+            arguments.append(f'"{_quote(element.description)}"')
+        lines.append(f"    {function_name}({', '.join(arguments)})")
+
+    for relationship in diagram.relationships:
+        arguments = [
+            relationship.from_element,
+            relationship.to_element,
+            f'"{_quote(relationship.description)}"',
+        ]
+        if relationship.technology:
+            arguments.append(f'"{_quote(relationship.technology)}"')
+        lines.append(f"    Rel({', '.join(arguments)})")
     return "\n".join(lines)
 
 
-def render_mindmap(d: Mindmap) -> str:
-    lines=["mindmap"]
-    if d.title: lines.append(f"    title {d.title}")
-    def walk(n: MindmapNode,depth:int):
-        lines.append("    "*(depth+1)+_q(n.label))
-        for child in n.children: walk(child,depth+1)
-    walk(d.root,0); return "\n".join(lines)
+def render_mindmap(diagram: Mindmap) -> str:
+    """Render a recursive mindmap."""
+    lines = ["mindmap"]
+    if diagram.title:
+        lines.append(f"    title {diagram.title}")
+
+    def append_node(node: MindmapNode, depth: int) -> None:
+        lines.append(f"{'    ' * (depth + 1)}{_quote(node.label)}")
+        for child in node.children:
+            append_node(child, depth + 1)
+
+    append_node(diagram.root, 0)
+    return "\n".join(lines)
 
 
-def render_sankey(d: SankeyDiagram) -> str:
-    lines=["sankey-beta"]
-    for x in d.flows: lines.append(f"    {x.source.replace(',','')},{x.target.replace(',','')},{x.value}")
+def render_sankey(diagram: SankeyDiagram) -> str:
+    """Render a Sankey diagram."""
+    lines = ["sankey-beta"]
+    for flow in diagram.flows:
+        source = flow.source.replace(",", "")
+        target = flow.target.replace(",", "")
+        lines.append(f"    {source},{target},{flow.value}")
     return "\n".join(lines)
