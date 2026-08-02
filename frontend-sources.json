@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "status": "PARTIAL_ALIVE",
+  "destination": {
+    "repository": "seanchatmangpt/mmdio",
+    "base_commit": "854a541fbfe415aeda098939d39fa011a2fdf348",
+    "path": "web"
+  },
+  "decision": {
+    "runtime": "Nuxt 4",
+    "reason": "The strongest reusable estate is Vue/Nuxt: a modern Nuxt 4 dashboard, Mermaid interaction, Nuxt UI, and typed OpenAPI tooling. Next.js repositories remain provenance sources rather than a second runtime."
+  },
+  "sources": [
+    {
+      "repository": "seanchatmangpt/neako-web",
+      "kind": "nuxt-app",
+      "evidence_blob": "3662667c817ef1496cbd71a909640669ede83ca3",
+      "admission": "architecture-source",
+      "reused": ["Nuxt 4 baseline", "Nuxt UI control-plane shell", "graph-oriented dependency direction", "test ladder"]
+    },
+    {
+      "repository": "seanchatmangpt/nuxt-ai-chatbot",
+      "kind": "nuxt-app",
+      "evidence_blobs": ["ff293d01e1540c95a80491d7b39cb06edc5b123b", "aea645cf729cfe615ea6a20f95b6dde8159bc6d7"],
+      "admission": "capability-source",
+      "reused": ["Mermaid workbench concept", "client-side diagram rendering", "FastAPI-adjacent API boundary"]
+    },
+    {
+      "repository": "seanchatmangpt/nuxt-ui",
+      "kind": "nuxt-module",
+      "evidence_blob": "c0fea501d53ee0e9d9bc1466e57877613f751266",
+      "admission": "dependency-source",
+      "reused": ["@nuxt/ui"]
+    },
+    {
+      "repository": "seanchatmangpt/nuxt-open-fetch",
+      "kind": "nuxt-module",
+      "evidence_blob": "9b7a2bafac4f5c0716e319f3a84d876e20217bad",
+      "admission": "planned-source",
+      "reused": [],
+      "deferred": "Admit after the FastAPI OpenAPI contract stabilizes."
+    },
+    {
+      "repository": "seanchatmangpt/nuxt-pro-all",
+      "kind": "nuxt-template",
+      "evidence_blob": "947d3fb292e19ea7c00ab91531796d9bc6a42ddc",
+      "admission": "reference-only",
+      "reused": ["route-family decomposition"],
+      "constraint": "No template source copied in this slice."
+    },
+    {
+      "repository": "seanchatmangpt/pro-dashboard",
+      "kind": "nuxt-template",
+      "evidence_blob": "4eebbef182ce7fc616677b47d589b7895dcd7bf1",
+      "admission": "reference-only",
+      "reused": ["board/control-plane dashboard archetype"]
+    },
+    {
+      "repository": "seanchatmangpt/pro-docs",
+      "kind": "nuxt-template",
+      "evidence_blob": "f65db94bc99c78287e47352fee53adf2f74e514f",
+      "admission": "reference-only",
+      "reused": ["documentation route archetype"]
+    },
+    {
+      "repository": "seanchatmangpt/docs",
+      "kind": "duplicate-nuxt-template",
+      "evidence_blob": "f65db94bc99c78287e47352fee53adf2f74e514f",
+      "admission": "deduplicated",
+      "reused": [],
+      "reason": "Exact package manifest blob duplicate of pro-docs."
+    },
+    {
+      "repository": "seanchatmangpt/pro-landing",
+      "kind": "nuxt-template",
+      "evidence_blob": "5d04e0c981a1d021e04a65ff9d4f8f0ab6ff3d6b",
+      "admission": "reference-only",
+      "reused": ["public narrative route archetype"]
+    },
+    {
+      "repository": "seanchatmangpt/nuxtjs-boilerplate",
+      "kind": "nuxt-boilerplate",
+      "evidence_blob": "336f4c30eb0b6f70fe26f11a58fc1c5a7ea514b0",
+      "admission": "superseded",
+      "reused": [],
+      "reason": "Nuxt 3.8 shell is older and less complete than neako-web."
+    },
+    {
+      "repository": "seanchatmangpt/nextjs-dashboard",
+      "kind": "next-app",
+      "evidence_blob": "5fe1097465bba9a40cb69ff1db5b56a210a7ff18",
+      "admission": "pattern-source",
+      "reused": ["dashboard information architecture"],
+      "constraint": "React runtime not imported."
+    },
+    {
+      "repository": "seanchatmangpt/swotdash",
+      "kind": "next-app",
+      "evidence_blob": "d928336146cbe5b37580012fedf26f7eb7518d42",
+      "admission": "pattern-source",
+      "reused": ["strategic dashboard concept"],
+      "constraint": "React runtime not imported."
+    },
+    {
+      "repository": "seanchatmangpt/nextjs-hello-world",
+      "kind": "next-boilerplate",
+      "evidence_blob": "cfeb5583d33310b9ee6ff706a19a38b31c657e79",
+      "admission": "superseded",
+      "reused": []
+    },
+    {
+      "repository": "seanchatmangpt/nextjs-boilerplate",
+      "kind": "next-boilerplate",
+      "evidence_blob": "2f6ce35bd4cd206added1afaeef0222f5656a0f3",
+      "admission": "superseded",
+      "reused": []
+    },
+    {
+      "repository": "seanchatmangpt/gitvan-nextjs-pack",
+      "kind": "automation-pack",
+      "evidence_blob": "60ad79cd0e2c4df234397679ddd64c5c61b51705",
+      "admission": "generator-reference",
+      "reused": [],
+      "reason": "Generates Next.js projects; it is not an application runtime."
+    },
+    {
+      "repository": "seanchatmangpt/FastUINuxt",
+      "kind": "false-positive",
+      "evidence_blob": "6036751c0827087d69034bf3f9ea36da798c41b6",
+      "admission": "excluded",
+      "reason": "Root manifest is a React FastUI workspace, not Nuxt."
+    },
+    {
+      "repository": "seanchatmangpt/hygen-nuxt-module",
+      "kind": "false-positive",
+      "evidence_blob": "094475f692c337fd1be6a97afd2af9dfb5ecfcd1",
+      "admission": "excluded",
+      "reason": "Manifest identifies a create-react-app Hygen package."
+    }
+  ],
+  "limitations": [
+    "GitHub global code search returned upstream 502 errors, so arbitrary deeply nested package manifests are not crowned complete.",
+    "The execution container could not resolve github.com, so the exact destination tree could not be cloned for a local Nuxt build.",
+    "No package lock was manufactured without an observed package-manager resolution."
+  ]
+}
