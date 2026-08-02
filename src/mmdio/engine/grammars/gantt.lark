@@ -24,7 +24,6 @@ statement: title_stmt
          | date_format_stmt
          | section_stmt
          | task_stmt
-         | milestone_stmt
 
 // Chart title
 title_stmt: "title"i title_text
@@ -57,12 +56,11 @@ TASK_NAME: /[^\n:]+/
 task_attrs: task_attr ("," task_attr)*
 
 task_attr: task_status
-         | task_dependency
          | task_date_spec
          | task_milestone
          | task_label
 
-task_status: "active" | "done" | "crit" | "milestone" | "active,crit" | "done,crit"
+task_status: "active" | "done" | "crit" | "active,crit" | "done,crit"
 
 task_label: IDENTIFIER
 
@@ -75,12 +73,7 @@ DATE_VALUE: /\d{4}-\d{2}-\d{2}/
 
 DURATION: /\d+[dD]/  // Duration in days (e.g., 10d, 5D)
 
-task_dependency: IDENTIFIER
-
-task_milestone: "milestone"
-
-// Milestone directive (simplified)
-milestone_stmt: task_title ":" task_attrs
+task_milestone: "milestone"i
 
 // Terminals
 IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
