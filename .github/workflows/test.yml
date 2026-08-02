@@ -38,7 +38,24 @@ jobs:
           PYTHON_VERSION: ${{ matrix.python-version }}
 
       - name: Lint app
-        run: devcontainer exec --workspace-folder . poe lint
+        id: lint
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          devcontainer exec --workspace-folder . poe lint 2>&1 | tee lint.log
+
+      - name: Upload lint diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-diagnostics-python-${{ matrix.python-version }}
+          path: lint.log
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Enforce lint result
+        if: steps.lint.outcome == 'failure'
+        run: exit 1
 
       - name: Test app
         run: devcontainer exec --workspace-folder . poe test
