@@ -4,26 +4,18 @@ force: true
 sparql:
   models: |
     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?className ?isTopLevel ?diagramId WHERE {
-      ?type mer:pythonInternalId ?diagramId ;
-            mer:hasModel ?model .
-      ?model a mer:PythonModel ;
-             mer:className ?className ;
-             mer:isTopLevel ?isTopLevel .
+    SELECT ?className ?isTopLevel ?diagramId (COALESCE(?rebuild, false) AS ?modelRebuild) WHERE {
+      ?type mer:pythonSupport true ; mer:pythonInternalId ?diagramId ; mer:hasModel ?model .
+      ?model a mer:PythonModel ; mer:className ?className ; mer:isTopLevel ?isTopLevel .
+      OPTIONAL { ?model mer:modelRebuild ?rebuild }
     } ORDER BY ?className
   fields: |
     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
     SELECT ?className ?fieldOrder ?fieldName ?fieldKind ?fieldPyType ?fieldDescription
-           (COALESCE(?d, "") AS ?fieldDefault) WHERE {
-      ?model a mer:PythonModel ;
-             mer:className ?className ;
-             mer:field ?f .
-      ?f mer:fieldOrder ?fieldOrder ;
-         mer:fieldName ?fieldName ;
-         mer:fieldKind ?fieldKind ;
-         mer:fieldPyType ?fieldPyType ;
-         mer:fieldDescription ?fieldDescription .
-      OPTIONAL { ?f mer:fieldDefault ?d }
+           (COALESCE(?d, "") AS ?fieldDefault) (COALESCE(?a, "") AS ?fieldValidationAlias) WHERE {
+      ?model a mer:PythonModel ; mer:className ?className ; mer:field ?f .
+      ?f mer:fieldOrder ?fieldOrder ; mer:fieldName ?fieldName ; mer:fieldKind ?fieldKind ; mer:fieldPyType ?fieldPyType ; mer:fieldDescription ?fieldDescription .
+      OPTIONAL { ?f mer:fieldDefault ?d } OPTIONAL { ?f mer:fieldValidationAlias ?a }
     } ORDER BY ?className ?fieldOrder
   union_models: |
     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
@@ -38,21 +30,11 @@ sparql:
              mer:isTopLevel true .
     } ORDER BY ?internalId
 ---
-"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
-
-Source: packs/mmdio-pack/templates/generated_models.py.tmpl
-Derived from: packs/mmdio-pack/ontology.ttl (mer:PythonModel / mer:PythonField)
-
-Every diagram-type AST model is a projection of the same (type, field)
-matrix — see the field-shape vocabulary comment at the top of
-packs/mmdio-pack/ontology.ttl before editing the source facts.
-"""
-
+"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`."""
 from __future__ import annotations
-
 from typing import List, Literal, Optional
-from pydantic import BaseModel, Field
-from mmdio.engine.enums import *  # noqa: F401,F403 — enum classes referenced by fieldPyType below
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
+from mmdio.engine.enums import *  # noqa: F401,F403
 
 {% for model in models %}
 class {{ model.className }}(BaseModel):

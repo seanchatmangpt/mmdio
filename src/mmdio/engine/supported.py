@@ -1,27 +1,38 @@
-"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`."""
 
-Source: packs/mmdio-pack/templates/generated_python_supported.py.tmpl
+GENERATED_PYTHON_SUPPORTED = frozenset(
+    {
+        "c4",
+        "classDiagram",
+        "er",
+        "flowchart",
+        "gantt",
+        "gitGraph",
+        "mindmap",
+        "pie",
+        "sankey",
+        "sequence",
+        "stateDiagram",
+    }
+)
+GENERATED_INTERNAL_SUPPORTED = frozenset(
+    {
+        "c4",
+        "class",
+        "er",
+        "flowchart",
+        "gantt",
+        "git",
+        "mindmap",
+        "pie",
+        "sankey",
+        "sequence",
+        "state",
+    }
+)
+SUPPORTED_TYPES = GENERATED_PYTHON_SUPPORTED
 
-Uses mer:diagramId (the canonical upstream mermaid-js id, e.g. "classDiagram")
-rather than mer:pythonInternalId, matching the pre-existing convention of
-mmdio.engine.registry._PYTHON_SUPPORTED / is_python_supported().
-"""
 
-GENERATED_PYTHON_SUPPORTED = frozenset({
-    "block",
-    "c4",
-    "classDiagram",
-    "er",
-    "flowchart",
-    "gantt",
-    "gitGraph",
-    "kanban",
-    "mindmap",
-    "pie",
-    "sankey",
-    "sequence",
-    "stateDiagram",
-    "timeline",
-    "xychart",
-
-})
+def is_supported(diagram_type: str) -> bool:
+    """Return whether a canonical or parser-internal type is executable."""
+    return diagram_type in GENERATED_PYTHON_SUPPORTED or diagram_type in GENERATED_INTERNAL_SUPPORTED

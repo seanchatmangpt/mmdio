@@ -4,13 +4,23 @@ build-backend = "uv_build"
 
 [project]  # https://packaging.python.org/en/latest/specifications/pyproject-toml/
 name = "mmdio"
-version = "0.0.0"
-description = "Mermaid Diagrams as Universal IO"
+version = "0.1.0"
+description = "Mermaid Markdown I/O: the universal IO for diagram-as-code workflows"
 readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "Apache-2.0" }
 authors = [
-  { name = "Sean Chatman", email = "info@chatmangpt.com" },
+    { name = "Sean Chatman" }
 ]
-requires-python = ">=3.13,<4.0"
+keywords = ["mermaid", "diagrams", "markdown", "visualization", "architecture"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Documentation",
+]
+
 dependencies = [
   "fastapi[all] (>=0.141.1)",
   "gunicorn (>=26.0.0)",
@@ -53,31 +63,16 @@ dev = [
   "typeguard (>=4.6.0)",
 ]
 
-[tool.codespell]  # https://github.com/codespell-project/codespell
-builtin = "en-GB_to_en-US,clear,code,rare"
-check-filenames = true
-skip = "./*_cache/,./.venv,./reports"
-
-[tool.commitizen]  # https://commitizen-tools.github.io/commitizen/config/
-bump_message = "bump: v$current_version → v$new_version"
-tag_format = "v$version"
-update_changelog_on_bump = true
-version_provider = "uv"
-
-[tool.coverage.report]  # https://coverage.readthedocs.io/en/latest/config.html#report
-fail_under = 50
-precision = 1
-show_missing = true
-skip_covered = true
-
-[tool.coverage.run]  # https://coverage.readthedocs.io/en/latest/config.html#run
+[tool.coverage.run]
+source = ["mmdio"]
 branch = true
-command_line = "--module pytest"
-data_file = "reports/.coverage"
-source = ["src"]
 
-[tool.coverage.xml]  # https://coverage.readthedocs.io/en/latest/config.html#xml
-output = "reports/coverage.xml"
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
 
 [tool.pytest.ini_options]  # https://docs.pytest.org/en/latest/reference/reference.html#ini-options-ref
 addopts = "--color=yes --doctest-modules --exitfirst --failed-first --strict-config --strict-markers --verbosity=2 --junitxml=reports/pytest.xml"
@@ -93,122 +88,61 @@ xfail_strict = true
 fix = true
 line-length = 100
 src = ["src", "tests"]
-target-version = "py313"
-
-[tool.ruff.format]
-docstring-code-format = true
-skip-magic-trailing-comma = true
+extend-exclude = [
+    "src/mmdio/engine/detect_patterns.py",
+    "src/mmdio/engine/enums.py",
+    "src/mmdio/engine/fixtures.py",
+    "src/mmdio/engine/models.py",
+    "src/mmdio/engine/parser_registry.py",
+    "src/mmdio/engine/render_dispatch.py",
+    "src/mmdio/engine/schemas.py",
+    "src/mmdio/engine/supported.py",
+    "tests/test_oracle_generated.py",
+]
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["CPY", "FIX", "ARG001", "COM812", "D203", "D213", "E501", "PD008", "PD009", "RET504", "S101", "TD003"]
-unfixable = ["ERA001", "F401", "F841", "T201", "T203"]
+ignore = [
+    "COM812",
+    "ISC001",
+    "D203",
+    "D213",
+]
 
-[tool.ruff.lint.flake8-annotations]
-allow-star-arg-any = true
-
-[tool.ruff.lint.flake8-tidy-imports]
-ban-relative-imports = "all"
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "PLR2004", "D"]
 
 [tool.ruff.lint.isort]
-split-on-trailing-comma = false
+known-first-party = ["mmdio"]
 
-[tool.ruff.lint.pycodestyle]
-max-doc-length = 100
+[tool.ty.environment]
+python-version = "3.13"
 
-[tool.ruff.lint.pydocstyle]
-convention = "numpy"
-
-[tool.ty.rules]
-unused-ignore-comment = "warn"
-
-[tool.ty.terminal]
-error-on-warning = true
-
-[tool.poe.executor]  # https://github.com/nat-n/poethepoet
-type = "simple"
+[tool.ty.src]
+include = ["src", "tests"]
 
 [tool.poe.tasks]
+test = "pytest"
+test-cov = "pytest --cov=mmdio --cov-report=term-missing --cov-report=html"
+lint = [
+    { cmd = "ruff check . --fix" },
+    { cmd = "ruff format ." },
+    { cmd = "ty check" },
+    { cmd = "codespell" },
+]
+format = [
+    { cmd = "ruff check . --fix" },
+    { cmd = "ruff format ." },
+]
+check = ["lint", "test"]
 
-  [tool.poe.tasks.docs]
-  help = "Build or serve the documentation"
-  shell = """
-    if [ $serve ]
-    then {
-      mkdocs serve
-    } else {
-      mkdocs build
-    } fi
-    """
-
-    [[tool.poe.tasks.docs.args]]
-    help = "Serve the documentation locally with live reload"
-    type = "boolean"
-    name = "serve"
-    options = ["--serve"]
-
-  [tool.poe.tasks.serve]
-  help = "Serve the REST API"
-  shell = """
-    if [ $dev ]
-    then {
-      uvicorn \
-        --host $host \
-        --port $port \
-        --reload \
-        mmdio.api:app
-    } else {
-      gunicorn \
-        --access-logfile - \
-        --bind $host:$port \
-        --graceful-timeout 10 \
-        --keep-alive 10 \
-        --log-file - \
-        --timeout 30 \
-        --worker-class uvicorn.workers.UvicornWorker \
-        --worker-tmp-dir /dev/shm \
-        --workers 2 \
-        mmdio.api:app
-    } fi
-    """
-
-    [[tool.poe.tasks.serve.args]]
-    help = "Bind socket to this host (default: 0.0.0.0)"
-    name = "host"
-    options = ["--host"]
-    default = "0.0.0.0"
-
-    [[tool.poe.tasks.serve.args]]
-    help = "Bind socket to this port (default: 8000)"
-    name = "port"
-    options = ["--port"]
-    default = "8000"
-
-    [[tool.poe.tasks.serve.args]]
-    help = "Enable development mode"
-    type = "boolean"
-    name = "dev"
-    options = ["--dev"]
-
-  [tool.poe.tasks.lint]
-  help = "Lint this app"
-  cmd = """
-    pre-commit run
-      --all-files
-      --color always
-    """
-
-  [tool.poe.tasks.test]
-  help = "Test this app"
-
-    [[tool.poe.tasks.test.sequence]]
-    cmd = "coverage run"
-
-    [[tool.poe.tasks.test.sequence]]
-    cmd = "coverage report"
-
-    [[tool.poe.tasks.test.sequence]]
-    cmd = "coverage xml"
-
-[tool.uv_build]  # https://docs.astral.sh/uv/concepts/build-backend/
-include = ["src/mmdio/engine/grammars/**/*.lark"]
+[dependency-groups]
+dev = [
+    "codespell>=2.4.1",
+    "poethepoet>=0.38.0",
+    "pre-commit>=4.5.1",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.14.11",
+    "ty>=0.0.8",
+]

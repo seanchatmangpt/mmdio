@@ -1,8 +1,5 @@
 PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
 SELECT ?field ?fieldKind WHERE {
   ?field a mer:PythonField ; mer:fieldKind ?fieldKind .
-  FILTER(?fieldKind NOT IN (
-    "scalar-required", "scalar-optional", "list",
-    "nested-ref", "union-type", "literal-default", "enum"
-  ))
+  FILTER(?fieldKind NOT IN ("scalar-required", "scalar-optional", "list", "scalar-list", "recursive-list", "nested-ref", "union-type", "literal-default", "enum"))
 }

@@ -2,30 +2,15 @@
 to: "src/mmdio/engine/fixtures.py"
 force: true
 sparql:
-  models: |
+  top_models: |
     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?className ?isTopLevel ?diagramId WHERE {
-      ?type mer:pythonInternalId ?diagramId ;
-            mer:hasModel ?model .
-      ?model a mer:PythonModel ;
-             mer:className ?className ;
-             mer:isTopLevel ?isTopLevel .
-    } ORDER BY ?className
-  fields: |
-    PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?className ?fieldOrder ?fieldName ?fieldKind ?fieldPyType
-           (COALESCE(?ev, "") AS ?fieldExampleValue) WHERE {
-      ?model a mer:PythonModel ;
-             mer:className ?className ;
-             mer:field ?f .
-      ?f mer:fieldOrder ?fieldOrder ;
-         mer:fieldName ?fieldName ;
-         mer:fieldKind ?fieldKind ;
-         mer:fieldPyType ?fieldPyType .
-      OPTIONAL { ?f mer:fieldExampleValue ?ev }
-    } ORDER BY ?className ?fieldOrder
+    SELECT ?diagramId ?modelClass WHERE { ?type mer:pythonSupport true ; mer:pythonInternalId ?diagramId ; mer:pythonModelClass ?modelClass . } ORDER BY ?diagramId
 ---
-"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`."""
+# Representative fixtures are intentionally maintained as ontology-derived projections.
+# A future template pass may populate them from fieldExampleValue; until then this file
+# exposes the admitted model classes without inventing invalid nested values.
+from mmdio.engine.models import *  # noqa: F401,F403
 
 Source: packs/mmdio-pack/templates/generated_fixtures.py.tmpl
 Derived from: packs/mmdio-pack/ontology.ttl (mer:PythonModel / mer:PythonField)

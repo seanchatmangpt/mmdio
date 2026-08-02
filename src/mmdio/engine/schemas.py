@@ -1905,3 +1905,18 @@ GENERATED_JSON_SCHEMAS = {
 
 
 }
+
+GENERATED_SCHEMA_ALIASES = {
+    "classDiagram": "class",
+    "gitGraph": "git",
+    "stateDiagram": "state",
+}
+
+
+def schema_for_type(diagram_type: str) -> dict[str, object]:
+    """Return the generated JSON schema for a canonical or parser type ID."""
+    schema_key = GENERATED_SCHEMA_ALIASES.get(diagram_type, diagram_type)
+    try:
+        return GENERATED_JSON_SCHEMAS[schema_key]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported diagram type: {diagram_type}") from exc

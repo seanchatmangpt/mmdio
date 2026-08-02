@@ -2,89 +2,32 @@
 to: "src/mmdio/engine/schemas.py"
 force: true
 sparql:
-  models: |
+  top_models: |
     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?className ?isTopLevel ?diagramId WHERE {
-      ?type mer:pythonInternalId ?diagramId ;
-            mer:hasModel ?model .
-      ?model a mer:PythonModel ;
-             mer:className ?className ;
-             mer:isTopLevel ?isTopLevel .
-    } ORDER BY ?className
-  fields: |
-    PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?className ?fieldOrder ?fieldName ?fieldKind ?fieldPyType ?fieldDescription WHERE {
-      ?model a mer:PythonModel ;
-             mer:className ?className ;
-             mer:field ?f .
-      ?f mer:fieldOrder ?fieldOrder ;
-         mer:fieldName ?fieldName ;
-         mer:fieldKind ?fieldKind ;
-         mer:fieldPyType ?fieldPyType ;
-         mer:fieldDescription ?fieldDescription .
-    } ORDER BY ?className ?fieldOrder
+    SELECT ?diagramId ?internalId ?modelClass WHERE {
+      ?type mer:pythonSupport true ;
+            mer:diagramId ?diagramId ;
+            mer:pythonInternalId ?internalId ;
+            mer:pythonModelClass ?modelClass .
+    } ORDER BY ?internalId
 ---
-"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`."""
 
-Source: packs/mmdio-pack/templates/generated_schemas.py.tmpl
-Derived from: packs/mmdio-pack/ontology.ttl (mer:PythonModel / mer:PythonField)
-
-One file, all types: GENERATED_JSON_SCHEMAS maps each top-level diagram id
-to its JSON Schema dict (nested models inlined, not $ref'd — every model
-in this codebase is at most two levels deep, so inlining stays readable).
-This is a free correctness/interop artifact, not consumed by mmdio's own
-parse/render path.
-"""
-
-_PY_TO_JSON_TYPE = {
-    "str": "string",
-    "int": "integer",
-    "float": "number",
-    "bool": "boolean",
-}
-
-
-def _json_type_for(py_type: str) -> dict:
-    """Map a bare Python type fragment to a JSON Schema type fragment."""
-    if py_type in _PY_TO_JSON_TYPE:
-        return {"type": _PY_TO_JSON_TYPE[py_type]}
-    if "|" in py_type:
-        return {"type": [_PY_TO_JSON_TYPE.get(p.strip(), "string") for p in py_type.split("|")]}
-    return {"$comment": f"nested model {py_type}", "type": "object"}
-
-
-{% for model in models %}
-_SCHEMA_{{ model.className }} = {
-    "type": "object",
-    "description": "{{ model.className }}",
-    "properties": {
-{% set model_fields = fields | filter(attribute="className", value=model.className) %}
-{% for f in model_fields %}
-        "{{ f.fieldName }}": {
-{% if f.fieldKind == "list" %}
-            "type": "array",
-            "items": _json_type_for("{{ f.fieldPyType }}"),
-{% else %}
-            **_json_type_for("{{ f.fieldPyType }}"),
-{% endif %}
-            "description": "{{ f.fieldDescription }}",
-        },
+{% for row in top_models %}from mmdio.engine.models import {{ row.modelClass }}
 {% endfor %}
-    },
-    "required": [
-{% for f in model_fields %}
-{% if f.fieldKind == "scalar-required" or f.fieldKind == "nested-ref" or f.fieldKind == "union-type" %}
-        "{{ f.fieldName }}",
-{% endif %}
-{% endfor %}
-    ],
-}
-{% endfor %}
-
 GENERATED_JSON_SCHEMAS = {
-{% for model in models %}
-{% if model.isTopLevel %}
-    "{{ model.diagramId }}": _SCHEMA_{{ model.className }},
-{% endif %}
-{% endfor %}
-}
+{% for row in top_models %}    "{{ row.internalId }}": {{ row.modelClass }}.model_json_schema(),
+{% endfor %}}
+
+GENERATED_SCHEMA_ALIASES = {
+{% for row in top_models %}{% if row.diagramId != row.internalId %}    "{{ row.diagramId }}": "{{ row.internalId }}",
+{% endif %}{% endfor %}}
+
+
+def schema_for_type(diagram_type: str) -> dict[str, object]:
+    """Return the generated JSON schema for a canonical or parser type ID."""
+    schema_key = GENERATED_SCHEMA_ALIASES.get(diagram_type, diagram_type)
+    try:
+        return GENERATED_JSON_SCHEMAS[schema_key]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported diagram type: {diagram_type}") from exc

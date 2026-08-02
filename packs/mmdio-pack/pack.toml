@@ -1,7 +1,4 @@
 [pack]
 name = "mmdio-pack"
-version = "0.1.0"
-description = "Generates first-class Python engine modules (models, enums, parser_registry, render_dispatch, render, schemas, fixtures, supported, detect_patterns) for mmdio diagram types directly from RDF facts."
-
-
-
+version = "0.2.0"
+description = "Generates RDF-admitted models, enums, registries, schemas, fixtures, support metadata, and tests; specialized Mermaid renderers remain hand-authored."

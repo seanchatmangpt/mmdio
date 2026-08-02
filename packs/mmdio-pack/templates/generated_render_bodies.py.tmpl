@@ -1,50 +1,16 @@
 ---
-to: "src/mmdio/engine/render.py"
+to: "src/mmdio/engine/render_projection.py"
 force: true
 sparql:
-  models: |
+  generic_types: |
     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?className ?isTopLevel ?diagramId ?diagramHeaderKeyword WHERE {
-      ?type mer:pythonInternalId ?diagramId ;
-            mer:hasModel ?model .
-      ?model a mer:PythonModel ;
-             mer:className ?className ;
-             mer:isTopLevel ?isTopLevel .
-      OPTIONAL { ?model mer:diagramHeaderKeyword ?diagramHeaderKeyword }
-    } ORDER BY ?className
-  fields: |
-    PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?className ?fieldOrder ?fieldName ?fieldKind ?fieldPyType
-           (COALESCE(?rf, "") AS ?fieldRenderFormat) WHERE {
-      ?model a mer:PythonModel ;
-             mer:className ?className ;
-             mer:field ?f .
-      ?f mer:fieldOrder ?fieldOrder ;
-         mer:fieldName ?fieldName ;
-         mer:fieldKind ?fieldKind ;
-         mer:fieldPyType ?fieldPyType .
-      OPTIONAL { ?f mer:fieldRenderFormat ?rf }
-    } ORDER BY ?className ?fieldOrder
+    SELECT ?internalId WHERE { ?type mer:pythonSupport true ; mer:pythonInternalId ?internalId ; mer:renderStrategy "generic" . } ORDER BY ?internalId
 ---
-"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+"""GENERATED DIAGNOSTIC PROJECTION.
 
-Source: packs/mmdio-pack/templates/generated_render_bodies.py.tmpl
-Derived from: packs/mmdio-pack/ontology.ttl (mer:PythonModel / mer:PythonField)
-
-Two-level nesting only: a top-level *Diagram model's list-kind fields
-(loop variable `_r1`), and each referenced element model's own list-kind
-fields (loop variable `_r2`). A type needing a third level is not
-representable by this template — gates/060_render_nesting_depth_limit.rq
-refuses it explicitly rather than emitting a silently-wrong render body.
-
-A top-level scalar-optional field with a fieldRenderFormat (e.g. `title`)
-becomes a conditional single-line append, emitted in fieldOrder alongside
-the list-field loops — matching the common "optional header line before
-the items" shape (timeline's `title`, block's `columns`). A top-level
-scalar field with NO fieldRenderFormat is silently skipped here: it still
-exists on the Pydantic model (for parsing/round-trip) but doesn't
-contribute to render output, which is the correct behavior for fields
-that are structural-only. Not every field needs a render projection.
+Specialized Mermaid renderers remain in src/mmdio/engine/render.py because conditional
+syntax, token maps, escaping, and recursion are not representable as fixed row formats.
+This file is intentionally empty until a type is admitted with renderStrategy=generic.
 """
 
 {% for model in models %}

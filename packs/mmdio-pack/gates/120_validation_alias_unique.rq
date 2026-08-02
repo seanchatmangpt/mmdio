@@ -1,0 +1,4 @@
+PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+SELECT ?model ?alias (COUNT(?field) AS ?count) WHERE {
+  ?model a mer:PythonModel ; mer:field ?field . ?field mer:fieldValidationAlias ?alias .
+} GROUP BY ?model ?alias HAVING (COUNT(?field) > 1)
