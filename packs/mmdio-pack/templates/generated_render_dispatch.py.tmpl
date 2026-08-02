@@ -2,27 +2,17 @@
 to: "src/mmdio/engine/render_dispatch.py"
 force: true
 sparql:
-  rows: |
+  types: |
     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?internalId ?modelModule ?modelClass ?renderModule ?renderFunction WHERE {
-      ?type a mer:DiagramType ;
-            mer:pythonInternalId ?internalId ;
-            mer:pythonSupport true ;
-            mer:pythonModelModule ?modelModule ;
-            mer:pythonModelClass ?modelClass ;
-            mer:pythonRenderModule ?renderModule ;
-            mer:pythonRenderFunction ?renderFunction .
-    } ORDER BY ?internalId
+    SELECT ?modelClass ?renderFunction WHERE { ?type mer:pythonSupport true; mer:pythonModelClass ?modelClass; mer:pythonRenderFunction ?renderFunction. } ORDER BY ?modelClass
 ---
-"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
-
-Source: packs/mmdio-pack/templates/generated_render_dispatch.py.tmpl
-"""
-
-{% for row in rows %}from {{ row.modelModule }} import {{ row.modelClass }}
-from {{ row.renderModule }} import {{ row.renderFunction }}
+"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`."""
+{% for row in types %}from mmdio.engine.models import {{ row.modelClass }}
+from mmdio.engine.render import {{ row.renderFunction }}
 {% endfor %}
 GENERATED_RENDER_DISPATCH = {
-{% for row in rows %}    {{ row.modelClass }}: {{ row.renderFunction }},
-{% endfor %}
-}
+{% for row in types %}    {{ row.modelClass }}: {{ row.renderFunction }},
+{% endfor %}}
+def render_diagram(diagram):
+    try: return GENERATED_RENDER_DISPATCH[type(diagram)](diagram)
+    except KeyError as exc: raise ValueError(f"Unknown diagram type: {type(diagram)!r}") from exc

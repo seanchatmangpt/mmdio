@@ -1,0 +1,198 @@
+@prefix mer: <https://seanchatmangpt.github.io/ontology/mermaid#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+
+# Canonical Mermaid diagram-type registry. Catalog presence does not imply executable support.
+mer:Type_c4 a mer:DiagramType ;
+  mer:diagramId "c4" ;
+  dct:title "C4 Diagram" ;
+  mer:catalogOrder 1 .
+
+mer:Type_flowchart a mer:DiagramType ;
+  mer:diagramId "flowchart" ;
+  dct:title "Flowchart" ;
+  mer:catalogOrder 2 .
+
+mer:Type_flowchart_v2 a mer:DiagramType ;
+  mer:diagramId "flowchart-v2" ;
+  dct:title "Flowchart v2" ;
+  mer:catalogOrder 3 .
+
+mer:Type_flowchart_elk a mer:DiagramType ;
+  mer:diagramId "flowchart-elk" ;
+  dct:title "Flowchart ELK" ;
+  mer:catalogOrder 4 .
+
+mer:Type_swimlane a mer:DiagramType ;
+  mer:diagramId "swimlane" ;
+  dct:title "Swimlane" ;
+  mer:catalogOrder 5 .
+
+mer:Type_er a mer:DiagramType ;
+  mer:diagramId "er" ;
+  dct:title "Entity Relationship Diagram" ;
+  mer:catalogOrder 6 .
+
+mer:Type_gitGraph a mer:DiagramType ;
+  mer:diagramId "gitGraph" ;
+  dct:title "Git Graph" ;
+  mer:catalogOrder 7 .
+
+mer:Type_gantt a mer:DiagramType ;
+  mer:diagramId "gantt" ;
+  dct:title "Gantt Chart" ;
+  mer:catalogOrder 8 .
+
+mer:Type_info a mer:DiagramType ;
+  mer:diagramId "info" ;
+  dct:title "Info Diagram" ;
+  mer:catalogOrder 9 .
+
+mer:Type_pie a mer:DiagramType ;
+  mer:diagramId "pie" ;
+  dct:title "Pie Chart" ;
+  mer:catalogOrder 10 .
+
+mer:Type_quadrantChart a mer:DiagramType ;
+  mer:diagramId "quadrantChart" ;
+  dct:title "Quadrant Chart" ;
+  mer:catalogOrder 11 .
+
+mer:Type_xychart a mer:DiagramType ;
+  mer:diagramId "xychart" ;
+  dct:title "XY Chart" ;
+  mer:catalogOrder 12 .
+
+mer:Type_requirement a mer:DiagramType ;
+  mer:diagramId "requirement" ;
+  dct:title "Requirement Diagram" ;
+  mer:catalogOrder 13 .
+
+mer:Type_sequence a mer:DiagramType ;
+  mer:diagramId "sequence" ;
+  dct:title "Sequence Diagram" ;
+  mer:catalogOrder 14 .
+
+mer:Type_classDiagram a mer:DiagramType ;
+  mer:diagramId "classDiagram" ;
+  dct:title "Class Diagram" ;
+  mer:catalogOrder 15 .
+
+mer:Type_classDiagram_v2 a mer:DiagramType ;
+  mer:diagramId "classDiagram-v2" ;
+  dct:title "Class Diagram v2" ;
+  mer:catalogOrder 16 .
+
+mer:Type_stateDiagram a mer:DiagramType ;
+  mer:diagramId "stateDiagram" ;
+  dct:title "State Diagram" ;
+  mer:catalogOrder 17 .
+
+mer:Type_stateDiagram_v2 a mer:DiagramType ;
+  mer:diagramId "stateDiagram-v2" ;
+  dct:title "State Diagram v2" ;
+  mer:catalogOrder 18 .
+
+mer:Type_journey a mer:DiagramType ;
+  mer:diagramId "journey" ;
+  dct:title "User Journey" ;
+  mer:catalogOrder 19 .
+
+mer:Type_timeline a mer:DiagramType ;
+  mer:diagramId "timeline" ;
+  dct:title "Timeline" ;
+  mer:catalogOrder 20 .
+
+mer:Type_mindmap a mer:DiagramType ;
+  mer:diagramId "mindmap" ;
+  dct:title "Mindmap" ;
+  mer:catalogOrder 21 .
+
+mer:Type_kanban a mer:DiagramType ;
+  mer:diagramId "kanban" ;
+  dct:title "Kanban" ;
+  mer:catalogOrder 22 .
+
+mer:Type_sankey a mer:DiagramType ;
+  mer:diagramId "sankey" ;
+  dct:title "Sankey" ;
+  mer:catalogOrder 23 .
+
+mer:Type_packet a mer:DiagramType ;
+  mer:diagramId "packet" ;
+  dct:title "Packet Diagram" ;
+  mer:catalogOrder 24 .
+
+mer:Type_radar a mer:DiagramType ;
+  mer:diagramId "radar" ;
+  dct:title "Radar Chart" ;
+  mer:catalogOrder 25 .
+
+mer:Type_block a mer:DiagramType ;
+  mer:diagramId "block" ;
+  dct:title "Block Diagram" ;
+  mer:catalogOrder 26 .
+
+mer:Type_treeView a mer:DiagramType ;
+  mer:diagramId "treeView" ;
+  dct:title "Tree View" ;
+  mer:catalogOrder 27 .
+
+mer:Type_architecture a mer:DiagramType ;
+  mer:diagramId "architecture" ;
+  dct:title "Architecture Diagram" ;
+  mer:catalogOrder 28 .
+
+mer:Type_eventmodeling a mer:DiagramType ;
+  mer:diagramId "eventmodeling" ;
+  dct:title "Event Modeling" ;
+  mer:catalogOrder 29 .
+
+mer:Type_ishikawa a mer:DiagramType ;
+  mer:diagramId "ishikawa" ;
+  dct:title "Ishikawa Diagram" ;
+  mer:catalogOrder 30 .
+
+mer:Type_venn a mer:DiagramType ;
+  mer:diagramId "venn" ;
+  dct:title "Venn Diagram" ;
+  mer:catalogOrder 31 .
+
+mer:Type_treemap a mer:DiagramType ;
+  mer:diagramId "treemap" ;
+  dct:title "Treemap" ;
+  mer:catalogOrder 32 .
+
+mer:Type_wardley a mer:DiagramType ;
+  mer:diagramId "wardley" ;
+  dct:title "Wardley Map" ;
+  mer:catalogOrder 33 .
+
+mer:Type_cynefin a mer:DiagramType ;
+  mer:diagramId "cynefin" ;
+  dct:title "Cynefin Diagram" ;
+  mer:catalogOrder 34 .
+
+mer:Type_railroad a mer:DiagramType ;
+  mer:diagramId "railroad" ;
+  dct:title "Railroad Diagram" ;
+  mer:catalogOrder 35 .
+
+mer:Type_railroad_ebnf a mer:DiagramType ;
+  mer:diagramId "railroad-ebnf" ;
+  dct:title "Railroad EBNF" ;
+  mer:catalogOrder 36 .
+
+mer:Type_railroad_abnf a mer:DiagramType ;
+  mer:diagramId "railroad-abnf" ;
+  dct:title "Railroad ABNF" ;
+  mer:catalogOrder 37 .
+
+mer:Type_railroad_peg a mer:DiagramType ;
+  mer:diagramId "railroad-peg" ;
+  dct:title "Railroad PEG" ;
+  mer:catalogOrder 38 .
+
+mer:Type_zenuml a mer:DiagramType ;
+  mer:diagramId "zenuml" ;
+  dct:title "ZenUML" ;
+  mer:catalogOrder 39 .

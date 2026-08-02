@@ -1,7 +1,6 @@
 PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-SELECT ?field ?fieldName WHERE {
-  ?field a mer:PythonField ;
-         mer:fieldKind "list" ;
-         mer:fieldName ?fieldName .
-  FILTER NOT EXISTS { ?field mer:fieldRenderFormat ?rf }
+SELECT ?type ?field WHERE {
+  ?type mer:pythonSupport true ; mer:renderStrategy "generic" ; mer:hasModel ?model .
+  ?model mer:field ?field . ?field mer:fieldKind "list" .
+  FILTER NOT EXISTS { ?field mer:fieldRenderFormat ?format }
 }

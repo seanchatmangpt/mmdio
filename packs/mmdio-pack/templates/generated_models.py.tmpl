@@ -4,78 +4,39 @@ force: true
 sparql:
   models: |
     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?className ?isTopLevel ?diagramId WHERE {
-      ?type mer:pythonInternalId ?diagramId ;
-            mer:hasModel ?model .
-      ?model a mer:PythonModel ;
-             mer:className ?className ;
-             mer:isTopLevel ?isTopLevel .
+    SELECT ?className ?isTopLevel ?diagramId (COALESCE(?rebuild, false) AS ?modelRebuild) WHERE {
+      ?type mer:pythonSupport true ; mer:pythonInternalId ?diagramId ; mer:hasModel ?model .
+      ?model a mer:PythonModel ; mer:className ?className ; mer:isTopLevel ?isTopLevel .
+      OPTIONAL { ?model mer:modelRebuild ?rebuild }
     } ORDER BY ?className
   fields: |
     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
     SELECT ?className ?fieldOrder ?fieldName ?fieldKind ?fieldPyType ?fieldDescription
-           (COALESCE(?d, "") AS ?fieldDefault) WHERE {
-      ?model a mer:PythonModel ;
-             mer:className ?className ;
-             mer:field ?f .
-      ?f mer:fieldOrder ?fieldOrder ;
-         mer:fieldName ?fieldName ;
-         mer:fieldKind ?fieldKind ;
-         mer:fieldPyType ?fieldPyType ;
-         mer:fieldDescription ?fieldDescription .
-      OPTIONAL { ?f mer:fieldDefault ?d }
+           (COALESCE(?d, "") AS ?fieldDefault) (COALESCE(?a, "") AS ?fieldValidationAlias) WHERE {
+      ?model a mer:PythonModel ; mer:className ?className ; mer:field ?f .
+      ?f mer:fieldOrder ?fieldOrder ; mer:fieldName ?fieldName ; mer:fieldKind ?fieldKind ; mer:fieldPyType ?fieldPyType ; mer:fieldDescription ?fieldDescription .
+      OPTIONAL { ?f mer:fieldDefault ?d } OPTIONAL { ?f mer:fieldValidationAlias ?a }
     } ORDER BY ?className ?fieldOrder
   union_models: |
     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?internalId ?modelModule ?modelClass WHERE {
-      ?type a mer:DiagramType ;
-            mer:pythonInternalId ?internalId ;
-            mer:pythonSupport true ;
-            mer:pythonModelModule ?modelModule ;
-            mer:pythonModelClass ?modelClass .
-    } ORDER BY ?internalId
+    SELECT ?internalId ?modelClass WHERE { ?type mer:pythonSupport true ; mer:pythonInternalId ?internalId ; mer:pythonModelClass ?modelClass . } ORDER BY ?internalId
 ---
-"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
-
-Source: packs/mmdio-pack/templates/generated_models.py.tmpl
-Derived from: packs/mmdio-pack/ontology.ttl (mer:PythonModel / mer:PythonField)
-
-Every diagram-type AST model is a projection of the same (type, field)
-matrix — see the field-shape vocabulary comment at the top of
-packs/mmdio-pack/ontology.ttl before editing the source facts.
-"""
-
+"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`."""
 from __future__ import annotations
-
 from typing import List, Literal, Optional
-from pydantic import BaseModel, Field
-from mmdio.engine.enums import *  # noqa: F401,F403 — enum classes referenced by fieldPyType below
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
+from mmdio.engine.enums import *  # noqa: F401,F403
 
 {% for model in models %}
 class {{ model.className }}(BaseModel):
-{% set model_fields = fields | filter(attribute="className", value=model.className) %}
-    """{{ model.className }} — generated from packs/mmdio-pack/ontology.ttl."""
-
-{% if model.isTopLevel %}
-    type: Literal["{{ model.diagramId }}"] = "{{ model.diagramId }}"
-{% endif %}
-{% for f in model_fields %}
-{% if f.fieldKind == "scalar-required" or f.fieldKind == "nested-ref" or f.fieldKind == "union-type" or f.fieldKind == "enum" %}
-    {{ f.fieldName }}: {{ f.fieldPyType }} = Field(..., description="{{ f.fieldDescription }}")
-{% elif f.fieldKind == "scalar-optional" %}
-    {{ f.fieldName }}: Optional[{{ f.fieldPyType }}] = Field(default=None, description="{{ f.fieldDescription }}")
-{% elif f.fieldKind == "list" %}
-    {{ f.fieldName }}: List[{{ f.fieldPyType }}] = Field(default_factory=list, description="{{ f.fieldDescription }}")
-{% elif f.fieldKind == "literal-default" %}
-    {{ f.fieldName }}: {{ f.fieldPyType }} = Field(default={{ f.fieldDefault }}, description="{{ f.fieldDescription }}")
-{% endif %}
+    model_config = ConfigDict(populate_by_name=True)
+{% if model.isTopLevel %}    type: Literal["{{ model.diagramId }}"] = "{{ model.diagramId }}"
+{% endif %}{% set fs = fields | filter(attribute="className", value=model.className) %}{% for f in fs %}{% set aa = ", validation_alias=AliasChoices(\"" ~ f.fieldName ~ "\", \"" ~ f.fieldValidationAlias ~ "\")" if f.fieldValidationAlias else "" %}{% if f.fieldKind in ["scalar-required","nested-ref","enum"] %}    {{ f.fieldName }}: {{ f.fieldPyType }} = Field(..., description="{{ f.fieldDescription }}"{{ aa }})
+{% elif f.fieldKind == "scalar-optional" %}    {{ f.fieldName }}: Optional[{{ f.fieldPyType }}] = Field(default=None, description="{{ f.fieldDescription }}"{{ aa }})
+{% elif f.fieldKind in ["list","scalar-list","recursive-list"] %}    {{ f.fieldName }}: List[{{ f.fieldPyType }}] = Field(default_factory=list, description="{{ f.fieldDescription }}"{{ aa }})
+{% elif f.fieldKind == "literal-default" %}    {{ f.fieldName }}: {{ f.fieldPyType }} = Field(default={{ f.fieldDefault }}, description="{{ f.fieldDescription }}"{{ aa }})
+{% endif %}{% endfor %}
 {% endfor %}
-{% endfor %}
-
-MermaidDiagram = (
-{% for row in union_models %}    {{ row.modelClass }}{% if not loop.last %} |{% endif %}
-
-{% endfor %}
-)
-"""Union type for all supported Mermaid diagram types. Use with Pydantic discriminated unions."""
-
+{% for model in models %}{% if model.modelRebuild %}{{ model.className }}.model_rebuild()
+{% endif %}{% endfor %}
+MermaidDiagram = ({% for row in union_models %}{{ row.modelClass }}{% if not loop.last %} | {% endif %}{% endfor %})

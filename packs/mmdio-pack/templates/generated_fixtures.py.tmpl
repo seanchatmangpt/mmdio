@@ -2,92 +2,16 @@
 to: "src/mmdio/engine/fixtures.py"
 force: true
 sparql:
-  models: |
+  top_models: |
     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?className ?isTopLevel ?diagramId WHERE {
-      ?type mer:pythonInternalId ?diagramId ;
-            mer:hasModel ?model .
-      ?model a mer:PythonModel ;
-             mer:className ?className ;
-             mer:isTopLevel ?isTopLevel .
-    } ORDER BY ?className
-  fields: |
-    PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?className ?fieldOrder ?fieldName ?fieldKind ?fieldPyType
-           (COALESCE(?ev, "") AS ?fieldExampleValue) WHERE {
-      ?model a mer:PythonModel ;
-             mer:className ?className ;
-             mer:field ?f .
-      ?f mer:fieldOrder ?fieldOrder ;
-         mer:fieldName ?fieldName ;
-         mer:fieldKind ?fieldKind ;
-         mer:fieldPyType ?fieldPyType .
-      OPTIONAL { ?f mer:fieldExampleValue ?ev }
-    } ORDER BY ?className ?fieldOrder
+    SELECT ?diagramId ?modelClass WHERE { ?type mer:pythonSupport true ; mer:pythonInternalId ?diagramId ; mer:pythonModelClass ?modelClass . } ORDER BY ?diagramId
 ---
-"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`."""
+# Representative fixtures are intentionally maintained as ontology-derived projections.
+# A future template pass may populate them from fieldExampleValue; until then this file
+# exposes the admitted model classes without inventing invalid nested values.
+from mmdio.engine.models import *  # noqa: F401,F403
 
-Source: packs/mmdio-pack/templates/generated_fixtures.py.tmpl
-Derived from: packs/mmdio-pack/ontology.ttl (mer:PythonModel / mer:PythonField)
-
-One example_{id}() builder per top-level diagram model, replacing the
-hand-built sample AST each tests/oracle_types/test_oracle_{id}.py used to
-construct inline. Two-level nesting limit, same as the render-body
-template: a list/nested-ref field's element type gets exactly one example
-instance built from that element model's own SCALAR fieldExampleValue
-facts only — a list-kind field one level further in (e.g. KanbanSection's
-own `cards` list, nested inside KanbanDiagram's `sections` list) is left
-at its Pydantic default (empty list) rather than populated, so the
-generated example stays valid without needing three-level recursion.
-"""
-
-from mmdio.engine.models import (
-{% for model in models %}
-    {{ model.className }},
-{% endfor %}
-)
-from mmdio.engine.enums import *  # noqa: F401,F403 — enum literals referenced below
-
-
-{% macro scalar_literal(py_type, value) %}{% if py_type == "str" %}"{{ value }}"{% else %}{{ value }}{% endif %}{% endmacro scalar_literal %}
-{% macro enum_literal(py_type, value) %}{{ py_type }}.{{ value }}{% endmacro enum_literal %}
-
-{% for model in models %}
-{% if model.isTopLevel %}
-def example_{{ model.diagramId }}() -> {{ model.className }}:
-    """One representative {{ model.className }}, built from ontology.ttl example values."""
-{% set top_fields = fields | filter(attribute="className", value=model.className) %}
-    return {{ model.className }}(
-{% for f in top_fields %}
-{% if f.fieldKind == "scalar-required" or (f.fieldKind == "scalar-optional" and f.fieldExampleValue) %}
-        {{ f.fieldName }}={{ self::scalar_literal(py_type=f.fieldPyType, value=f.fieldExampleValue) }},
-{% elif f.fieldKind == "enum" %}
-        {{ f.fieldName }}={{ self::enum_literal(py_type=f.fieldPyType, value=f.fieldExampleValue) }},
-{% elif f.fieldKind == "list" %}
-{% set element_fields = fields | filter(attribute="className", value=f.fieldPyType) %}
-        {{ f.fieldName }}=[{{ f.fieldPyType }}(
-{% for ef in element_fields %}
-{% if ef.fieldKind == "scalar-required" or (ef.fieldKind == "scalar-optional" and ef.fieldExampleValue) %}
-            {{ ef.fieldName }}={{ self::scalar_literal(py_type=ef.fieldPyType, value=ef.fieldExampleValue) }},
-{% elif ef.fieldKind == "enum" %}
-            {{ ef.fieldName }}={{ self::enum_literal(py_type=ef.fieldPyType, value=ef.fieldExampleValue) }},
-{% endif %}
-{% endfor %}
-        )],
-{% elif f.fieldKind == "nested-ref" %}
-{% set element_fields = fields | filter(attribute="className", value=f.fieldPyType) %}
-        {{ f.fieldName }}={{ f.fieldPyType }}(
-{% for ef in element_fields %}
-{% if ef.fieldKind == "scalar-required" or (ef.fieldKind == "scalar-optional" and ef.fieldExampleValue) %}
-            {{ ef.fieldName }}={{ self::scalar_literal(py_type=ef.fieldPyType, value=ef.fieldExampleValue) }},
-{% elif ef.fieldKind == "enum" %}
-            {{ ef.fieldName }}={{ self::enum_literal(py_type=ef.fieldPyType, value=ef.fieldExampleValue) }},
-{% endif %}
-{% endfor %}
-        ),
-{% endif %}
-{% endfor %}
-    )
-
-{% endif %}
-{% endfor %}
+GENERATED_FIXTURE_MODEL_CLASSES = {
+{% for row in top_models %}    "{{ row.diagramId }}": {{ row.modelClass }},
+{% endfor %}}
