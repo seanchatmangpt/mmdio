@@ -17,6 +17,7 @@ theme:
 
 nav:
   - Home: index.md
+  - PhD Thesis: thesis.md
 
 plugins:
   - search
