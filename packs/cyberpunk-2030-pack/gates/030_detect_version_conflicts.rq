@@ -1,0 +1,28 @@
+# SPARQL Gate: Detect version conflicts
+# Identifies packages used across multiple projects with incompatible versions
+# Warning (not failure): Reports high-risk version combinations
+
+PREFIX cyber: <http://cyberpunk.2030/>
+PREFIX pkg: <http://cyberpunk.2030/package/>
+PREFIX proj: <http://cyberpunk.2030/project/>
+
+# Find packages used by multiple projects
+SELECT ?package ?version_count ?projects WHERE {
+  ?package a cyber:Package ;
+    cyber:used-by ?proj1, ?proj2 ;
+    cyber:versions ?version1, ?version2 .
+
+  FILTER (?proj1 != ?proj2)
+  FILTER (?version1 != ?version2)
+
+  {
+    SELECT ?package (COUNT(DISTINCT ?version) AS ?version_count) (GROUP_CONCAT(?proj; separator=", ") AS ?projects) WHERE {
+      ?package a cyber:Package ;
+        cyber:used-by ?proj ;
+        cyber:versions ?version .
+    }
+    GROUP BY ?package
+    HAVING (COUNT(DISTINCT ?version) > 1)
+  }
+}
+ORDER BY DESC(?version_count)
