@@ -1,4 +1,8 @@
-[project]
+[build-system]  # https://docs.astral.sh/uv/concepts/build-backend/
+requires = ["uv_build>=0.12.0,<0.13.0"]
+build-backend = "uv_build"
+
+[project]  # https://packaging.python.org/en/latest/specifications/pyproject-toml/
 name = "mmdio"
 version = "0.1.0"
 description = "Mermaid Markdown I/O: the universal IO for diagram-as-code workflows"
@@ -18,39 +22,45 @@ classifiers = [
 ]
 
 dependencies = [
-    "pydantic>=2.12.5",
-    "lark>=1.3.1",
+  "fastapi[all] (>=0.141.1)",
+  "gunicorn (>=26.0.0)",
+  "poethepoet (>=0.48.0)",
+  "typer (>=0.27.0)",
 ]
 
-[project.optional-dependencies]
+[project.scripts]  # https://docs.astral.sh/uv/concepts/projects/config/#command-line-interfaces
+mmdio = "mmdio.cli:app"
+
+[project.optional-dependencies]  # https://packaging.python.org/en/latest/specifications/pyproject-toml/#optional-dependencies
+all = [
+  "lark>=1.3.1",
+  "pydantic>=2.13.4",
+]
+
+[project.urls]  # https://packaging.python.org/en/latest/specifications/well-known-project-urls/#well-known-labels
+homepage = "https://github.com/seanchatmangpt/mmdio"
+source = "https://github.com/seanchatmangpt/mmdio"
+changelog = "https://github.com/seanchatmangpt/mmdio/blob/main/CHANGELOG.md"
+releasenotes = "https://github.com/seanchatmangpt/mmdio/releases"
+documentation = "https://seanchatmangpt.github.io/mmdio"
+issues = "https://github.com/seanchatmangpt/mmdio/issues"
+
+[dependency-groups]  # https://docs.astral.sh/uv/concepts/projects/dependencies/#development-dependencies
 dev = [
-    "pytest>=9.0.2",
-    "pytest-cov>=7.0.0",
-    "ruff>=0.14.11",
-    "ty>=0.0.8",
-    "pre-commit>=4.5.1",
-    "codespell>=2.4.1",
-    "poethepoet>=0.38.0",
-]
-all = []
-
-[project.scripts]
-mmdio = "mmdio.cli:main"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/mmdio"]
-
-[tool.pytest.ini_options]
-minversion = "9.0"
-testpaths = ["tests"]
-addopts = [
-    "--strict-markers",
-    "--strict-config",
-    "-ra",
+  "codespell (>=2.4.3)",
+  "commitizen (>=4.17.0)",
+  "coverage[toml] (>=7.15.2)",
+  "ipykernel (>=7.3.0)",
+  "ipython (>=9.15.0)",
+  "ipywidgets (>=8.1.8)",
+  "mkdocs-material (>=9.7.7)",
+  "pre-commit (>=4.6.1)",
+  "pytest (>=9.1.1)",
+  "pytest-mock (>=3.15.1)",
+  "pytest-xdist (>=3.8.0)",
+  "ruff (>=0.16.1)",
+  "ty (>=0.0.65)",
+  "typeguard (>=4.6.0)",
 ]
 
 [tool.coverage.run]
