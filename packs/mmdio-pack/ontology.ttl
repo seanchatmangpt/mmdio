@@ -428,7 +428,8 @@ mer:Type_flowchart
   mer:pythonRenderModule "mmdio.engine.render" ;
   mer:pythonRenderFunction "render_flowchart" ;
   mer:grammarFile "flowchart.lark" ;
-  mer:detectPattern "^\\s*flowchart\\b" .
+  mer:detectPattern "^\\s*flowchart\\b" ;
+  mer:hasModel mer:Model_FlowchartDiagram, mer:Model_FlowchartNode, mer:Model_FlowchartEdge .
 
 mer:Type_sequence
   mer:pythonSupport true ;
@@ -440,7 +441,8 @@ mer:Type_sequence
   mer:pythonRenderModule "mmdio.engine.render" ;
   mer:pythonRenderFunction "render_sequence" ;
   mer:grammarFile "sequence.lark" ;
-  mer:detectPattern "^\\s*sequencediagram\\b" .
+  mer:detectPattern "^\\s*sequencediagram\\b" ;
+  mer:hasModel mer:Model_SequenceDiagram, mer:Model_SequenceParticipant, mer:Model_SequenceMessage .
 
 mer:Type_classDiagram
   mer:pythonSupport true ;
@@ -452,7 +454,8 @@ mer:Type_classDiagram
   mer:pythonRenderModule "mmdio.engine.render" ;
   mer:pythonRenderFunction "render_class" ;
   mer:grammarFile "class_diagram.lark" ;
-  mer:detectPattern "^\\s*classdiagram\\b" .
+  mer:detectPattern "^\\s*classdiagram\\b" ;
+  mer:hasModel mer:Model_ClassDiagram, mer:Model_ClassDefinition, mer:Model_ClassMember, mer:Model_ClassMethod, mer:Model_ClassRelationship .
 
 mer:Type_stateDiagram
   mer:pythonSupport true ;
@@ -464,7 +467,8 @@ mer:Type_stateDiagram
   mer:pythonRenderModule "mmdio.engine.render" ;
   mer:pythonRenderFunction "render_state" ;
   mer:grammarFile "state.lark" ;
-  mer:detectPattern "^\\s*statediagram(-v2)?\\b" .
+  mer:detectPattern "^\\s*statediagram(-v2)?\\b" ;
+  mer:hasModel mer:Model_StateDiagram, mer:Model_StateNode, mer:Model_StateTransition .
 
 mer:Type_er
   mer:pythonSupport true ;
@@ -476,7 +480,8 @@ mer:Type_er
   mer:pythonRenderModule "mmdio.engine.render" ;
   mer:pythonRenderFunction "render_er" ;
   mer:grammarFile "er.lark" ;
-  mer:detectPattern "^\\s*erdiagram\\b" .
+  mer:detectPattern "^\\s*erdiagram\\b" ;
+  mer:hasModel mer:Model_ERDiagram, mer:Model_EREntity, mer:Model_ERAttribute, mer:Model_ERRelationship .
 
 mer:Type_gantt
   mer:pythonSupport true ;
@@ -488,7 +493,8 @@ mer:Type_gantt
   mer:pythonRenderModule "mmdio.engine.render" ;
   mer:pythonRenderFunction "render_gantt" ;
   mer:grammarFile "gantt.lark" ;
-  mer:detectPattern "^\\s*gantt\\b" .
+  mer:detectPattern "^\\s*gantt\\b" ;
+  mer:hasModel mer:Model_GanttChart, mer:Model_GanttTask, mer:Model_GanttDependency .
 
 mer:Type_pie
   mer:pythonSupport true ;
@@ -512,7 +518,8 @@ mer:Type_gitGraph
   mer:pythonRenderModule "mmdio.engine.render" ;
   mer:pythonRenderFunction "render_git" ;
   mer:grammarFile "git.lark" ;
-  mer:detectPattern "^\\s*gitgraph\\b" .
+  mer:detectPattern "^\\s*gitgraph\\b" ;
+  mer:hasModel mer:Model_GitGraph, mer:Model_GitCommit, mer:Model_GitBranch .
 
 mer:Type_c4
   mer:pythonSupport true ;
@@ -524,7 +531,8 @@ mer:Type_c4
   mer:pythonRenderModule "mmdio.engine.render" ;
   mer:pythonRenderFunction "render_c4" ;
   mer:grammarFile "c4.lark" ;
-  mer:detectPattern "^\\s*c4(context|diagram)\\b" .
+  mer:detectPattern "^\\s*c4(context|diagram)\\b" ;
+  mer:hasModel mer:Model_C4Diagram, mer:Model_C4Element, mer:Model_C4Relationship .
 
 mer:Type_mindmap
   mer:pythonSupport true ;
@@ -536,7 +544,8 @@ mer:Type_mindmap
   mer:pythonRenderModule "mmdio.engine.render" ;
   mer:pythonRenderFunction "render_mindmap" ;
   mer:grammarFile "mindmap.lark" ;
-  mer:detectPattern "^\\s*mindmap\\b" .
+  mer:detectPattern "^\\s*mindmap\\b" ;
+  mer:hasModel mer:Model_Mindmap, mer:Model_MindmapNode .
 
 mer:Type_sankey
   mer:pythonSupport true ;
@@ -589,7 +598,8 @@ mer:Type_xychart
   mer:pythonRenderModule "mmdio.engine.render" ;
   mer:pythonRenderFunction "render_xychart" ;
   mer:grammarFile "xychart.lark" ;
-  mer:detectPattern "^\\s*xychart(-beta)?\\b" .
+  mer:detectPattern "^\\s*xychart(-beta)?\\b" ;
+  mer:hasModel mer:Model_XYChartDiagram, mer:Model_XYAxis, mer:Model_DataSeries .
 
 mer:Type_block
   mer:pythonSupport true ;
@@ -688,20 +698,1058 @@ mer:Field_SankeyFlow_value a mer:PythonField ;
   mer:fieldOrder 3 ; mer:fieldName "value" ; mer:fieldKind "scalar-required" ;
   mer:fieldPyType "float" ; mer:fieldDescription "Flow value (determines width/thickness of flow)" ;
   mer:fieldExampleValue "100" .
+# ============================================================================
+# Tier 1 Expansion RDF Model & Field Triples for 10 Supported Diagram Types
+# ============================================================================
 
 # ----------------------------------------------------------------------------
-# Mindmap: DELIBERATELY NOT TRANSCRIBED.
-#
-# MindmapNode is self-referential (`children: List["MindmapNode"]`,
-# models.py:690) rendered via unbounded-depth recursion
-# (render.py's `render_node`, called recursively on each child). This is a
-# third distinct vocabulary gap beyond xychart (joined-list) and block
-# (conditional-format): recursive/self-referential model shapes. The
-# render-body template's two-level nesting limit (gate
-# 060_render_nesting_depth_limit.rq) would correctly REFUSE this if forced
-# in — a tree of unknown depth cannot be unrolled into a fixed number of
-# `_r1`/`_r2` loop levels. Stays on its original hand-written
-# model/render/test files. A `recursive-ref` field-kind emitting an
-# actually-recursive Python function (not a fixed-depth unroll) would be
-# needed to close this gap; out of scope for this pass.
+# 1. State Diagram (mer:Type_stateDiagram)
 # ----------------------------------------------------------------------------
+
+mer:Model_StateDiagram a mer:PythonModel ;
+  mer:className "StateDiagram" ;
+  mer:isTopLevel true ;
+  mer:diagramHeaderKeyword "stateDiagram-v2" ;
+  mer:field mer:Field_StateDiagram_initial_state, 
+            mer:Field_StateDiagram_states,
+            mer:Field_StateDiagram_transitions .
+
+mer:Field_StateDiagram_initial_state a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "initial_state" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Initial state identifier" ;
+  mer:fieldExampleValue "[*]" .
+
+mer:Field_StateDiagram_states a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "states" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "StateNode" ;
+  mer:fieldDescription "List of states" ;
+  mer:fieldRenderFormat "  {_r1.id}" ;
+  mer:fieldExampleValue "" .
+
+mer:Field_StateDiagram_transitions a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "transitions" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "StateTransition" ;
+  mer:fieldDescription "List of transitions between states" ;
+  mer:fieldRenderFormat "  {_r1.source} --> {_r1.target} : {_r1.label}" ;
+  mer:fieldExampleValue "" .
+
+mer:Model_StateNode a mer:PythonModel ;
+  mer:className "StateNode" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_StateNode_id, mer:Field_StateNode_label .
+
+mer:Field_StateNode_id a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "id" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "State identifier" ;
+  mer:fieldExampleValue "state_1" .
+
+mer:Field_StateNode_label a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "label" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "State display label" ;
+  mer:fieldExampleValue "Active" .
+
+mer:Model_StateTransition a mer:PythonModel ;
+  mer:className "StateTransition" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_StateTransition_source,
+            mer:Field_StateTransition_target,
+            mer:Field_StateTransition_label .
+
+mer:Field_StateTransition_source a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "source" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Source state ID" ;
+  mer:fieldExampleValue "state_1" .
+
+mer:Field_StateTransition_target a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "target" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Target state ID" ;
+  mer:fieldExampleValue "state_2" .
+
+mer:Field_StateTransition_label a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "label" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Transition label/trigger" ;
+  mer:fieldExampleValue "event" .
+
+# ----------------------------------------------------------------------------
+# 2. ER Diagram (mer:Type_er)
+# ----------------------------------------------------------------------------
+
+mer:Model_ERDiagram a mer:PythonModel ;
+  mer:className "ERDiagram" ;
+  mer:isTopLevel true ;
+  mer:diagramHeaderKeyword "erDiagram" ;
+  mer:field mer:Field_ERDiagram_entities, mer:Field_ERDiagram_relationships .
+
+mer:Field_ERDiagram_entities a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "entities" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "EREntity" ;
+  mer:fieldDescription "List of entities" ;
+  mer:fieldRenderFormat "  {_r1.name}" ;
+  mer:fieldExampleValue "" .
+
+mer:Field_ERDiagram_relationships a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "relationships" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "ERRelationship" ;
+  mer:fieldDescription "List of entity relationships" ;
+  mer:fieldRenderFormat "  {_r1.entity_a} {_r1.cardinality_a}--{_r1.cardinality_b} {_r1.entity_b} : {_r1.relation_type}" ;
+  mer:fieldExampleValue "" .
+
+mer:Model_EREntity a mer:PythonModel ;
+  mer:className "EREntity" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_EREntity_name, mer:Field_EREntity_attributes .
+
+mer:Field_EREntity_name a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "name" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Entity name" ;
+  mer:fieldExampleValue "USER" .
+
+mer:Field_EREntity_attributes a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "attributes" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "ERAttribute" ;
+  mer:fieldDescription "Entity attributes" ;
+  mer:fieldRenderFormat "    {_r2.name} {_r2.attr_type}" ;
+  mer:fieldExampleValue "" .
+
+mer:Model_ERAttribute a mer:PythonModel ;
+  mer:className "ERAttribute" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_ERAttribute_name, mer:Field_ERAttribute_attr_type .
+
+mer:Field_ERAttribute_name a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "name" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Attribute name" ;
+  mer:fieldExampleValue "id" .
+
+mer:Field_ERAttribute_attr_type a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "attr_type" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Attribute type (int, string, etc.)" ;
+  mer:fieldExampleValue "int" .
+
+mer:Model_ERRelationship a mer:PythonModel ;
+  mer:className "ERRelationship" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_ERRelationship_entity_a,
+            mer:Field_ERRelationship_entity_b,
+            mer:Field_ERRelationship_cardinality_a,
+            mer:Field_ERRelationship_cardinality_b,
+            mer:Field_ERRelationship_relation_type .
+
+mer:Field_ERRelationship_entity_a a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "entity_a" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "First entity name" ;
+  mer:fieldExampleValue "USER" .
+
+mer:Field_ERRelationship_entity_b a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "entity_b" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Second entity name" ;
+  mer:fieldExampleValue "ORDER" .
+
+mer:Field_ERRelationship_cardinality_a a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "cardinality_a" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Cardinality of entity_a side" ;
+  mer:fieldExampleValue "|o" .
+
+mer:Field_ERRelationship_cardinality_b a mer:PythonField ;
+  mer:fieldOrder 4 ;
+  mer:fieldName "cardinality_b" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Cardinality of entity_b side" ;
+  mer:fieldExampleValue "o|" .
+
+mer:Field_ERRelationship_relation_type a mer:PythonField ;
+  mer:fieldOrder 5 ;
+  mer:fieldName "relation_type" ;
+  mer:fieldKind "enum" ;
+  mer:fieldPyType "RelationshipType" ;
+  mer:fieldDescription "Type of relationship" ;
+  mer:fieldExampleValue "ASSOCIATION" .
+
+# ----------------------------------------------------------------------------
+# 3. Gantt Chart (mer:Type_gantt)
+# ----------------------------------------------------------------------------
+
+mer:Model_GanttChart a mer:PythonModel ;
+  mer:className "GanttChart" ;
+  mer:isTopLevel true ;
+  mer:diagramHeaderKeyword "gantt" ;
+  mer:field mer:Field_GanttChart_title,
+            mer:Field_GanttChart_date_format,
+            mer:Field_GanttChart_tasks .
+
+mer:Field_GanttChart_title a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "title" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Chart title" ;
+  mer:fieldExampleValue "Project Timeline" .
+
+mer:Field_GanttChart_date_format a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "date_format" ;
+  mer:fieldKind "literal-default" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Date format (YYYY-MM-DD, etc.)" ;
+  mer:fieldDefault "\"YYYY-MM-DD\"" ;
+  mer:fieldExampleValue "YYYY-MM-DD" .
+
+mer:Field_GanttChart_tasks a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "tasks" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "GanttTask" ;
+  mer:fieldDescription "List of tasks" ;
+  mer:fieldRenderFormat "  {_r1.id} : {_r1.status} , {_r1.start_date}, {_r1.end_date}" ;
+  mer:fieldExampleValue "" .
+
+mer:Model_GanttTask a mer:PythonModel ;
+  mer:className "GanttTask" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_GanttTask_id,
+            mer:Field_GanttTask_title,
+            mer:Field_GanttTask_status,
+            mer:Field_GanttTask_start_date,
+            mer:Field_GanttTask_end_date,
+            mer:Field_GanttTask_dependencies .
+
+mer:Field_GanttTask_id a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "id" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Task identifier" ;
+  mer:fieldExampleValue "task1" .
+
+mer:Field_GanttTask_title a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "title" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Task title/name" ;
+  mer:fieldExampleValue "Phase 1" .
+
+mer:Field_GanttTask_status a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "status" ;
+  mer:fieldKind "enum" ;
+  mer:fieldPyType "TaskStatus" ;
+  mer:fieldDescription "Task status (active, done, milestone, crit, etc.)" ;
+  mer:fieldExampleValue "ACTIVE" .
+
+mer:Field_GanttTask_start_date a mer:PythonField ;
+  mer:fieldOrder 4 ;
+  mer:fieldName "start_date" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Task start date" ;
+  mer:fieldExampleValue "2024-01-01" .
+
+mer:Field_GanttTask_end_date a mer:PythonField ;
+  mer:fieldOrder 5 ;
+  mer:fieldName "end_date" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Task end date" ;
+  mer:fieldExampleValue "2024-01-31" .
+
+mer:Field_GanttTask_dependencies a mer:PythonField ;
+  mer:fieldOrder 6 ;
+  mer:fieldName "dependencies" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "GanttDependency" ;
+  mer:fieldDescription "Task dependencies" ;
+  mer:fieldRenderFormat "  " ;
+  mer:fieldExampleValue "" .
+
+mer:Model_GanttDependency a mer:PythonModel ;
+  mer:className "GanttDependency" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_GanttDependency_task_id .
+
+mer:Field_GanttDependency_task_id a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "task_id" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "ID of dependent task" ;
+  mer:fieldExampleValue "task0" .
+
+# ----------------------------------------------------------------------------
+# 4. Git Graph (mer:Type_gitGraph)
+# ----------------------------------------------------------------------------
+
+mer:Model_GitGraph a mer:PythonModel ;
+  mer:className "GitGraph" ;
+  mer:isTopLevel true ;
+  mer:diagramHeaderKeyword "gitGraph" ;
+  mer:field mer:Field_GitGraph_main_branch, mer:Field_GitGraph_commits .
+
+mer:Field_GitGraph_main_branch a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "main_branch" ;
+  mer:fieldKind "literal-default" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Main branch name" ;
+  mer:fieldDefault "\"main\"" ;
+  mer:fieldExampleValue "main" .
+
+mer:Field_GitGraph_commits a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "commits" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "GitCommit" ;
+  mer:fieldDescription "List of commits" ;
+  mer:fieldRenderFormat "  commit id: \"{_r1.id}\"" ;
+  mer:fieldExampleValue "" .
+
+mer:Model_GitCommit a mer:PythonModel ;
+  mer:className "GitCommit" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_GitCommit_id, mer:Field_GitCommit_message .
+
+mer:Field_GitCommit_id a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "id" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Commit identifier (hash)" ;
+  mer:fieldExampleValue "abc1234" .
+
+mer:Field_GitCommit_message a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "message" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Commit message" ;
+  mer:fieldExampleValue "Initial commit" .
+
+mer:Model_GitBranch a mer:PythonModel ;
+  mer:className "GitBranch" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_GitBranch_name .
+
+mer:Field_GitBranch_name a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "name" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Branch name" ;
+  mer:fieldExampleValue "feature/x" .
+
+# ----------------------------------------------------------------------------
+# 5. C4 Diagram (mer:Type_c4)
+# ----------------------------------------------------------------------------
+
+mer:Model_C4Diagram a mer:PythonModel ;
+  mer:className "C4Diagram" ;
+  mer:isTopLevel true ;
+  mer:diagramHeaderKeyword "C4Context" ;
+  mer:field mer:Field_C4Diagram_title, 
+            mer:Field_C4Diagram_level,
+            mer:Field_C4Diagram_elements,
+            mer:Field_C4Diagram_relationships .
+
+mer:Field_C4Diagram_title a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "title" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Diagram title" ;
+  mer:fieldExampleValue "System Context" .
+
+mer:Field_C4Diagram_level a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "level" ;
+  mer:fieldKind "enum" ;
+  mer:fieldPyType "C4Level" ;
+  mer:fieldDescription "C4 level (C1, C2, C3, C4)" ;
+  mer:fieldExampleValue "C1" .
+
+mer:Field_C4Diagram_elements a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "elements" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "C4Element" ;
+  mer:fieldDescription "Systems, containers, or components" ;
+  mer:fieldRenderFormat "  {_r1.type}({_r1.id}, \"{_r1.name}\", \"{_r1.description}\")" ;
+  mer:fieldExampleValue "" .
+
+mer:Field_C4Diagram_relationships a mer:PythonField ;
+  mer:fieldOrder 4 ;
+  mer:fieldName "relationships" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "C4Relationship" ;
+  mer:fieldDescription "Relationships between elements" ;
+  mer:fieldRenderFormat "  Rel({_r1.source}, {_r1.target}, \"{_r1.label}\")" ;
+  mer:fieldExampleValue "" .
+
+mer:Model_C4Element a mer:PythonModel ;
+  mer:className "C4Element" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_C4Element_id,
+            mer:Field_C4Element_name,
+            mer:Field_C4Element_description,
+            mer:Field_C4Element_type .
+
+mer:Field_C4Element_id a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "id" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Element identifier" ;
+  mer:fieldExampleValue "user" .
+
+mer:Field_C4Element_name a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "name" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Element name" ;
+  mer:fieldExampleValue "User" .
+
+mer:Field_C4Element_description a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "description" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Element description" ;
+  mer:fieldExampleValue "A user of the system" .
+
+mer:Field_C4Element_type a mer:PythonField ;
+  mer:fieldOrder 4 ;
+  mer:fieldName "type" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Element type (System, Person, Container, etc.)" ;
+  mer:fieldExampleValue "Person" .
+
+mer:Model_C4Relationship a mer:PythonModel ;
+  mer:className "C4Relationship" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_C4Relationship_source,
+            mer:Field_C4Relationship_target,
+            mer:Field_C4Relationship_label .
+
+mer:Field_C4Relationship_source a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "source" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Source element ID" ;
+  mer:fieldExampleValue "user" .
+
+mer:Field_C4Relationship_target a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "target" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Target element ID" ;
+  mer:fieldExampleValue "system" .
+
+mer:Field_C4Relationship_label a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "label" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Relationship description" ;
+  mer:fieldExampleValue "uses" .
+
+# ----------------------------------------------------------------------------
+# 6. XY Chart (mer:Type_xychart)
+# ----------------------------------------------------------------------------
+
+mer:Model_XYChartDiagram a mer:PythonModel ;
+  mer:className "XYChartDiagram" ;
+  mer:isTopLevel true ;
+  mer:diagramHeaderKeyword "xychart-beta" ;
+  mer:field mer:Field_XYChartDiagram_title,
+            mer:Field_XYChartDiagram_x_axis,
+            mer:Field_XYChartDiagram_y_axis,
+            mer:Field_XYChartDiagram_series .
+
+mer:Field_XYChartDiagram_title a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "title" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Chart title" ;
+  mer:fieldExampleValue "Sales Data" .
+
+mer:Field_XYChartDiagram_x_axis a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "x_axis" ;
+  mer:fieldKind "nested-ref" ;
+  mer:fieldPyType "XYAxis" ;
+  mer:fieldDescription "X-axis configuration" ;
+  mer:fieldExampleValue "" .
+
+mer:Field_XYChartDiagram_y_axis a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "y_axis" ;
+  mer:fieldKind "nested-ref" ;
+  mer:fieldPyType "XYAxis" ;
+  mer:fieldDescription "Y-axis configuration" ;
+  mer:fieldExampleValue "" .
+
+mer:Field_XYChartDiagram_series a mer:PythonField ;
+  mer:fieldOrder 4 ;
+  mer:fieldName "series" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "DataSeries" ;
+  mer:fieldDescription "Data series to plot" ;
+  mer:fieldRenderFormat "  {_r1.series_type} {_r1.values}" ;
+  mer:fieldExampleValue "" .
+
+mer:Model_XYAxis a mer:PythonModel ;
+  mer:className "XYAxis" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_XYAxis_label,
+            mer:Field_XYAxis_values,
+            mer:Field_XYAxis_range_min,
+            mer:Field_XYAxis_range_max .
+
+mer:Field_XYAxis_label a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "label" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Axis label" ;
+  mer:fieldExampleValue "Month" .
+
+mer:Field_XYAxis_values a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "values" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "float | str" ;
+  mer:fieldDescription "Axis values or tick marks" ;
+  mer:fieldRenderFormat "    {_r2}" ;
+  mer:fieldExampleValue "" .
+
+mer:Field_XYAxis_range_min a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "range_min" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "float" ;
+  mer:fieldDescription "Minimum range (y-axis)" ;
+  mer:fieldExampleValue "" .
+
+mer:Field_XYAxis_range_max a mer:PythonField ;
+  mer:fieldOrder 4 ;
+  mer:fieldName "range_max" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "float" ;
+  mer:fieldDescription "Maximum range (y-axis)" ;
+  mer:fieldExampleValue "" .
+
+mer:Model_DataSeries a mer:PythonModel ;
+  mer:className "DataSeries" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_DataSeries_series_type, mer:Field_DataSeries_values .
+
+mer:Field_DataSeries_series_type a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "series_type" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Series type: line, bar, scatter, bubble" ;
+  mer:fieldExampleValue "line" .
+
+mer:Field_DataSeries_values a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "values" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "float | str" ;
+  mer:fieldDescription "Series data values" ;
+  mer:fieldRenderFormat "" ;
+  mer:fieldExampleValue "[10, 20, 30]" .
+
+# ----------------------------------------------------------------------------
+# 7. Flowchart Diagram (mer:Type_flowchart)
+# ----------------------------------------------------------------------------
+
+mer:Model_FlowchartDiagram a mer:PythonModel ;
+  mer:className "FlowchartDiagram" ;
+  mer:isTopLevel true ;
+  mer:diagramHeaderKeyword "flowchart" ;
+  mer:field mer:Field_FlowchartDiagram_direction, 
+            mer:Field_FlowchartDiagram_nodes,
+            mer:Field_FlowchartDiagram_edges .
+
+mer:Field_FlowchartDiagram_direction a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "direction" ;
+  mer:fieldKind "literal-default" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Layout direction: TD, LR, BT, RL" ;
+  mer:fieldDefault "\"TD\"" ;
+  mer:fieldExampleValue "TD" .
+
+mer:Field_FlowchartDiagram_nodes a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "nodes" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "FlowchartNode" ;
+  mer:fieldDescription "List of nodes in the flowchart" ;
+  mer:fieldRenderFormat "  {_r1.id}[\"{_r1.label}\"]" ;
+  mer:fieldExampleValue "" .
+
+mer:Field_FlowchartDiagram_edges a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "edges" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "FlowchartEdge" ;
+  mer:fieldDescription "List of edges/connections between nodes" ;
+  mer:fieldRenderFormat "  {_r1.source} --> {_r1.target}" ;
+  mer:fieldExampleValue "" .
+
+mer:Model_FlowchartNode a mer:PythonModel ;
+  mer:className "FlowchartNode" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_FlowchartNode_id,
+            mer:Field_FlowchartNode_label,
+            mer:Field_FlowchartNode_node_type .
+
+mer:Field_FlowchartNode_id a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "id" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Node identifier" ;
+  mer:fieldExampleValue "A" .
+
+mer:Field_FlowchartNode_label a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "label" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Node display label" ;
+  mer:fieldExampleValue "Process" .
+
+mer:Field_FlowchartNode_node_type a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "node_type" ;
+  mer:fieldKind "enum" ;
+  mer:fieldPyType "NodeShape" ;
+  mer:fieldDefault "NodeShape.RECTANGLE" ;
+  mer:fieldDescription "Node shape (rectangle, circle, diamond, etc.)" ;
+  mer:fieldExampleValue "RECTANGLE" .
+
+mer:Model_FlowchartEdge a mer:PythonModel ;
+  mer:className "FlowchartEdge" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_FlowchartEdge_source,
+            mer:Field_FlowchartEdge_target,
+            mer:Field_FlowchartEdge_label,
+            mer:Field_FlowchartEdge_edge_type .
+
+mer:Field_FlowchartEdge_source a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "source" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Source node ID" ;
+  mer:fieldExampleValue "A" .
+
+mer:Field_FlowchartEdge_target a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "target" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Target node ID" ;
+  mer:fieldExampleValue "B" .
+
+mer:Field_FlowchartEdge_label a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "label" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Optional edge label" ;
+  mer:fieldExampleValue "depends on" .
+
+mer:Field_FlowchartEdge_edge_type a mer:PythonField ;
+  mer:fieldOrder 4 ;
+  mer:fieldName "edge_type" ;
+  mer:fieldKind "literal-default" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Edge style: solid, dotted, thick" ;
+  mer:fieldDefault "\"solid\"" ;
+  mer:fieldExampleValue "solid" .
+
+# ----------------------------------------------------------------------------
+# 8. Sequence Diagram (mer:Type_sequence)
+# ----------------------------------------------------------------------------
+
+mer:Model_SequenceDiagram a mer:PythonModel ;
+  mer:className "SequenceDiagram" ;
+  mer:isTopLevel true ;
+  mer:diagramHeaderKeyword "sequenceDiagram" ;
+  mer:field mer:Field_SequenceDiagram_title,
+            mer:Field_SequenceDiagram_participants,
+            mer:Field_SequenceDiagram_messages .
+
+mer:Field_SequenceDiagram_title a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "title" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Optional diagram title" ;
+  mer:fieldExampleValue "User Interaction" .
+
+mer:Field_SequenceDiagram_participants a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "participants" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "SequenceParticipant" ;
+  mer:fieldDescription "List of sequence participants" ;
+  mer:fieldRenderFormat "  participant {_r1.id} as {_r1.name}" ;
+  mer:fieldExampleValue "" .
+
+mer:Field_SequenceDiagram_messages a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "messages" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "SequenceMessage" ;
+  mer:fieldDescription "List of messages between participants" ;
+  mer:fieldRenderFormat "  {_r1.from_id}-{_r1.message_type}->{_r1.to_id}: {_r1.label}" ;
+  mer:fieldExampleValue "" .
+
+mer:Model_SequenceParticipant a mer:PythonModel ;
+  mer:className "SequenceParticipant" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_SequenceParticipant_id,
+            mer:Field_SequenceParticipant_name,
+            mer:Field_SequenceParticipant_participant_type .
+
+mer:Field_SequenceParticipant_id a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "id" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Participant identifier" ;
+  mer:fieldExampleValue "A" .
+
+mer:Field_SequenceParticipant_name a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "name" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Participant display name" ;
+  mer:fieldExampleValue "User" .
+
+mer:Field_SequenceParticipant_participant_type a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "participant_type" ;
+  mer:fieldKind "enum" ;
+  mer:fieldPyType "ParticipantType" ;
+  mer:fieldDescription "Participant type: actor, participant" ;
+  mer:fieldExampleValue "PARTICIPANT" .
+
+mer:Model_SequenceMessage a mer:PythonModel ;
+  mer:className "SequenceMessage" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_SequenceMessage_from_id,
+            mer:Field_SequenceMessage_to_id,
+            mer:Field_SequenceMessage_label,
+            mer:Field_SequenceMessage_message_type,
+            mer:Field_SequenceMessage_sequence_number .
+
+mer:Field_SequenceMessage_from_id a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "from_id" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Source participant ID" ;
+  mer:fieldExampleValue "A" .
+
+mer:Field_SequenceMessage_to_id a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "to_id" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Target participant ID" ;
+  mer:fieldExampleValue "B" .
+
+mer:Field_SequenceMessage_label a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "label" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Message text/label" ;
+  mer:fieldExampleValue "request" .
+
+mer:Field_SequenceMessage_message_type a mer:PythonField ;
+  mer:fieldOrder 4 ;
+  mer:fieldName "message_type" ;
+  mer:fieldKind "enum" ;
+  mer:fieldPyType "MessageType" ;
+  mer:fieldDescription "Message type: sync, async, return, autonumber" ;
+  mer:fieldExampleValue "SYNC" .
+
+mer:Field_SequenceMessage_sequence_number a mer:PythonField ;
+  mer:fieldOrder 5 ;
+  mer:fieldName "sequence_number" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "int" ;
+  mer:fieldDescription "Auto-assigned message sequence number" ;
+  mer:fieldExampleValue "1" .
+
+# ----------------------------------------------------------------------------
+# 9. Class Diagram (mer:Type_classDiagram)
+# ----------------------------------------------------------------------------
+
+mer:Model_ClassDiagram a mer:PythonModel ;
+  mer:className "ClassDiagram" ;
+  mer:isTopLevel true ;
+  mer:diagramHeaderKeyword "classDiagram" ;
+  mer:field mer:Field_ClassDiagram_classes, mer:Field_ClassDiagram_relationships .
+
+mer:Field_ClassDiagram_classes a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "classes" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "ClassDefinition" ;
+  mer:fieldDescription "List of class definitions" ;
+  mer:fieldRenderFormat "  class {_r1.name}" ;
+  mer:fieldExampleValue "" .
+
+mer:Field_ClassDiagram_relationships a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "relationships" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "ClassRelationship" ;
+  mer:fieldDescription "List of relationships between classes" ;
+  mer:fieldRenderFormat "  {_r1.from_class} -- {_r1.to_class}" ;
+  mer:fieldExampleValue "" .
+
+mer:Model_ClassDefinition a mer:PythonModel ;
+  mer:className "ClassDefinition" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_ClassDefinition_name, mer:Field_ClassDefinition_members, mer:Field_ClassDefinition_methods .
+
+mer:Field_ClassDefinition_name a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "name" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Class/interface name" ;
+  mer:fieldExampleValue "Animal" .
+
+mer:Field_ClassDefinition_members a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "members" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "ClassMember" ;
+  mer:fieldDescription "List of class members" ;
+  mer:fieldRenderFormat "    {_r2.name} {_r2.type}" ;
+  mer:fieldExampleValue "" .
+
+mer:Field_ClassDefinition_methods a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "methods" ;
+  mer:fieldKind "list" ;
+  mer:fieldPyType "ClassMethod" ;
+  mer:fieldDescription "List of class methods" ;
+  mer:fieldRenderFormat "    {_r2.name}()" ;
+  mer:fieldExampleValue "" .
+
+mer:Model_ClassMember a mer:PythonModel ;
+  mer:className "ClassMember" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_ClassMember_name, mer:Field_ClassMember_type, mer:Field_ClassMember_visibility .
+
+mer:Field_ClassMember_name a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "name" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Member name" ;
+  mer:fieldExampleValue "age" .
+
+mer:Field_ClassMember_type a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "type" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Type annotation" ;
+  mer:fieldExampleValue "int" .
+
+mer:Field_ClassMember_visibility a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "visibility" ;
+  mer:fieldKind "literal-default" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Visibility modifier (+, -, #, ~)" ;
+  mer:fieldDefault "\"+\"" ;
+  mer:fieldExampleValue "+" .
+
+mer:Model_ClassMethod a mer:PythonModel ;
+  mer:className "ClassMethod" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_ClassMethod_name, mer:Field_ClassMethod_signature, mer:Field_ClassMethod_return_type, mer:Field_ClassMethod_visibility .
+
+mer:Field_ClassMethod_name a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "name" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Method name" ;
+  mer:fieldExampleValue "makeSound" .
+
+mer:Field_ClassMethod_signature a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "signature" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Full method signature" ;
+  mer:fieldExampleValue "makeSound()" .
+
+mer:Field_ClassMethod_return_type a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "return_type" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Return type annotation" ;
+  mer:fieldExampleValue "void" .
+
+mer:Field_ClassMethod_visibility a mer:PythonField ;
+  mer:fieldOrder 4 ;
+  mer:fieldName "visibility" ;
+  mer:fieldKind "literal-default" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Visibility modifier" ;
+  mer:fieldDefault "\"+\"" ;
+  mer:fieldExampleValue "+" .
+
+mer:Model_ClassRelationship a mer:PythonModel ;
+  mer:className "ClassRelationship" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_ClassRelationship_from_class, mer:Field_ClassRelationship_to_class, mer:Field_ClassRelationship_type, mer:Field_ClassRelationship_label .
+
+mer:Field_ClassRelationship_from_class a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "from_class" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Source class name" ;
+  mer:fieldExampleValue "Dog" .
+
+mer:Field_ClassRelationship_to_class a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "to_class" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Target class name" ;
+  mer:fieldExampleValue "Animal" .
+
+mer:Field_ClassRelationship_type a mer:PythonField ;
+  mer:fieldOrder 3 ;
+  mer:fieldName "type" ;
+  mer:fieldKind "enum" ;
+  mer:fieldPyType "RelationshipType" ;
+  mer:fieldDescription "Type of relationship" ;
+  mer:fieldExampleValue "INHERITANCE" .
+
+mer:Field_ClassRelationship_label a mer:PythonField ;
+  mer:fieldOrder 4 ;
+  mer:fieldName "label" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Optional relationship label" ;
+  mer:fieldExampleValue "extends" .
+
+# ----------------------------------------------------------------------------
+# 10. Mindmap Diagram (mer:Type_mindmap)
+# ----------------------------------------------------------------------------
+
+mer:Model_Mindmap a mer:PythonModel ;
+  mer:className "Mindmap" ;
+  mer:isTopLevel true ;
+  mer:diagramHeaderKeyword "mindmap" ;
+  mer:field mer:Field_Mindmap_root, mer:Field_Mindmap_title .
+
+mer:Field_Mindmap_root a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "root" ;
+  mer:fieldKind "nested-ref" ;
+  mer:fieldPyType "MindmapNode" ;
+  mer:fieldDescription "Root node of the mindmap tree" ;
+  mer:fieldRenderFormat "  {d.root.id}(({d.root.label}))" ;
+  mer:fieldExampleValue "" .
+
+mer:Field_Mindmap_title a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "title" ;
+  mer:fieldKind "scalar-optional" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Optional mindmap title" ;
+  mer:fieldExampleValue "My Mindmap" .
+
+mer:Model_MindmapNode a mer:PythonModel ;
+  mer:className "MindmapNode" ;
+  mer:isTopLevel false ;
+  mer:field mer:Field_MindmapNode_id, mer:Field_MindmapNode_label .
+
+mer:Field_MindmapNode_id a mer:PythonField ;
+  mer:fieldOrder 1 ;
+  mer:fieldName "id" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Unique node identifier" ;
+  mer:fieldExampleValue "root" .
+
+mer:Field_MindmapNode_label a mer:PythonField ;
+  mer:fieldOrder 2 ;
+  mer:fieldName "label" ;
+  mer:fieldKind "scalar-required" ;
+  mer:fieldPyType "str" ;
+  mer:fieldDescription "Node label/text" ;
+  mer:fieldExampleValue "Root Node" .
+

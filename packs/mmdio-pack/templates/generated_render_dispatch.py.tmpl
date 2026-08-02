@@ -8,10 +8,13 @@ sparql:
       ?type a mer:DiagramType ;
             mer:pythonInternalId ?internalId ;
             mer:pythonSupport true ;
+            mer:hasModel ?model ;
             mer:pythonModelModule ?modelModule ;
             mer:pythonModelClass ?modelClass ;
             mer:pythonRenderModule ?renderModule ;
             mer:pythonRenderFunction ?renderFunction .
+      ?model a mer:PythonModel ;
+             mer:isTopLevel true .
     } ORDER BY ?internalId
 ---
 """GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
@@ -26,3 +29,12 @@ GENERATED_RENDER_DISPATCH = {
 {% for row in rows %}    {{ row.modelClass }}: {{ row.renderFunction }},
 {% endfor %}
 }
+
+
+def render_diagram(d) -> str:
+    """Render any MermaidDiagram model instance to Mermaid syntax string."""
+    renderer = GENERATED_RENDER_DISPATCH.get(type(d))
+    if not renderer:
+        raise ValueError(f"Unsupported or unregistered diagram model type: {type(d)}")
+    return renderer(d)
+

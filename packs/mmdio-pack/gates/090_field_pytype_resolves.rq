@@ -9,7 +9,9 @@ SELECT ?field ?fieldName ?fieldPyType WHERE {
          mer:fieldName ?fieldName ;
          mer:fieldPyType ?fieldPyType .
   FILTER(?kind IN ("list", "nested-ref"))
+  FILTER(?fieldPyType NOT IN ("str", "int", "float", "bool", "float | str"))
   FILTER NOT EXISTS {
     ?model a mer:PythonModel ; mer:className ?fieldPyType .
   }
 }
+

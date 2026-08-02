@@ -17,9 +17,9 @@ from mmdio.engine.models import (
     ClassMember,
     ClassMethod,
     ClassRelationship,
-    Entity,
-    EntityAttribute,
+    ERAttribute as EntityAttribute,
     ERDiagram,
+    EREntity as Entity,
     ERRelationship,
     FlowchartDiagram,
     FlowchartEdge,
@@ -43,10 +43,10 @@ from mmdio.engine.models import (
     SequenceDiagram,
     SequenceMessage,
     SequenceParticipant,
-    State,
+    StateNode as State,
     StateDiagram,
     TaskStatus,
-    Transition,
+    StateTransition as Transition,
 )
 from mmdio.engine.parser import (
     parse_c4,
@@ -64,7 +64,7 @@ from mmdio.engine.parser import (
     MermaidParser,
     ParsingError,
 )
-from mmdio.engine.render_dispatch import render_diagram
+from mmdio.engine.render import render_diagram
 from mmdio.engine.ops import merge, diff, validate_topology
 
 __all__ = [

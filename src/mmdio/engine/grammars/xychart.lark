@@ -1,0 +1,53 @@
+// Production Lark EBNF grammar for XY Charts
+// Ported from mermaid-js source (github.com/mermaid-js/mermaid)
+//
+// Examples:
+//   xychart-beta
+//     title XY Chart Example
+//     x-axis [1, 2, 3, 4, 5]
+//     y-axis "Values" 0 --> 100
+//     line-series [10, 20, 30, 40, 50]
+//     bar-series [15, 25, 35, 45, 55]
+
+?start: diagram
+
+diagram: "xychart-beta"i title? x_axis y_axis series*
+
+title: "title"i title_text
+
+title_text: STRING | TITLE_CONTENT
+
+x_axis: "x-axis"i "[" axis_values "]"
+
+y_axis: "y-axis"i y_axis_content
+
+axis_values: value ("," value)*
+
+value: NUMBER | STRING
+
+y_axis_content: STRING range
+              | range
+              | STRING
+
+range: NUMBER "-->" NUMBER
+
+series: SERIES_TYPE "[" series_values "]"
+
+?series_values: value ("," value)*
+
+SERIES_TYPE: "line-series"i
+           | "bar-series"i
+           | "scatter-series"i
+           | "bubble-series"i
+
+TITLE_CONTENT: /[^\n]+/
+
+// Terminals
+STRING: /"[^"\\]*(?:\\.[^"\\]*)*"/
+      | /'[^'\\]*(?:\\.[^'\\]*)*'/
+
+NUMBER: /\d+(\.\d+)?/
+
+%import common.WS
+%ignore WS
+%ignore /%%.*$/m

@@ -52,3 +52,12 @@ GENERATED_RENDER_DISPATCH = {
     XYChartDiagram: render_xychart,
 
 }
+
+
+def render_diagram(d) -> str:
+    """Render any MermaidDiagram model instance to Mermaid syntax string."""
+    renderer = GENERATED_RENDER_DISPATCH.get(type(d))
+    if not renderer:
+        raise ValueError(f"Unsupported or unregistered diagram model type: {type(d)}")
+    return renderer(d)
+

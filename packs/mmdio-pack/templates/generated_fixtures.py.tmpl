@@ -71,6 +71,8 @@ def example_{{ model.diagramId }}() -> {{ model.className }}:
             {{ ef.fieldName }}={{ self::scalar_literal(py_type=ef.fieldPyType, value=ef.fieldExampleValue) }},
 {% elif ef.fieldKind == "enum" %}
             {{ ef.fieldName }}={{ self::enum_literal(py_type=ef.fieldPyType, value=ef.fieldExampleValue) }},
+{% elif ef.fieldKind == "list" and ef.fieldExampleValue %}
+            {{ ef.fieldName }}={{ ef.fieldExampleValue }},
 {% endif %}
 {% endfor %}
         )],
@@ -82,6 +84,8 @@ def example_{{ model.diagramId }}() -> {{ model.className }}:
             {{ ef.fieldName }}={{ self::scalar_literal(py_type=ef.fieldPyType, value=ef.fieldExampleValue) }},
 {% elif ef.fieldKind == "enum" %}
             {{ ef.fieldName }}={{ self::enum_literal(py_type=ef.fieldPyType, value=ef.fieldExampleValue) }},
+{% elif ef.fieldKind == "list" and ef.fieldExampleValue %}
+            {{ ef.fieldName }}={{ ef.fieldExampleValue }},
 {% endif %}
 {% endfor %}
         ),

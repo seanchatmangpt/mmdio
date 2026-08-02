@@ -16,6 +16,14 @@ from lark import Lark, Token, Transformer, v_args
 
 from mmdio.detect import detect_diagram_type
 from mmdio.engine import models
+from mmdio.engine.types.block_parser import BlockTransformer  # noqa: F401
+from mmdio.engine.types.kanban_parser import KanbanTransformer  # noqa: F401
+from mmdio.engine.types.timeline_parser import TimelineTransformer  # noqa: F401
+from mmdio.engine.types.xychart_parser import XYChartTransformer  # noqa: F401
+from mmdio.engine.types.block_parser import BlockTransformer  # noqa: F401
+from mmdio.engine.types.kanban_parser import KanbanTransformer  # noqa: F401
+from mmdio.engine.types.timeline_parser import TimelineTransformer  # noqa: F401
+from mmdio.engine.types.xychart_parser import XYChartTransformer  # noqa: F401
 
 
 class ParsingError(Exception):
@@ -465,6 +473,10 @@ class PieTransformer(Transformer):
         value = float(items[1]) if len(items) > 1 else 0.0
         return models.PieSlice(label=label, value=value)
 
+    def diagram(self, items: list) -> models.PieChart:
+        """Build pie chart."""
+        return self.start(items)
+
     def start(self, items: list) -> models.PieChart:
         """Build pie chart."""
         title = None
@@ -566,6 +578,10 @@ class C4Transformer(Transformer):
             description=description,
             technology=technology,
         )
+
+    def diagram(self, items: list) -> models.C4Diagram:
+        """Build C4 diagram."""
+        return self.start(items)
 
     def start(self, items: list) -> models.C4Diagram:
         """Build C4 diagram."""

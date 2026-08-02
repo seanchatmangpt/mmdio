@@ -31,8 +31,11 @@ sparql:
       ?type a mer:DiagramType ;
             mer:pythonInternalId ?internalId ;
             mer:pythonSupport true ;
+            mer:hasModel ?model ;
             mer:pythonModelModule ?modelModule ;
             mer:pythonModelClass ?modelClass .
+      ?model a mer:PythonModel ;
+             mer:isTopLevel true .
     } ORDER BY ?internalId
 ---
 """GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
@@ -60,7 +63,9 @@ class {{ model.className }}(BaseModel):
     type: Literal["{{ model.diagramId }}"] = "{{ model.diagramId }}"
 {% endif %}
 {% for f in model_fields %}
-{% if f.fieldKind == "scalar-required" or f.fieldKind == "nested-ref" or f.fieldKind == "union-type" or f.fieldKind == "enum" %}
+{% if f.fieldDefault != "" %}
+    {{ f.fieldName }}: {{ f.fieldPyType }} = Field(default={{ f.fieldDefault }}, description="{{ f.fieldDescription }}")
+{% elif f.fieldKind == "scalar-required" or f.fieldKind == "nested-ref" or f.fieldKind == "union-type" or f.fieldKind == "enum" %}
     {{ f.fieldName }}: {{ f.fieldPyType }} = Field(..., description="{{ f.fieldDescription }}")
 {% elif f.fieldKind == "scalar-optional" %}
     {{ f.fieldName }}: Optional[{{ f.fieldPyType }}] = Field(default=None, description="{{ f.fieldDescription }}")
@@ -78,4 +83,11 @@ MermaidDiagram = (
 {% endfor %}
 )
 """Union type for all supported Mermaid diagram types. Use with Pydantic discriminated unions."""
+
+# Legacy class aliases for backwards compatibility
+Entity = EREntity
+EntityAttribute = ERAttribute
+State = StateNode
+Transition = StateTransition
+
 
