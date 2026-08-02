@@ -1,0 +1,26 @@
+site_name: mmdio
+site_description: Mermaid Diagrams as Universal IO
+site_url: https://seanchatmangpt.github.io/mmdio
+repo_url: https://github.com/seanchatmangpt/mmdio
+repo_name: seanchatmangpt/mmdio
+
+strict: true
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
