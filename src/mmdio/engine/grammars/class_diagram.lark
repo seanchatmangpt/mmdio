@@ -1,0 +1,95 @@
+// Production Lark EBNF grammar for Class diagrams (UML)
+// Ported from mermaid-js source (github.com/mermaid-js/mermaid)
+//
+// Examples:
+//   classDiagram
+//     class Animal {
+//       +name: string
+//       +age: int
+//       +eat()
+//       -sleep()
+//     }
+//     class Dog {
+//       +breed: string
+//       +bark()
+//     }
+//     Animal <|-- Dog
+//
+//   classDiagram
+//     class Plane {
+//       -engines: int
+//     }
+//     Plane *-- Engine
+
+?start: diagram
+
+diagram: "classDiagram"i statement*
+
+statement: class_def
+         | relationship
+         | note_stmt
+
+// Class definition with optional body
+class_def: "class"i class_name ("{" class_member* "}")?
+
+class_name: IDENTIFIER | STRING
+
+class_member: member_name member_type?
+            | member_visibility member_name member_type?
+            | member_visibility member_name "(" method_params? ")" return_type?
+
+member_name: IDENTIFIER
+member_type: ":" type_annotation
+return_type: type_annotation
+
+member_visibility: "+" | "-" | "#" | "~"
+
+type_annotation: IDENTIFIER
+               | IDENTIFIER "[" "]"
+               | IDENTIFIER "<" IDENTIFIER ">"
+               | "string" | "int" | "boolean" | "float" | "double"
+
+method_params: method_param ("," method_param)*
+
+method_param: IDENTIFIER
+            | IDENTIFIER ":" type_annotation
+
+// Relationships between classes
+relationship: class_name rel_type class_name (rel_label)?
+
+rel_type: "--|>"                // Inheritance (abstract)
+        | "<|--"                // Inheritance (alternative)
+        | "*--"                 // Composition
+        | "--*"                 // Composition (alternative)
+        | "o--"                 // Aggregation
+        | "--o"                 // Aggregation (alternative)
+        | "-->"                 // Association
+        | "<--"                 // Association (alternative)
+        | "..|>"                // Realization
+        | "<|.."                // Realization (alternative)
+        | "..>"                 // Dependency
+        | "<.."                 // Dependency (alternative)
+        | "--"                  // Link
+
+rel_label: "|" LABEL_TEXT "|"
+
+LABEL_TEXT: /[^|]+/
+
+// Note directives
+note_stmt: "note"i note_pos class_name ":" note_text
+
+note_pos: "left of"i | "right of"i | "on"i
+
+note_text: NOTE_CONTENT
+
+NOTE_CONTENT: /[^\n]+/
+
+// Terminals
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+
+STRING: /"[^"\\]*(?:\\.[^"\\]*)*"/
+      | /'[^'\\]*(?:\\.[^'\\]*)*'/
+
+%import common.WS
+%ignore WS
+%ignore /%%.*$/m

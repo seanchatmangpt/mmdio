@@ -1,0 +1,73 @@
+// Production Lark EBNF grammar for Entity-Relationship (ER) diagrams
+// Ported from mermaid-js source (github.com/mermaid-js/mermaid)
+//
+// Examples:
+//   erDiagram
+//     CUSTOMER ||--o{ ORDER: places
+//     ORDER ||--|{ LINE-ITEM: contains
+//     LINE-ITEM }o--|| PRODUCT: "quantity"
+//
+//   erDiagram
+//     CUSTOMER {
+//       string name
+//       int id PK
+//     }
+//     ORDER {
+//       int id PK
+//       string date
+//     }
+
+?start: diagram
+
+diagram: "erDiagram"i statement*
+
+statement: entity_def
+         | entity_relationship
+
+// Entity definition (optional attributes)
+entity_def: "entity"i entity_name ("{" entity_attr* "}")?
+          | entity_name_bare ("{" entity_attr* "}")?
+
+entity_name: IDENTIFIER | STRING
+
+entity_name_bare: IDENTIFIER | STRING
+
+// Entity attributes (with optional type and constraints)
+entity_attr: attr_type? attr_name attr_constraint*
+
+attr_type: "string" | "int" | "float" | "text" | "date" | "datetime" | "blob"
+
+attr_name: IDENTIFIER
+
+attr_constraint: "PK"        // Primary Key
+               | "FK"        // Foreign Key
+               | "UK"        // Unique Key
+               | "NULL"      // Can be NULL
+
+// Relationships with cardinality notation
+entity_relationship: entity_name card_left rel_symbol card_right entity_name (rel_label)?
+
+// Cardinality markers
+card_left: "|"                // One
+         | "o"                // Zero or one
+
+card_right: "|"               // One
+          | "{"               // Many
+          | "}"               // Many (alternative)
+
+rel_symbol: "--"              // Standard relationship
+
+rel_label: ":" LABEL_TEXT
+         | "|" LABEL_TEXT "|"
+
+LABEL_TEXT: /[^\n|]+/
+
+// Terminals
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_-]*/
+
+STRING: /"[^"\\]*(?:\\.[^"\\]*)*"/
+      | /'[^'\\]*(?:\\.[^'\\]*)*'/
+
+%import common.WS
+%ignore WS
+%ignore /%%.*$/m

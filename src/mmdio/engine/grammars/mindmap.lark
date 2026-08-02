@@ -1,0 +1,54 @@
+// Production Lark EBNF grammar for Mindmap diagrams
+// Ported from mermaid-js source (github.com/mermaid-js/mermaid)
+//
+// Examples:
+//   mindmap
+//     root((Central Idea))
+//       Branch 1
+//         Sub-branch 1.1
+//         Sub-branch 1.2
+//       Branch 2
+//         Sub-branch 2.1
+//
+//   mindmap
+//     mindmap
+//       root
+//         child1
+//           grandchild1
+//           grandchild2
+//         child2
+
+?start: diagram
+
+diagram: "mindmap"i root_node
+
+// Root node can be parenthesized for emphasis
+root_node: node_content child_nodes?
+
+// Node content (label text)
+node_content: IDENTIFIER
+            | STRING
+            | "(" "(" node_label ")" ")"  // Double parens for root emphasis
+            | "[" node_label "]"          // Brackets
+            | "{" "{" node_label "}" "}"  // Braces
+
+node_label: STRING | IDENTIFIER | NODE_TEXT
+
+NODE_TEXT: /[^\n\[\]\{\}\(\)]+/
+
+// Child nodes with indentation
+child_nodes: child_node+
+
+child_node: node_content child_nodes?
+
+// Terminals
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_\s-]*/
+
+STRING: /"[^"\\]*(?:\\.[^"\\]*)*"/
+      | /'[^'\\]*(?:\\.[^'\\]*)*'/
+
+%import common.WS
+%import common.INDENT
+%import common.DEDENT
+
+%ignore WS

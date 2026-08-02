@@ -1,0 +1,64 @@
+// Production Lark EBNF grammar for State diagrams (FSM/UML)
+// Ported from mermaid-js source (github.com/mermaid-js/mermaid)
+//
+// Examples:
+//   stateDiagram-v2
+//     [*] --> Start
+//     Start --> Stop: event1
+//     Stop --> [*]
+//
+//   stateDiagram
+//     state A {
+//       [*] --> B
+//       B --> [*]
+//     }
+//     A --> C
+
+?start: diagram
+
+diagram: ("stateDiagram"i | "state"i) ("-v2"i)? statement*
+
+statement: state_def
+         | transition
+         | state_id_only
+
+// State definition (simple or composite)
+state_def: "state"i state_id ("{" statement* "}")?
+
+state_id: IDENTIFIER | STRING | "[*]"
+
+// Just declaring a state ID without content
+state_id_only: "[*]"
+
+// Transitions between states
+transition: state_id transition_type state_id (transition_label)?
+
+transition_type: "-->"               // Regular transition
+               | "-.->"              // Dotted transition
+
+transition_label: ":" transition_text
+
+transition_text: IDENTIFIER
+               | STRING
+               | TRANSITION_TEXT
+
+TRANSITION_TEXT: /[^\n]+/
+
+// Note directives
+note_stmt: "note"i note_pos state_id ":" note_text
+
+note_pos: "left of"i | "right of"i
+
+note_text: NOTE_CONTENT
+
+NOTE_CONTENT: /[^\n]+/
+
+// Terminals
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+
+STRING: /"[^"\\]*(?:\\.[^"\\]*)*"/
+      | /'[^'\\]*(?:\\.[^'\\]*)*'/
+
+%import common.WS
+%ignore WS
+%ignore /%%.*$/m

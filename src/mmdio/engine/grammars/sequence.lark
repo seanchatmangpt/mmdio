@@ -1,0 +1,131 @@
+// Production Lark EBNF grammar for Sequence diagrams
+// Ported from mermaid-js source (github.com/mermaid-js/mermaid)
+//
+// Examples:
+//   sequenceDiagram
+//     participant Alice
+//     participant Bob
+//     Alice->>Bob: Hello, how are you?
+//     Bob-->>Alice: Great! And you?
+//
+//   sequenceDiagram
+//     autonumber
+//     loop Every minute
+//       Alice->>Bob: Great!
+//     end
+
+?start: diagram
+
+diagram: "sequenceDiagram"i statement*
+
+statement: participant_stmt
+         | message_stmt
+         | autonumber_stmt
+         | block_stmt
+         | note_stmt
+
+// Participant declarations
+participant_stmt: participant_type participant_id ("as"i participant_label)?
+
+participant_type: "participant"i | "actor"i | "database"i | "box"i
+
+participant_id: IDENTIFIER | STRING
+
+participant_label: STRING | IDENTIFIER
+
+// Message declarations with various arrow types
+message_stmt: participant_id msg_arrow participant_id ":" msg_label
+            | participant_id msg_arrow participant_id
+
+msg_label: STRING | MESSAGE_TEXT
+
+// Arrow types for messages
+msg_arrow: "->>"               // Solid line with filled arrowhead (sync)
+         | "-->"               // Solid line with filled arrowhead
+         | "->>>"              // Thick solid line
+         | "-)"                // Solid line with open arrowhead (async)
+         | "--)"               // Dashed line with open arrowhead
+         | "-x"                // Solid line with cross (error)
+         | "--x"               // Dashed line with cross
+         | "->-"               // Solid line with half-open arrowhead
+         | "-"                 // Simple line
+         | "-.->"              // Dotted line
+
+// Autonumber statement
+autonumber_stmt: "autonumber"i (autonumber_param)?
+
+autonumber_param: NUMBER ("," NUMBER)?
+
+// Structural blocks (loop, alt, par, seq, break, etc.)
+block_stmt: block_start statement* block_end
+
+block_start: loop_start
+           | alt_start
+           | par_start
+           | seq_start
+           | break_start
+           | rect_start
+           | critical_start
+           | opt_start
+           | neg_start
+           | strict_start
+           | assert_start
+           | ignore_start
+           | consider_start
+           | exc_start
+
+loop_start: "loop"i block_label
+
+alt_start: "alt"i block_label ("else"i block_label)*
+
+par_start: "par"i block_label ("and"i block_label)*
+
+seq_start: "seq"i block_label
+
+break_start: "break"i block_label
+
+rect_start: "rect"i ("rgb(" NUMBER "," NUMBER "," NUMBER ")")? block_label
+
+critical_start: "critical"i (block_label)?
+
+opt_start: "opt"i block_label
+
+neg_start: "neg"i block_label
+
+strict_start: "strict"i block_label
+
+assert_start: "assert"i block_label
+
+ignore_start: "ignore"i block_label
+
+consider_start: "consider"i block_label
+
+exc_start: "exc"i block_label
+
+block_end: "end"i
+
+block_label: STRING | BLOCK_TEXT
+
+// Note directives
+note_stmt: "note"i note_pos note_for ":" NOTE_TEXT
+
+note_pos: "left of"i | "right of"i | "over"i
+
+note_for: participant_id
+        | participant_id "," participant_id
+
+// Terminals
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+
+STRING: /"[^"\\]*(?:\\.[^"\\]*)*"/
+      | /'[^'\\]*(?:\\.[^'\\]*)*'/
+
+MESSAGE_TEXT: /[^\n:]+/
+BLOCK_TEXT: /[^\n]+/
+NOTE_TEXT: /[^\n]+/
+
+NUMBER: /\d+(\.\d+)?/
+
+%import common.WS
+%ignore WS
+%ignore /%%.*$/m

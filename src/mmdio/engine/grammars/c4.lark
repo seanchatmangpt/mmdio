@@ -1,0 +1,90 @@
+// Production Lark EBNF grammar for C4 Model diagrams
+// Ported from mermaid-js source (github.com/mermaid-js/mermaid)
+//
+// Examples:
+//   C4Context
+//     System(E1, "Email System", "System for sending emails")
+//     Person(U1, "User", "A user of the email system")
+//     Rel(U1, E1, "Sends emails")
+//
+//   C4Container
+//     System(SysAlias, "Web Browser", "Allows users to use the web app")
+
+?start: diagram
+
+diagram: diagram_type statement*
+
+// C4 diagram types
+diagram_type: "C4Context"i | "C4Container"i | "C4Component"i | "C4Code"i | "c4diagram"i | "c4context"i
+
+statement: c4_element
+         | c4_relationship
+         | property_stmt
+         | note_stmt
+
+// C4 Element function calls: Person, System, Container, Component, etc.
+c4_element: element_type "(" element_args ")"
+
+element_type: "Person"i
+            | "System"i
+            | "Container"i
+            | "Component"i
+            | "Database"i
+            | "DataStore"i
+            | "Queue"i
+            | "ExternalPerson"i
+            | "ExternalSystem"i
+
+element_args: ELEMENT_ID "," element_name ("," element_desc ("," element_tech)?)?
+
+ELEMENT_ID: IDENTIFIER | STRING
+
+element_name: STRING
+
+element_desc: STRING | "empty"i
+
+element_tech: STRING
+
+// Relationship function calls
+c4_relationship: "Rel"i "(" rel_args ")"
+               | "RelHorizontal"i "(" rel_args ")"
+               | "RelVertical"i "(" rel_args ")"
+               | "RelIndex"i "(" rel_args ")"
+               | rel_shorthand
+
+rel_args: ELEMENT_ID "," ELEMENT_ID "," rel_description ("," rel_tech)?
+
+rel_description: STRING
+
+rel_tech: STRING
+
+// Shorthand relationship syntax (alternative)
+rel_shorthand: ELEMENT_ID "-->" ELEMENT_ID (":" rel_description)?
+             | ELEMENT_ID "-.->" ELEMENT_ID (":" rel_description)?
+
+// Properties (config directives)
+property_stmt: "title" "=" property_value
+             | "direction" "=" direction_value
+
+property_value: STRING | IDENTIFIER
+
+direction_value: "TB"i | "BT"i | "LR"i | "RL"i
+
+// Note directives
+note_stmt: "note"i note_pos ":" note_text
+
+note_pos: "left of"i | "right of"i | "below"i | "above"i
+
+note_text: NOTE_CONTENT
+
+NOTE_CONTENT: /[^\n]+/
+
+// Terminals
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+
+STRING: /"[^"\\]*(?:\\.[^"\\]*)*"/
+      | /'[^'\\]*(?:\\.[^'\\]*)*'/
+
+%import common.WS
+%ignore WS
+%ignore /%%.*$/m

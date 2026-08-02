@@ -1,0 +1,93 @@
+// Production Lark EBNF grammar for Flowchart/Graph diagrams
+// Ported from mermaid-js source (github.com/mermaid-js/mermaid)
+//
+// Examples:
+//   graph TD
+//     A[Start] --> B{Decision}
+//     B -->|Yes| C[Action]
+//     B -->|No| D[End]
+//
+//   graph LR
+//     A["Node with \"quoted\" label"] -.->|dashed edge| B
+
+?start: diagram
+
+diagram: graph_type direction? statement*
+
+graph_type: "graph"i | "flowchart"i
+
+direction: "TB"i | "BT"i | "LR"i | "RL"i | "TD"i | "T"i
+
+statement: node_stmt
+         | edge_stmt
+         | subgraph_stmt
+         | style_stmt
+         | class_stmt
+
+// Node declarations with various shape syntax
+node_stmt: node_id
+         | node_id "[" node_label "]"    // Rectangle
+         | node_id "(" node_label ")"    // Circle/ellipse
+         | node_id "{" node_label "}"    // Rhombus/diamond
+         | node_id "{" "{" node_label "}" "}"  // Hexagon
+         | node_id "[" "[" node_label "]" "]"  // Subroutine/parallelogram
+         | node_id "[" "(" node_label ")" "]"  // Stadium/pill shape
+         | node_id "(" "(" node_label ")" ")"  // Circle
+         | node_id "[" "/" node_label "/" "]"  // Trapezoid
+         | node_id "[" "\\" node_label "\\" "]" // Trapezoid
+         | node_id "|" "|" node_label "|" "|"  // Cylinder/database
+         | node_id "{{" node_label "}}"       // Hexagon (alt syntax)
+
+// Edge declarations with various arrow syntaxes
+edge_stmt: node_id edge_type node_id
+         | node_id edge_type "|" edge_label "|" node_id
+
+edge_type: "-->"               // Solid arrow
+         | "-.->"              // Dotted arrow
+         | "==>"               // Thick/double arrow
+         | "-"                 // Simple line
+         | "--"                // Solid line
+         | "-.-"               // Dotted line
+         | "====="             // Thick line
+
+// Edge labels (enclosed in pipes or explicit syntax)
+edge_label: STRING | IDENTIFIER
+
+// Node labels can be strings, identifiers, or quoted text
+node_label: STRING
+          | IDENTIFIER
+          | NUMBER
+          | node_label "\\n" node_label  // Multi-line labels
+
+// Node IDs (alphanumeric, with optional quotes)
+node_id: IDENTIFIER | STRING | NUMBER
+
+// Subgraph (recursive structure)
+subgraph_stmt: "subgraph"i subgraph_id? "{" statement* "}"
+
+subgraph_id: IDENTIFIER | STRING
+
+// Style directives
+style_stmt: "style"i node_id STYLE_ATTRS
+
+// Class declarations for styling
+class_stmt: "class"i node_id_list CLASS_IDENTIFIER
+
+node_id_list: node_id ("," node_id)*
+
+CLASS_IDENTIFIER: IDENTIFIER
+
+STYLE_ATTRS: /[^;]+/  // One or more non-semicolon chars (fixes zero-width issue)
+
+// Terminals
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+STRING: /"(?:\\.|[^"\\])*"/
+      | /'(?:\\.|[^'\\])*'/
+      | /`[^`]+`/
+
+NUMBER: /\d+(\.\d+)?/
+
+%import common.WS
+%import common.CNAME
+%ignore WS
+%ignore /%%.*$/m

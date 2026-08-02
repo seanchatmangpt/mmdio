@@ -1,0 +1,91 @@
+// Production Lark EBNF grammar for Git graphs
+// Ported from mermaid-js source (github.com/mermaid-js/mermaid)
+//
+// Examples:
+//   gitGraph
+//     commit id: "initial"
+//     branch develop
+//     commit
+//     checkout main
+//     merge develop
+//     commit id: "v1.0" tag: "release"
+//
+//   gitGraph LR
+//     commit
+//     commit
+//     branch feature
+
+?start: diagram
+
+diagram: "gitGraph"i diagram_direction? statement*
+
+diagram_direction: "TB" | "BT" | "LR" | "RL"
+
+statement: commit_stmt
+         | branch_stmt
+         | checkout_stmt
+         | merge_stmt
+         | cherry_pick_stmt
+         | reset_stmt
+         | revert_stmt
+
+// Commit statement
+commit_stmt: "commit"i commit_args?
+
+commit_args: commit_attr ("," commit_attr | ":" commit_attr)*
+
+commit_attr: "id:" commit_id
+           | "type:" commit_type
+           | "tag:" commit_tag
+
+commit_id: STRING | IDENTIFIER
+
+commit_type: IDENTIFIER
+
+commit_tag: STRING | IDENTIFIER
+
+// Branch statement
+branch_stmt: "branch"i branch_name (branch_order)?
+
+branch_name: IDENTIFIER | STRING
+
+branch_order: "order:" NUMBER
+
+// Checkout branch
+checkout_stmt: "checkout"i branch_name
+
+// Merge branches
+merge_stmt: "merge"i branch_name merge_attrs?
+
+merge_attrs: "id:" merge_id
+
+merge_id: STRING | IDENTIFIER
+
+// Cherry-pick commits
+cherry_pick_stmt: "cherry-pick"i cherry_pick_args
+
+cherry_pick_args: cherry_pick_id
+
+cherry_pick_id: STRING | IDENTIFIER
+
+// Reset to commit
+reset_stmt: "reset"i reset_target
+
+reset_target: STRING | IDENTIFIER
+
+// Revert commit
+revert_stmt: "revert"i revert_id
+
+revert_id: STRING | IDENTIFIER
+
+// Terminals
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_-]*/
+
+STRING: /"[^"\\]*(?:\\.[^"\\]*)*"/
+      | /'[^'\\]*(?:\\.[^'\\]*)*'/
+
+NUMBER: /\d+/
+
+%import common.WS
+%ignore WS
+%ignore /%%.*$/m

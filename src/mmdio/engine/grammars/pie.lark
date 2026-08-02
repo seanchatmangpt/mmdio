@@ -1,0 +1,39 @@
+// Production Lark EBNF grammar for Pie charts
+// Ported from mermaid-js source (github.com/mermaid-js/mermaid)
+//
+// Examples:
+//   pie title Data Distribution
+//     "Category A" : 30
+//     "Category B" : 45
+//     "Category C" : 25
+//
+//   pie chart
+//     "Sales" : 100
+//     "Support" : 50
+//     "Development" : 150
+
+?start: diagram
+
+diagram: pie_type pie_title? slice*
+
+pie_type: "pie"i | "pie"i "chart"i
+
+pie_title: "title"i title_text
+         | title_text
+
+title_text: STRING | TITLE_CONTENT
+
+TITLE_CONTENT: /[^\n]+/
+
+// Pie slice: label and value
+slice: STRING ":" NUMBER
+
+// Terminals
+STRING: /"[^"\\]*(?:\\.[^"\\]*)*"/
+      | /'[^'\\]*(?:\\.[^'\\]*)*'/
+
+NUMBER: /\d+(\.\d+)?/
+
+%import common.WS
+%ignore WS
+%ignore /%%.*$/m

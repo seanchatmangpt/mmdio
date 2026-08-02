@@ -1,0 +1,90 @@
+// Production Lark EBNF grammar for Gantt charts
+// Ported from mermaid-js source (github.com/mermaid-js/mermaid)
+//
+// Examples:
+//   gantt
+//     title Project Schedule
+//     section Development
+//       Task 1 :a1, 2024-01-01, 10d
+//       Task 2 :a2, after a1, 15d
+//     section Testing
+//       QA :crit, a3, 2024-02-01, 7d
+//
+//   gantt
+//     dateFormat YYYY-MM-DD
+//     section Tasks
+//       Setup :setup, 2024-01-01, 3d
+//       Build :build, after setup, 5d
+
+?start: diagram
+
+diagram: "gantt"i statement*
+
+statement: title_stmt
+         | date_format_stmt
+         | section_stmt
+         | task_stmt
+         | milestone_stmt
+
+// Chart title
+title_stmt: "title"i title_text
+
+title_text: TITLE_CONTENT
+
+TITLE_CONTENT: /[^\n]+/
+
+// Date format specification
+date_format_stmt: "dateFormat"i date_format
+
+date_format: IDENTIFIER | DATE_FORMAT_SPEC
+
+DATE_FORMAT_SPEC: /[a-zA-Z0-9-]+/
+
+// Section declaration
+section_stmt: "section"i section_name
+
+section_name: SECTION_NAME
+
+SECTION_NAME: /[^\n]+/
+
+// Task definition: id, title, status, start_date, duration
+task_stmt: task_title (":" task_attrs)?
+
+task_title: TASK_NAME
+
+TASK_NAME: /[^\n:]+/
+
+task_attrs: task_attr ("," task_attr)*
+
+task_attr: task_status
+         | task_dependency
+         | task_date_spec
+         | task_milestone
+         | task_label
+
+task_status: "active" | "done" | "crit" | "milestone" | "active,crit" | "done,crit"
+
+task_label: IDENTIFIER
+
+task_date_spec: DATE_VALUE
+              | "after"i IDENTIFIER
+              | "after"i IDENTIFIER DURATION
+              | DURATION
+
+DATE_VALUE: /\d{4}-\d{2}-\d{2}/
+
+DURATION: /\d+[dD]/  // Duration in days (e.g., 10d, 5D)
+
+task_dependency: IDENTIFIER
+
+task_milestone: "milestone"
+
+// Milestone directive (simplified)
+milestone_stmt: task_title ":" task_attrs
+
+// Terminals
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+
+%import common.WS
+%ignore WS
+%ignore /%%.*$/m
