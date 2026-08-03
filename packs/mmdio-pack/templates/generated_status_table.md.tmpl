@@ -4,10 +4,12 @@ force: true
 sparql:
   rows: |
     PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?diagramId ?displayName (COALESCE(?supported, false) AS ?isSupported) WHERE {
+    PREFIX dct: <http://purl.org/dc/terms/>
+    SELECT ?diagramId (COALESCE(?title, ?diagramId) AS ?displayName)
+           (COALESCE(?supported, false) AS ?isSupported) WHERE {
       ?type a mer:DiagramType ;
             mer:diagramId ?diagramId .
-      OPTIONAL { ?type mer:displayName ?displayName }
+      OPTIONAL { ?type dct:title ?title }
       OPTIONAL { ?type mer:pythonSupport ?supported }
     } ORDER BY ?diagramId
 ---

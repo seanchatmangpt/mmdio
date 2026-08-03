@@ -1,22 +1,28 @@
-"""Mermaid diagram parsing, rendering, schemas, and topology operations."""
+"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+
+Public surface of the mmdio engine, projected from packs/mmdio-pack/ontology.ttl.
+
+Previously hand-maintained, which let it drift from the ontology: it imported
+ERAttribute/EREntity/StateNode/StateTransition long after those models were renamed to
+EntityAttribute/Entity/State/Transition, and nothing caught it because no gate compared
+the two. Generating it makes that class of drift unrepresentable.
+"""
 
 from __future__ import annotations
 
 from mmdio.engine.models import (
     C4Diagram,
     C4Element,
-    C4Level,
     C4Relationship,
-    CardinityType,
     ClassDefinition,
     ClassDiagram,
     ClassMember,
     ClassMethod,
     ClassRelationship,
-    ERAttribute as EntityAttribute,
     ERDiagram,
-    EREntity as Entity,
     ERRelationship,
+    Entity,
+    EntityAttribute,
     FlowchartDiagram,
     FlowchartEdge,
     FlowchartNode,
@@ -25,51 +31,54 @@ from mmdio.engine.models import (
     GitBranch,
     GitCommit,
     GitGraph,
-    MermaidDiagram,
-    MessageType,
     Mindmap,
     MindmapNode,
-    NodeShape,
-    ParticipantType,
     PieChart,
     PieSlice,
-    RelationshipType,
     SankeyDiagram,
     SankeyFlow,
     SequenceDiagram,
     SequenceMessage,
     SequenceParticipant,
-    StateNode as State,
+    State,
     StateDiagram,
-    TaskStatus,
-    StateTransition as Transition,
+    Transition,
+    MermaidDiagram,
 )
-from mmdio.engine.ops import diff, merge, validate_topology
+from mmdio.engine.enums import (
+    C4Level,
+    CardinityType,
+    MessageType,
+    NodeShape,
+    ParticipantType,
+    RelationshipType,
+    TaskStatus,
+)
 from mmdio.engine.parser import (
     MermaidParser,
     ParsingError,
+    parse_mermaid,
     parse_c4,
     parse_class,
     parse_er,
     parse_flowchart,
     parse_gantt,
     parse_git,
-    parse_mermaid,
     parse_mindmap,
     parse_pie,
     parse_sankey,
     parse_sequence,
     parse_state,
 )
-from mmdio.engine.render import render_diagram
-from mmdio.engine.ops import merge, diff, validate_topology
+from mmdio.engine.render_dispatch import render_diagram, render_model
+from mmdio.engine.schemas import schema_for_type
+from mmdio.engine.supported import SUPPORTED_TYPES, is_supported
+from mmdio.engine.ops import diff, merge, validate_topology
 
 __all__ = [
     "C4Diagram",
     "C4Element",
-    "C4Level",
     "C4Relationship",
-    "CardinityType",
     "ClassDefinition",
     "ClassDiagram",
     "ClassMember",
@@ -87,18 +96,10 @@ __all__ = [
     "GitBranch",
     "GitCommit",
     "GitGraph",
-    "MermaidDiagram",
-    "MermaidParser",
-    "MessageType",
     "Mindmap",
     "MindmapNode",
-    "NodeShape",
-    "ParsingError",
-    "ParticipantType",
     "PieChart",
     "PieSlice",
-    "RelationshipType",
-    "SUPPORTED_TYPES",
     "SankeyDiagram",
     "SankeyFlow",
     "SequenceDiagram",
@@ -106,23 +107,33 @@ __all__ = [
     "SequenceParticipant",
     "State",
     "StateDiagram",
-    "TaskStatus",
     "Transition",
-    "diff",
-    "is_supported",
-    "merge",
+    "C4Level",
+    "CardinityType",
+    "MessageType",
+    "NodeShape",
+    "ParticipantType",
+    "RelationshipType",
+    "TaskStatus",
     "parse_c4",
     "parse_class",
     "parse_er",
     "parse_flowchart",
     "parse_gantt",
     "parse_git",
-    "parse_mermaid",
     "parse_mindmap",
     "parse_pie",
     "parse_sankey",
     "parse_sequence",
     "parse_state",
+    "MermaidDiagram",
+    "MermaidParser",
+    "ParsingError",
+    "SUPPORTED_TYPES",
+    "diff",
+    "is_supported",
+    "merge",
+    "parse_mermaid",
     "render_diagram",
     "render_model",
     "schema_for_type",

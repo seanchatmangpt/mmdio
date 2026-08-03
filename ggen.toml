@@ -12,8 +12,11 @@ rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 rdfs = "http://www.w3.org/2000/01/rdf-schema#"
 
 [packs]
-mmdio-pack = { path = "packs/mmdio-pack" }
-cyberpunk-2030-pack = { path = "packs/cyberpunk-2030-pack" }
+# lock = false: these are in-repo path packs under active development, so git already
+# pins their content. Content-hash locking is for remote/git packs; here it only forces
+# a re-lock after every template edit.
+mmdio-pack = { path = "packs/mmdio-pack", lock = false }
+cyberpunk-2030-pack = { path = "packs/cyberpunk-2030-pack", lock = false }
 
 [templates]
 dir = "templates"

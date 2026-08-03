@@ -12,41 +12,4 @@ Specialized Mermaid renderers remain in src/mmdio/engine/render.py because condi
 syntax, token maps, escaping, and recursion are not representable as fixed row formats.
 This file is intentionally empty until a type is admitted with renderStrategy=generic.
 """
-
-{% for model in models %}
-{% if model.isTopLevel %}
-def render_{{ model.diagramId }}(d) -> str:
-    """Render {{ model.className }} to Mermaid syntax."""
-    lines = ["{{ model.diagramHeaderKeyword }}"]
-{% set top_fields = fields | filter(attribute="className", value=model.className) %}
-{% for f1 in top_fields %}
-{% if f1.fieldKind == "list" %}
-    for _r1 in d.{{ f1.fieldName }}:
-        lines.append(f'{{ f1.fieldRenderFormat }}')
-{% set nested_fields = fields | filter(attribute="className", value=f1.fieldPyType) %}
-{% for f2 in nested_fields %}
-{% if f2.fieldKind == "list" and f2.fieldRenderFormat %}
-        for _r2 in _r1.{{ f2.fieldName }}:
-            lines.append(f'{{ f2.fieldRenderFormat }}')
-{% endif %}
-{% endfor %}
-{% elif f1.fieldKind == "scalar-optional" and f1.fieldRenderFormat %}
-    if d.{{ f1.fieldName }} is not None:
-        lines.append(f'{{ f1.fieldRenderFormat }}')
-{% elif (f1.fieldKind == "scalar-required" or f1.fieldKind == "enum" or f1.fieldKind == "nested-ref") and f1.fieldRenderFormat %}
-    lines.append(f'{{ f1.fieldRenderFormat }}')
-{% endif %}
-{% endfor %}
-    return "\n".join(lines)
-
-{% endif %}
-{% endfor %}
-
-def render_diagram(d) -> str:
-    """Render any MermaidDiagram model instance to Mermaid syntax string."""
-    from mmdio.engine.render_dispatch import GENERATED_RENDER_DISPATCH
-    renderer = GENERATED_RENDER_DISPATCH.get(type(d))
-    if not renderer:
-        raise ValueError(f"Unsupported or unregistered diagram model type: {type(d)}")
-    return renderer(d)
-
+GENERIC_RENDER_TYPES = ({% for row in generic_types %}"{{ row.internalId }}",{% endfor %})

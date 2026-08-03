@@ -1,0 +1,68 @@
+---
+to: "src/mmdio/engine/__init__.py"
+force: true
+sparql:
+  models: |
+    PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+    SELECT DISTINCT ?className WHERE {
+      ?type mer:pythonSupport true ; mer:hasModel ?model .
+      ?model a mer:PythonModel ; mer:className ?className .
+    } ORDER BY ?className
+  enums: |
+    PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+    SELECT DISTINCT ?enumClassName WHERE {
+      ?e a mer:PythonEnum ; mer:enumClassName ?enumClassName .
+    } ORDER BY ?enumClassName
+  types: |
+    PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+    SELECT ?internalId WHERE {
+      ?type mer:pythonSupport true ; mer:pythonInternalId ?internalId .
+    } ORDER BY ?internalId
+---
+"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+
+Public surface of the mmdio engine, projected from packs/mmdio-pack/ontology.ttl.
+
+Previously hand-maintained, which let it drift from the ontology: it imported
+ERAttribute/EREntity/StateNode/StateTransition long after those models were renamed to
+EntityAttribute/Entity/State/Transition, and nothing caught it because no gate compared
+the two. Generating it makes that class of drift unrepresentable.
+"""
+
+from __future__ import annotations
+
+from mmdio.engine.models import (
+{% for row in models %}    {{ row.className }},
+{% endfor %}    MermaidDiagram,
+)
+from mmdio.engine.enums import (
+{% for row in enums %}    {{ row.enumClassName }},
+{% endfor %})
+from mmdio.engine.parser import (
+    MermaidParser,
+    ParsingError,
+    parse_mermaid,
+{% for row in types %}    parse_{{ row.internalId }},
+{% endfor %})
+from mmdio.engine.render_dispatch import render_diagram, render_model
+from mmdio.engine.schemas import schema_for_type
+from mmdio.engine.supported import SUPPORTED_TYPES, is_supported
+from mmdio.engine.ops import diff, merge, validate_topology
+
+__all__ = [
+{% for row in models %}    "{{ row.className }}",
+{% endfor %}{% for row in enums %}    "{{ row.enumClassName }}",
+{% endfor %}{% for row in types %}    "parse_{{ row.internalId }}",
+{% endfor %}    "MermaidDiagram",
+    "MermaidParser",
+    "ParsingError",
+    "SUPPORTED_TYPES",
+    "diff",
+    "is_supported",
+    "merge",
+    "parse_mermaid",
+    "render_diagram",
+    "render_model",
+    "schema_for_type",
+    "validate_topology",
+]

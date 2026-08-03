@@ -16,14 +16,6 @@ from lark import Lark, Token, Transformer, v_args
 
 from mmdio.detect import detect_diagram_type
 from mmdio.engine import models
-from mmdio.engine.types.block_parser import BlockTransformer  # noqa: F401
-from mmdio.engine.types.kanban_parser import KanbanTransformer  # noqa: F401
-from mmdio.engine.types.timeline_parser import TimelineTransformer  # noqa: F401
-from mmdio.engine.types.xychart_parser import XYChartTransformer  # noqa: F401
-from mmdio.engine.types.block_parser import BlockTransformer  # noqa: F401
-from mmdio.engine.types.kanban_parser import KanbanTransformer  # noqa: F401
-from mmdio.engine.types.timeline_parser import TimelineTransformer  # noqa: F401
-from mmdio.engine.types.xychart_parser import XYChartTransformer  # noqa: F401
 
 
 class ParsingError(Exception):

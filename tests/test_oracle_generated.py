@@ -19,8 +19,6 @@ from test_oracle_roundtrip import validate_mermaid_source
 
 from mmdio.engine.fixtures import (
 
-    example_block,
-
     example_c4,
 
     example_class,
@@ -33,8 +31,6 @@ from mmdio.engine.fixtures import (
 
     example_git,
 
-    example_kanban,
-
     example_mindmap,
 
     example_pie,
@@ -45,14 +41,8 @@ from mmdio.engine.fixtures import (
 
     example_state,
 
-    example_timeline,
-
-    example_xychart,
-
 )
 from mmdio.engine.render import (
-
-    render_block,
 
     render_c4,
 
@@ -66,8 +56,6 @@ from mmdio.engine.render import (
 
     render_git,
 
-    render_kanban,
-
     render_mindmap,
 
     render_pie,
@@ -78,22 +66,8 @@ from mmdio.engine.render import (
 
     render_state,
 
-    render_timeline,
-
-    render_xychart,
-
 )
 
-
-
-class TestOracleBlockDiagram:
-    """Test BlockDiagram rendering against real mermaid-js (generated fixture)."""
-
-    def test_block_generated(self) -> None:
-        """Render the ontology-derived example BlockDiagram and validate against mermaid-js."""
-        diagram = example_block()
-        source = render_block(diagram)
-        validate_mermaid_source(source)
 
 
 class TestOracleC4Diagram:
@@ -156,16 +130,6 @@ class TestOracleGitGraph:
         validate_mermaid_source(source)
 
 
-class TestOracleKanbanDiagram:
-    """Test KanbanDiagram rendering against real mermaid-js (generated fixture)."""
-
-    def test_kanban_generated(self) -> None:
-        """Render the ontology-derived example KanbanDiagram and validate against mermaid-js."""
-        diagram = example_kanban()
-        source = render_kanban(diagram)
-        validate_mermaid_source(source)
-
-
 class TestOracleMindmap:
     """Test Mindmap rendering against real mermaid-js (generated fixture)."""
 
@@ -213,26 +177,6 @@ class TestOracleStateDiagram:
         """Render the ontology-derived example StateDiagram and validate against mermaid-js."""
         diagram = example_state()
         source = render_state(diagram)
-        validate_mermaid_source(source)
-
-
-class TestOracleTimelineDiagram:
-    """Test TimelineDiagram rendering against real mermaid-js (generated fixture)."""
-
-    def test_timeline_generated(self) -> None:
-        """Render the ontology-derived example TimelineDiagram and validate against mermaid-js."""
-        diagram = example_timeline()
-        source = render_timeline(diagram)
-        validate_mermaid_source(source)
-
-
-class TestOracleXYChartDiagram:
-    """Test XYChartDiagram rendering against real mermaid-js (generated fixture)."""
-
-    def test_xychart_generated(self) -> None:
-        """Render the ontology-derived example XYChartDiagram and validate against mermaid-js."""
-        diagram = example_xychart()
-        source = render_xychart(diagram)
         validate_mermaid_source(source)
 
 
