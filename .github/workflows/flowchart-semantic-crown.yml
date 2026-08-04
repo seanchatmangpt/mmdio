@@ -82,7 +82,13 @@ jobs:
         run: |
           node --version
           npm --version
+          cat > /tmp/puppeteer-config.json <<'JSON'
+          {
+            "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+          }
+          JSON
           npx --yes @mermaid-js/mermaid-cli@11.12.0 \
+            --puppeteerConfigFile /tmp/puppeteer-config.json \
             --input /tmp/canonical-a.mmd \
             --output /tmp/canonical.svg \
             --backgroundColor transparent
