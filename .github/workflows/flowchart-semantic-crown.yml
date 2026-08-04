@@ -1,0 +1,111 @@
+name: Flowchart Semantic Crown
+
+on:
+  pull_request:
+    paths:
+      - "src/mmdio/flowchart_crown.py"
+      - "scripts/flowchart_crown.py"
+      - "tests/test_flowchart_crown.py"
+      - "docs/flowchart-semantic-crown.md"
+      - ".github/workflows/flowchart-semantic-crown.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: flowchart-semantic-crown-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  exact-head-crown:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+
+      - name: Assert exact head
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+
+      - name: Install Python 3.13
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install focused verifier dependency
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1
+
+      - name: Compile authored crown surfaces
+        run: |
+          python -m compileall -q \
+            src/mmdio/flowchart_crown.py \
+            scripts/flowchart_crown.py \
+            tests/test_flowchart_crown.py
+
+      - name: Execute positive, negative, mutation, and replay tests
+        env:
+          PYTHONPATH: src
+        run: python -m pytest -q -c /dev/null tests/test_flowchart_crown.py
+
+      - name: Execute two independent crown passes
+        env:
+          PYTHONPATH: src
+        run: |
+          cat > /tmp/input.mmd <<'MMD'
+          flowchart LR
+            review["Review evidence"]
+            admit["Admit subject"]
+            receipt["Issue receipt"]
+            review -->|bounded| admit
+            admit --> receipt
+          MMD
+
+          python scripts/flowchart_crown.py /tmp/input.mmd \
+            --receipt /tmp/receipt-a.json \
+            --rendered /tmp/canonical-a.mmd
+          python scripts/flowchart_crown.py /tmp/input.mmd \
+            --receipt /tmp/receipt-b.json \
+            --rendered /tmp/canonical-b.mmd
+
+          cmp /tmp/receipt-a.json /tmp/receipt-b.json
+          cmp /tmp/canonical-a.mmd /tmp/canonical-b.mmd
+          python scripts/flowchart_crown.py --receipt /tmp/receipt-a.json --verify
+
+      - name: Execute pinned Mermaid JavaScript oracle
+        run: |
+          node --version
+          npm --version
+          npx --yes @mermaid-js/mermaid-cli@11.12.0 \
+            --input /tmp/canonical-a.mmd \
+            --output /tmp/canonical.svg \
+            --backgroundColor transparent
+          test -s /tmp/canonical.svg
+          grep -q '<svg' /tmp/canonical.svg
+
+      - name: Emit bounded receipt summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+
+          receipt_path = Path("/tmp/receipt-a.json")
+          receipt = json.loads(receipt_path.read_text()) if receipt_path.exists() else None
+          summary = {
+              "schema": "mmdio-flowchart-exact-head-workflow/v1",
+              "repository": os.environ.get("GITHUB_REPOSITORY"),
+              "head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+              "semantic_receipt": None if receipt is None else receipt.get("receipt_sha256"),
+              "claim_ceiling": "BOUNDED_FLOWCHART_SEMANTIC_ROUNDTRIP_AND_MERMAID_RENDER_ONLY",
+          }
+          print(json.dumps(summary, sort_keys=True))
+          PY
