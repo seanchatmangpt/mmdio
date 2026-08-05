@@ -1,9 +1,14 @@
 PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
 SELECT ?type ?problem WHERE {
   { ?type mer:pythonSupport true ; mer:pythonModelClass ?modelClass .
-    FILTER NOT EXISTS { ?type mer:hasModel ?model . ?model mer:isTopLevel true ; mer:className ?modelClass . }
-    BIND("missing matching top-level model" AS ?problem) }
+    FILTER NOT EXISTS {
+      ?type mer:hasModel ?model .
+      ?model mer:isTopLevel true ; mer:className ?modelClass .
+    }
+    FILTER NOT EXISTS { ?type mer:documentClassName ?modelClass }
+    BIND("missing matching deep model or universal document class" AS ?problem) }
   UNION
-  { ?type mer:pythonSupport true . FILTER NOT EXISTS { ?type mer:renderStrategy ?strategy }
+  { ?type mer:pythonSupport true .
+    FILTER NOT EXISTS { ?type mer:renderStrategy ?strategy }
     BIND("missing renderStrategy" AS ?problem) }
 }

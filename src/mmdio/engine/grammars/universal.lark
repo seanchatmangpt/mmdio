@@ -1,0 +1,6 @@
+// Lossless line carrier used by the generated all-dialect CST projection.
+start: line*
+line: TEXT? NEWLINE
+    | TEXT
+TEXT: /[^\n]+/
+%import common.NEWLINE

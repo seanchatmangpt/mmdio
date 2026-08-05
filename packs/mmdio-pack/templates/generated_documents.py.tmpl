@@ -1,0 +1,32 @@
+---
+to: "src/mmdio/engine/documents.py"
+force: true
+sparql:
+  rows: |
+    PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+    SELECT ?diagramId ?documentClassName ?pythonEnumMember WHERE {
+      ?type a mer:DiagramType ;
+            mer:diagramId ?diagramId ;
+            mer:documentClassName ?documentClassName ;
+            mer:pythonEnumMember ?pythonEnumMember .
+    } ORDER BY ?diagramId
+---
+"""GENERATED FILE — projected from the mmdio all-dialect capability ontology."""
+
+from __future__ import annotations
+
+from typing import Literal
+
+from mmdio.engine.universal import DiagramType, MermaidDocument
+
+{% for row in rows %}
+class {{ row.documentClassName }}(MermaidDocument):
+    """Lossless structured document for ``{{ row.diagramId }}``."""
+
+    expected_type = DiagramType.{{ row.pythonEnumMember }}
+    type: Literal[DiagramType.{{ row.pythonEnumMember }}] = DiagramType.{{ row.pythonEnumMember }}
+
+{% endfor %}
+DOCUMENT_CLASS_BY_TYPE = {
+{% for row in rows %}    DiagramType.{{ row.pythonEnumMember }}: {{ row.documentClassName }},
+{% endfor %}}
