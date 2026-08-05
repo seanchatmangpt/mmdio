@@ -1,0 +1,116 @@
+name: All Diagram Oracle
+
+on:
+  pull_request:
+    paths:
+      - "src/mmdio/**"
+      - "packs/mmdio-pack/**"
+      - "scripts/verify_universal_projection.py"
+      - "tests/test_universal_documents.py"
+      - "tests/test_api.py"
+      - "tests/test_cli.py"
+      - "tests/oracle/**"
+      - ".github/workflows/all-diagram-oracle.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: all-diagram-oracle-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  exact-head-all-39:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+
+      - name: Assert exact head
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+
+      - name: Check out pinned Mermaid oracle source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: mermaid-js/mermaid
+          ref: mermaid@11.16.0
+          path: _oracle/mermaid
+          fetch-depth: 1
+
+      - name: Install Python 3.13
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install Python validation capsule
+        run: python -m pip install --disable-pip-version-check -e ".[all]" pytest==9.1.1 httpx rdflib
+
+      - name: Install pinned JavaScript oracle
+        working-directory: tests/oracle
+        run: |
+          npm ci
+          npm install --no-save --package-lock=false @mermaid-js/mermaid-zenuml@0.2.3
+
+      - name: Compile authored and generated Python
+        run: python -m compileall -q src tests scripts
+
+      - name: Verify ontology and projection closure
+        env:
+          PYTHONPATH: src
+        run: python scripts/verify_universal_projection.py | tee /tmp/projection-receipt.json
+
+      - name: Execute Python capability, CLI, and API tests
+        env:
+          PYTHONPATH: src
+        run: >-
+          python -m pytest -q -c /dev/null
+          tests/test_universal_documents.py
+          tests/test_cli.py
+          tests/test_api.py
+          tests/test_ggen_contract.py
+          tests/test_flowchart_crown.py
+
+      - name: Execute all 39 against Mermaid 11.16.0
+        env:
+          PYTHONPATH: src
+        run: node tests/oracle/catalog_oracle.mjs _oracle/mermaid | tee /tmp/js-oracle-receipt.json
+
+      - name: Execute full repository test suite
+        env:
+          PYTHONPATH: src
+        run: python -m pytest -q
+
+      - name: Emit exact-head receipt summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+
+          def read(path):
+              candidate = Path(path)
+              if not candidate.exists():
+                  return None
+              lines = [line for line in candidate.read_text().splitlines() if line.strip()]
+              return json.loads(lines[-1]) if lines else None
+
+          print(json.dumps({
+              "schema": "mmdio.all-diagram-workflow/v1",
+              "repository": os.environ.get("GITHUB_REPOSITORY"),
+              "head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+              "mermaid_oracle": "11.16.0",
+              "projection": read("/tmp/projection-receipt.json"),
+              "javascript_oracle": read("/tmp/js-oracle-receipt.json"),
+              "claim": "ALL_39_TYPED_CST_PARSE_RENDER_RECEIPT_REPLAY_AND_JS_ORACLE",
+          }, sort_keys=True))
+          PY

@@ -64,28 +64,27 @@ EXPECTED_TYPES: dict[str, tuple[str, type[BaseModel], Callable[[], BaseModel], s
 
 @pytest.fixture(scope="module")
 def graph() -> Graph:
-    """Load the canonical Mermaid registry and executable model ontology."""
+    """Load the canonical registry, deep model ontology, and universal capabilities."""
     result = Graph()
     result.parse(ROOT / "src/mmdio/engine/registry.ttl")
     result.parse(ROOT / "packs/mmdio-pack/ontology.ttl")
+    result.parse(ROOT / "packs/mmdio-pack/universal-capabilities.ttl")
     return result
 
 
 def test_registry_contains_all_mermaid_types(graph: Graph) -> None:
+    """Require all 39 registry subjects to be admitted as executable Python types."""
     diagram_types = set(graph.subjects(RDF.type, MMDIO.DiagramType))
     assert len(diagram_types) == 39
-    assert sum(bool(graph.value(item, MMDIO.pythonSupport)) for item in diagram_types) == 11
+    assert sum(bool(graph.value(item, MMDIO.pythonSupport)) for item in diagram_types) == 39
 
 
-@pytest.mark.parametrize(
-    ("canonical_id", "case"),
-    EXPECTED_TYPES.items(),
-    ids=EXPECTED_TYPES,
-)
+@pytest.mark.parametrize(("canonical_id", "case"), EXPECTED_TYPES.items(), ids=EXPECTED_TYPES)
 def test_model_dispatch_schema_and_support(
     canonical_id: str,
     case: tuple[str, type[BaseModel], Callable[[], BaseModel], str],
 ) -> None:
+    """Preserve the eleven deep-AST projections as additive compatibility APIs."""
     internal_id, model_class, factory, source = case
     model = factory()
     assert isinstance(model, model_class)
@@ -101,11 +100,13 @@ def test_model_dispatch_schema_and_support(
     sorted((ROOT / "packs/mmdio-pack/gates").glob("*.rq")),
 )
 def test_all_sparql_gates_pass(graph: Graph, gate: Path) -> None:
+    """Execute every pack law gate against the complete admitted RDF graph."""
     results = list(graph.query(gate.read_text(encoding="utf-8")))
     assert not results, f"{gate.name}: {results}"
 
 
 def test_detection_patterns_are_runtime_regexes(graph: Graph) -> None:
+    """Check the deep parser patterns against their executable examples."""
     samples = {canonical_id: case[3] for canonical_id, case in EXPECTED_TYPES.items()}
     for subject, pattern in graph.subject_objects(MMDIO.detectPattern):
         canonical_id = str(graph.value(subject, MMDIO.diagramId))
@@ -120,7 +121,10 @@ def test_detection_patterns_are_runtime_regexes(graph: Graph) -> None:
 
 
 def test_alias_validation_and_schemas_are_json_serializable() -> None:
-    flowchart = FlowchartDiagram(nodes=[{"id": "start", "label": "Start", "node_type": "circle"}])
+    """Keep legacy field aliases and schema serialization stable."""
+    flowchart = FlowchartDiagram(
+        nodes=[{"id": "start", "label": "Start", "node_type": "circle"}]
+    )
     sequence = SequenceDiagram(
         participants=[{"id": "alice", "name": "Alice", "participant_type": "actor"}],
         messages=[{"from_id": "alice", "to_id": "bob", "label": "hello"}],
@@ -138,6 +142,7 @@ def test_alias_validation_and_schemas_are_json_serializable() -> None:
 
 
 def test_parser_accepts_flowchart_smoke_sample() -> None:
+    """Keep the deep flowchart projection executable."""
     model = parse_mermaid("flowchart TD\n    start[Start]\n")
     assert isinstance(model, FlowchartDiagram)
     assert model.nodes

@@ -1,82 +1,109 @@
-[![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTE3IDE2VjdsLTYgNU0yIDlWOGwxLTFoMWw0IDMgOC04aDFsNCAyIDEgMXYxNGwtMSAxLTQgMmgtMWwtOC04LTQgM0gzbC0xLTF2LTFsMy0zIi8+PC9zdmc+)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/seanchatmangpt/mmdio) [![Open in GitHub Codespaces](https://img.shields.io/static/v1?label=GitHub%20Codespaces&message=Open&color=blue&logo=github)](https://github.com/codespaces/new/seanchatmangpt/mmdio) [![Documentation](https://img.shields.io/static/v1?label=Documentation&message=View&color=blue&logo=readme&logoColor=white)](https://seanchatmangpt.github.io/mmdio)
-
 # mmdio
 
-Mermaid Diagrams as Universal IO
+**Typed, receipt-bearing Mermaid I/O for the complete 39-type mmdio catalog.**
 
-## Installing
+`mmdio` admits Mermaid source into explicit Pydantic document classes, preserves a lossless concrete syntax tree, canonicalizes deterministically, renders without semantic loss, issues tamper-evident receipts, and replays the exact admitted subject.
 
-To install this package, run:
+## What is executable
 
-```sh
-pip install mmdio
+The capability registry contains 39 types. Every type has:
+
+- an explicit Python document class;
+- exact header detection with no unknown-to-flowchart fallback;
+- lossless line and token spans;
+- deterministic canonical rendering;
+- JSON Schema;
+- receipt verification and replay;
+- a first-party example executed against Mermaid JavaScript `11.16.0` in CI.
+
+The original eleven domain-specific Pydantic ASTs remain available as additional projections. They are no longer the support ceiling.
+
+## Python
+
+```python
+from mmdio import issue_receipt, parse_document, render_document, verify_receipt
+
+source = """cynefin-beta
+  clear
+    "Apply known fix"
+"""
+
+document = parse_document(source)
+assert document.type == "cynefin"
+assert render_document(document) == source
+
+receipt = issue_receipt(document)
+assert verify_receipt(receipt) == document
 ```
 
-## Using
+Use `parse_mermaid(source)` for compatibility with the original deep AST parsers when their grammar is installed. Use `parse_document(source, diagram_type=...)` for a uniform all-dialect return contract.
 
-To view the CLI help information, run:
+## CLI
 
 ```sh
-mmdio --help
+mmdio types
+mmdio detect architecture.mmd
+mmdio parse architecture.mmd
+mmdio validate architecture.mmd --receipt architecture.receipt.json
+mmdio format architecture.mmd --check
+mmdio replay architecture.receipt.json
+mmdio diff left.mmd right.mmd
+mmdio merge base.mmd left.mmd right.mmd
+mmdio schema cynefin
 ```
 
-## Contributing
+All machine-facing commands emit deterministic JSON. Refusals carry stable `MMDIO-*` codes and exit with a non-zero status.
 
-<details>
-<summary>Prerequisites</summary>
+## REST API
 
-1. [Generate an SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key) and [add the SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
-1. Configure SSH to automatically load your SSH keys:
+```sh
+uvicorn mmdio.api:app
+```
 
-    ```sh
-    cat << EOF >> ~/.ssh/config
-    
-    Host *
-      AddKeysToAgent yes
-      IgnoreUnknown UseKeychain
-      UseKeychain yes
-      ForwardAgent yes
-    EOF
-    ```
+Primary routes:
 
-1. [Install Docker Desktop](https://www.docker.com/get-started).
-1. [Install VS Code](https://code.visualstudio.com/) and [VS Code's Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers). Alternatively, install [PyCharm](https://www.jetbrains.com/pycharm/download/).
-1. _Optional:_ install a [Nerd Font](https://www.nerdfonts.com/font-downloads) such as [FiraCode Nerd Font](https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/FiraCode) and [configure VS Code](https://github.com/tonsky/FiraCode/wiki/VS-Code-Instructions) or [PyCharm](https://github.com/tonsky/FiraCode/wiki/Intellij-products-instructions) to use it.
+- `GET /health`
+- `GET /v1/capabilities`
+- `POST /v1/detect`
+- `POST /v1/parse`
+- `POST /v1/canonicalize`
+- `POST /v1/validate`
+- `POST /v1/diff`
+- `POST /v1/merge`
+- `POST /v1/receipts/verify`
 
-</details>
+## Capability families
 
-<details open>
-<summary>Development environments</summary>
+| Family | Registered types |
+|---|---|
+| Graph and architecture | `flowchart`, `flowchart-v2`, `flowchart-elk`, `swimlane`, `block`, `architecture`, `treeView`, `c4` |
+| Software and data | `classDiagram`, `classDiagram-v2`, `stateDiagram`, `stateDiagram-v2`, `sequence`, `er`, `requirement`, `gitGraph`, `zenuml` |
+| Planning and narrative | `gantt`, `timeline`, `journey`, `kanban`, `mindmap`, `eventmodeling` |
+| Quantitative | `pie`, `quadrantChart`, `xychart`, `sankey`, `radar`, `treemap`, `venn` |
+| Analysis and strategy | `ishikawa`, `wardley`, `cynefin` |
+| Protocol and grammar | `packet`, `railroad`, `railroad-ebnf`, `railroad-abnf`, `railroad-peg`, `info` |
 
-The following development environments are supported:
+## Verification
 
-1. ⭐️ _GitHub Codespaces_: click on [Open in GitHub Codespaces](https://github.com/codespaces/new/seanchatmangpt/mmdio) to start developing in your browser.
-1. ⭐️ _VS Code Dev Container (with container volume)_: click on [Open in Dev Containers](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/seanchatmangpt/mmdio) to clone this repository in a container volume and create a Dev Container with VS Code.
-1. ⭐️ _uv_: clone this repository and run the following from root of the repository:
+```sh
+PYTHONPATH=src python scripts/verify_universal_projection.py
+PYTHONPATH=src pytest
+node tests/oracle/catalog_oracle.mjs _oracle/mermaid
+```
 
-    ```sh
-    # Create and install a virtual environment
-    uv sync --python 3.13 --all-extras
+The JavaScript oracle is a development verifier, not an ambient execution authority. The Python runtime does not invoke Node. CI pins Mermaid `11.16.0`; ZenUML is registered through its official Mermaid plugin package.
 
-    # Activate the virtual environment
-    source .venv/bin/activate
+## Architecture
 
-    # Install the pre-commit hooks
-    pre-commit install --install-hooks
-    ```
+```text
+Mermaid source
+→ typed admission/refusal
+→ exact 39-class lossless CST
+→ canonical render
+→ SHA-256 receipt
+→ replay
 
-1. _VS Code Dev Container_: clone this repository, open it with VS Code, and run <kbd>Ctrl/⌘</kbd> + <kbd>⇧</kbd> + <kbd>P</kbd> → _Dev Containers: Reopen in Container_.
-1. _PyCharm Dev Container_: clone this repository, open it with PyCharm, [create a Dev Container with Mount Sources](https://www.jetbrains.com/help/pycharm/start-dev-container-inside-ide.html), and [configure an existing Python interpreter](https://www.jetbrains.com/help/pycharm/configuring-python-interpreter.html#widget) at `/opt/venv/bin/python`.
+                         ↘ Mermaid 11.16.0 JS oracle in validation only
+```
 
-</details>
-
-<details open>
-<summary>Developing</summary>
-
-- This project follows the [Conventional Commits](https://www.conventionalcommits.org/) standard to automate [Semantic Versioning](https://semver.org/) and [Keep A Changelog](https://keepachangelog.com/) with [Commitizen](https://github.com/commitizen-tools/commitizen).
-- Run `poe` from within the development environment to print a list of [Poe the Poet](https://github.com/nat-n/poethepoet) tasks available to run on this project.
-- Run `uv add {package}` from within the development environment to install a run time dependency and add it to `pyproject.toml` and `uv.lock`. Add `--dev` to install a development dependency.
-- Run `uv sync --upgrade` from within the development environment to upgrade all dependencies to the latest versions allowed by `pyproject.toml`. Add `--only-dev` to upgrade the development dependencies only.
-- Run `cz bump` to bump the app's version, update the `CHANGELOG.md`, and create a git tag. Then push the changes and the git tag with `git push origin main --tags`.
-
-</details>
+See [All-diagram capabilities](docs/all-diagram-capabilities.md) for the claim boundary and verifier design.

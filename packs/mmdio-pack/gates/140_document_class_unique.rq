@@ -1,0 +1,6 @@
+PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+SELECT ?className (COUNT(?type) AS ?count) WHERE {
+  ?type a mer:DiagramType ; mer:documentClassName ?className .
+}
+GROUP BY ?className
+HAVING (COUNT(?type) != 1)

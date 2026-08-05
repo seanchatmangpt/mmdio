@@ -1,0 +1,14 @@
+PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
+SELECT ?type ?missing WHERE {
+  { ?type a mer:DiagramType . FILTER NOT EXISTS { ?type mer:pythonSupport true }
+    BIND("pythonSupport" AS ?missing) }
+  UNION
+  { ?type a mer:DiagramType . FILTER NOT EXISTS { ?type mer:documentClassName ?class }
+    BIND("documentClassName" AS ?missing) }
+  UNION
+  { ?type a mer:DiagramType . FILTER NOT EXISTS { ?type mer:oracleExample ?example }
+    BIND("oracleExample" AS ?missing) }
+  UNION
+  { ?type a mer:DiagramType . FILTER NOT EXISTS { ?type mer:acceptedJsType ?jsType }
+    BIND("acceptedJsType" AS ?missing) }
+}

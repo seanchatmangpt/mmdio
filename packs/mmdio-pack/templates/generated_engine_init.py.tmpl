@@ -13,56 +13,45 @@ sparql:
     SELECT DISTINCT ?enumClassName WHERE {
       ?e a mer:PythonEnum ; mer:enumClassName ?enumClassName .
     } ORDER BY ?enumClassName
-  types: |
-    PREFIX mer: <https://seanchatmangpt.github.io/ontology/mermaid#>
-    SELECT ?internalId WHERE {
-      ?type mer:pythonSupport true ; mer:pythonInternalId ?internalId .
-    } ORDER BY ?internalId
 ---
-"""GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
-
-Public surface of the mmdio engine, projected from packs/mmdio-pack/ontology.ttl.
-
-Previously hand-maintained, which let it drift from the ontology: it imported
-ERAttribute/EREntity/StateNode/StateTransition long after those models were renamed to
-EntityAttribute/Entity/State/Transition, and nothing caught it because no gate compared
-the two. Generating it makes that class of drift unrepresentable.
-"""
+"""GENERATED FILE — public all-dialect mmdio engine surface."""
 
 from __future__ import annotations
 
+from mmdio.engine.documents import *  # noqa: F403
+from mmdio.engine.documents import DOCUMENT_CLASS_BY_TYPE
+from mmdio.engine.enums import (
+{% for row in enums %}    {{ row.enumClassName }},
+{% endfor %})
+from mmdio.engine.facade import parse_mermaid, parse_structured_mermaid, render_diagram, schema_for_type
 from mmdio.engine.models import (
 {% for row in models %}    {{ row.className }},
 {% endfor %}    MermaidDiagram,
 )
-from mmdio.engine.enums import (
-{% for row in enums %}    {{ row.enumClassName }},
-{% endfor %})
-from mmdio.engine.parser import (
-    MermaidParser,
-    ParsingError,
-    parse_mermaid,
-{% for row in types %}    parse_{{ row.internalId }},
-{% endfor %})
-from mmdio.engine.render_dispatch import render_diagram, render_model
-from mmdio.engine.schemas import schema_for_type
-from mmdio.engine.supported import SUPPORTED_TYPES, is_supported
 from mmdio.engine.ops import diff, merge, validate_topology
+from mmdio.engine.render_dispatch import render_model
+from mmdio.engine.schemas import schema_for_type as structured_schema_for_type
+from mmdio.engine.supported import SUPPORTED_TYPES, is_supported
+from mmdio.engine.universal import *  # noqa: F403
+
+_PARSER_EXPORTS = frozenset({
+    "MermaidParser", "ParsingError", "parse_c4", "parse_class", "parse_er",
+    "parse_flowchart", "parse_gantt", "parse_git", "parse_mindmap",
+    "parse_pie", "parse_sankey", "parse_sequence", "parse_state",
+})
+
+
+def __getattr__(name: str):
+    """Load optional Lark-backed parser symbols only when requested."""
+    if name in _PARSER_EXPORTS:
+        from importlib import import_module
+        return getattr(import_module("mmdio.engine.parser"), name)
+    raise AttributeError(name)
 
 __all__ = [
 {% for row in models %}    "{{ row.className }}",
 {% endfor %}{% for row in enums %}    "{{ row.enumClassName }}",
-{% endfor %}{% for row in types %}    "parse_{{ row.internalId }}",
-{% endfor %}    "MermaidDiagram",
-    "MermaidParser",
-    "ParsingError",
-    "SUPPORTED_TYPES",
-    "diff",
-    "is_supported",
-    "merge",
-    "parse_mermaid",
-    "render_diagram",
-    "render_model",
-    "schema_for_type",
-    "validate_topology",
-]
+{% endfor %}    "MermaidDiagram", "SUPPORTED_TYPES", "diff", "is_supported", "merge",
+    "parse_mermaid", "parse_structured_mermaid", "render_diagram", "render_model",
+    "schema_for_type", "structured_schema_for_type", "validate_topology",
+] + sorted(_PARSER_EXPORTS) + sorted(cls.__name__ for cls in DOCUMENT_CLASS_BY_TYPE.values())

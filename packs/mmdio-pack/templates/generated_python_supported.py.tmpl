@@ -21,6 +21,12 @@ GENERATED_INTERNAL_SUPPORTED = frozenset({
 {% endfor %}})
 SUPPORTED_TYPES = GENERATED_PYTHON_SUPPORTED
 
+# Additional deep domain projections retained above the universal CST.
+STRUCTURED_INTERNAL_TYPES = frozenset({
+    "c4", "class", "er", "flowchart", "gantt", "git", "mindmap",
+    "pie", "sankey", "sequence", "state",
+})
+
 
 def is_supported(diagram_type: str) -> bool:
     """Return whether a canonical or parser-internal type is executable."""
