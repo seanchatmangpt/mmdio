@@ -1,0 +1,236 @@
+# Base regenerated via `maturin generate-ci github`.
+# abi3-py39: one wheel per platform covers CPython 3.9+. Free-threaded has no stable ABI.
+# Publishes `r4pm` (default) and `r4pm-full` (bundled DuckDB); they share the `r4pm` import
+# package, so only one can be installed at a time.
+name: CI
+
+on:
+  push:
+    tags:
+      - '*'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Any interpreter >= 3.9 produces the same cp39-abi3 wheel.
+  BUILD_PYTHON_VERSION: "3.11"
+
+jobs:
+  linux:
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [default, full]
+        platform:
+          - runner: ubuntu-22.04
+            target: x86_64
+          - runner: ubuntu-22.04-arm
+            target: aarch64
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.BUILD_PYTHON_VERSION }}
+      - name: Configure variant
+        shell: bash
+        run: |
+          if [ "${{ matrix.variant }}" = "full" ]; then
+            sed -i.bak -e 's/^name = "r4pm"$/name = "r4pm-full"/' \
+                       -e 's|^features = \["pyo3/extension-module"\]$|features = ["pyo3/extension-module", "full"]|' \
+                       pyproject.toml && rm pyproject.toml.bak
+            grep -E '^name|^features' pyproject.toml
+          fi
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist -i python${{ env.BUILD_PYTHON_VERSION }}
+          sccache: 'true'
+          # 2_28: bundled DuckDB needs a newer toolchain than manylinux2014 provides
+          manylinux: '2_28'
+      - name: Upload wheels
+        uses: actions/upload-artifact@v7
+        with:
+          name: wheels-linux-${{ matrix.variant }}-${{ matrix.platform.target }}
+          path: dist
+
+  # Best-effort: bundled DuckDB on musl is untested upstream, so this does not block the release.
+  musllinux:
+    runs-on: ${{ matrix.platform.runner }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [default, full]
+        platform:
+          - runner: ubuntu-22.04
+            target: x86_64
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.BUILD_PYTHON_VERSION }}
+      - name: Configure variant
+        shell: bash
+        run: |
+          if [ "${{ matrix.variant }}" = "full" ]; then
+            sed -i.bak -e 's/^name = "r4pm"$/name = "r4pm-full"/' \
+                       -e 's|^features = \["pyo3/extension-module"\]$|features = ["pyo3/extension-module", "full"]|' \
+                       pyproject.toml && rm pyproject.toml.bak
+            grep -E '^name|^features' pyproject.toml
+          fi
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist -i python${{ env.BUILD_PYTHON_VERSION }}
+          sccache: 'true'
+          manylinux: musllinux_1_2
+      - name: Upload wheels
+        uses: actions/upload-artifact@v7
+        with:
+          name: wheels-musllinux-${{ matrix.variant }}-${{ matrix.platform.target }}
+          path: dist
+
+  windows:
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [default, full]
+        platform:
+          # Not windows-latest: VS 2026 (MSVC 14.51) removed stdext::checked_array_iterator,
+          # which the fmt vendored in bundled DuckDB still uses.
+          - runner: windows-2022
+            target: x64
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.BUILD_PYTHON_VERSION }}
+          architecture: ${{ matrix.platform.target }}
+      - name: Configure variant
+        shell: bash
+        run: |
+          if [ "${{ matrix.variant }}" = "full" ]; then
+            sed -i.bak -e 's/^name = "r4pm"$/name = "r4pm-full"/' \
+                       -e 's|^features = \["pyo3/extension-module"\]$|features = ["pyo3/extension-module", "full"]|' \
+                       pyproject.toml && rm pyproject.toml.bak
+            grep -E '^name|^features' pyproject.toml
+          fi
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        # libduckdb-sys only passes -std=c++11, which MSVC ignores
+        env:
+          CXXFLAGS: /std:c++17
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist -i python${{ env.BUILD_PYTHON_VERSION }}
+          sccache: 'true'
+      - name: Upload wheels
+        uses: actions/upload-artifact@v7
+        with:
+          name: wheels-windows-${{ matrix.variant }}-${{ matrix.platform.target }}
+          path: dist
+
+  macos:
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [default, full]
+        platform:
+          - runner: macos-15-intel
+            target: x86_64
+          - runner: macos-latest
+            target: aarch64
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.BUILD_PYTHON_VERSION }}
+      - name: Configure variant
+        shell: bash
+        run: |
+          if [ "${{ matrix.variant }}" = "full" ]; then
+            sed -i.bak -e 's/^name = "r4pm"$/name = "r4pm-full"/' \
+                       -e 's|^features = \["pyo3/extension-module"\]$|features = ["pyo3/extension-module", "full"]|' \
+                       pyproject.toml && rm pyproject.toml.bak
+            grep -E '^name|^features' pyproject.toml
+          fi
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist -i python${{ env.BUILD_PYTHON_VERSION }}
+          sccache: 'true'
+      - name: Upload wheels
+        uses: actions/upload-artifact@v7
+        with:
+          name: wheels-macos-${{ matrix.variant }}-${{ matrix.platform.target }}
+          path: dist
+
+  sdist:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [default, full]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Configure variant
+        shell: bash
+        run: |
+          if [ "${{ matrix.variant }}" = "full" ]; then
+            sed -i.bak -e 's/^name = "r4pm"$/name = "r4pm-full"/' \
+                       -e 's|^features = \["pyo3/extension-module"\]$|features = ["pyo3/extension-module", "full"]|' \
+                       pyproject.toml && rm pyproject.toml.bak
+            grep -E '^name|^features' pyproject.toml
+          fi
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      - name: Upload sdist
+        uses: actions/upload-artifact@v7
+        with:
+          name: wheels-sdist-${{ matrix.variant }}
+          path: dist
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
+    needs: [linux, musllinux, windows, macos, sdist]
+    # Must match the environment in both PyPI trusted publishers
+    environment:
+      name: ci
+      url: https://pypi.org/p/r4pm
+    permissions:
+      # Mints the OIDC token PyPI exchanges for an upload token
+      id-token: write
+      # Used to upload release artifacts
+      contents: write
+      # Used to generate artifact attestation
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@v8
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: 'wheels-*/*'
+      # Trusted publishing (OIDC), no API token. Both projects trust the same publisher, and
+      # PyPI routes each file by the project name in its metadata.
+      - name: Collect distributions
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        run: mkdir -p dist && cp wheels-*/* dist/ && ls -la dist
+      - name: Publish to PyPI
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true

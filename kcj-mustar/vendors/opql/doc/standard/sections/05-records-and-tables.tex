@@ -1,0 +1,32 @@
+\section{Records and Tables}
+
+OPQL evaluation is structured around a current state consisting of an event log $L$ and a table $\mathcal{B}$. A table is a multiset of records, each carrying the bindings established by preceding clauses. Tables accumulate and transform as the query executes: PATTERN extends records with entity bindings; KEEP and WHEN compute new bound values; FILTER modifies the underlying event log. Query evaluation begins with the table $[\{ \}]$ containing a single empty record.
+
+\subsection{Records}
+
+A record is a finite mapping from symbolic names to values, representing one row of a table. Each symbolic name in a record corresponds to a column.
+
+\begin{frameddef}[Records]
+Let $\mathbb{U}_{sym}$ be the universe of symbolic names and $\mathbb{U}_V$ the universe of values. A \emph{record} is a set of tuples $b \in \mathbb{P}(\mathbb{U}_{sym} \times \mathbb{U}_V)$, where each element associates a concrete value to a symbolic name. We refer to $\mathbb{U}_B = \mathbb{P}(\mathbb{U}_{sym} \times \mathbb{U}_V)$ as the universe of records.
+
+The function $c : \mathbb{U}_B \times \mathbb{U}_{sym} \nrightarrow \mathbb{U}_V$ returns the value from a record $b$ bound to symbolic name $a$:
+\[
+c(b, a) = v \text{ iff } (a, v) \in b.
+\]
+
+The concatenation $\sqcup : \mathbb{U}_B \times \mathbb{U}_B \nrightarrow \mathbb{U}_B$ of two records with distinct symbolic names is:
+\[
+b \sqcup b' = b \cup b' \text{ s.t. } \not\exists_{(a,v) \in b,\, (a',v') \in b'}\ a = a',
+\]
+i.e., no duplicate symbolic names are allowed in $b \sqcup b'$.
+\end{frameddef}
+
+Record concatenation is partial: it is undefined when both records bind the same symbolic name. This prevents earlier bindings from being silently overwritten; a symbolic name established by a PATTERN clause cannot be rebound by a subsequent KEEP clause using the same name.
+
+\subsection{Tables}
+
+\begin{frameddef}[Tables]
+A \emph{multiset} $\mathcal{B} = (\mathbb{U}_B, m)$ over the universe of records is called a \emph{table}. We refer to the set of all possible tables $\mathbb{U}_T = \{ (\mathbb{U}_B, m) \mid m : \mathbb{U}_B \to \mathbb{N} \}$ as the universe of tables.
+\end{frameddef}
+
+Tables are multisets rather than sets: the same record may appear multiple times, and each occurrence is processed independently by subsequent clauses. Duplicate records arise naturally when multiple entity bindings satisfy the same pattern; they are preserved unless \term{DISTINCT} is used to collapse them.

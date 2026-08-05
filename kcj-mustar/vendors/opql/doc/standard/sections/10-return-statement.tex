@@ -1,0 +1,29 @@
+\section{RETURN Statement}
+
+\begin{framedgram}[RETURN Statement]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{returnRule} & = & \term{RETURN} \term{OCEL} \\
+& | & \term{RETURN} \nterm{projection} [ \term{SUBJECTTO} | \term{ST} \nterm{expression} ] \\
+\end{tabularx}
+\end{framedgram}
+
+RETURN statements terminate a query. They come in two forms:
+
+\begin{itemize}
+    \item \textbf{RETURN OCEL} --- returns the (potentially filtered) event log as-is
+    \item \textbf{Tabular RETURN} --- returns a table of records, using the same projection mechanism as KEEP clauses
+\end{itemize}
+
+The tabular form supports the same modifiers as KEEP: \term{DISTINCT} for deduplication, \term{*} for retaining previously bound values, optional \term{AS} aliases (omitting \term{AS} yields a column name from the expression's string representation), binning, ordering, and limiting.
+
+\begin{frameddef}[RETURN Statement Evaluation]
+The universe of RETURN statements is $\mathbb{U}_{rS} = \mathbb{U}_{retTab} \cup \mathbb{U}_{retLog}$, where $\mathbb{U}_{retTab} = \mathbb{U}_{kC}$ and $\mathbb{U}_{retLog}$ is the singleton universe of \term{RETURN OCEL} statements.
+
+The evaluation $eval_{rS} : \mathbb{U}_{OCEL} \times \mathbb{U}_T \times \mathbb{U}_{rS} \nrightarrow \mathbb{U}_T \cup \mathbb{U}_{OCEL}$ is:
+\[
+eval_{rS}(L, \mathcal{B}, R) = \begin{cases}
+L & \text{if } R \in \mathbb{U}_{retLog} \\
+eval_{kC}(L, \mathcal{B}, R) & \text{if } R \in \mathbb{U}_{retTab}
+\end{cases}
+\]
+\end{frameddef}

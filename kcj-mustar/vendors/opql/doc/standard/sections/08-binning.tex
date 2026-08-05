@@ -1,0 +1,41 @@
+\section{Binning}
+
+Binning maps a numeric value to a user-defined target value based on which of a set of intervals it falls into. It is applied as a modifier to a projection item, replacing the computed value with the label of the matching bin.
+
+\begin{framedgram}[Binning]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{intervalTarget} & = & \nterm{int} | \nterm{float} | \nterm{string} \\
+\nterm{intervalLimit} & = & \nterm{int} | \nterm{float} | \term{-inf} | [ \term{+} ] \term{inf} \\
+\nterm{binningInterval} & = & (\term{(} | \term{[}) \nterm{intervalLimit} \term{,} \nterm{intervalLimit} \\
+& & \quad (\term{)} | \term{]}) \term{AS} \nterm{intervalTarget} \\
+\nterm{binning} & = & \term{BINNED} \term{(} \nterm{binningInterval} \{ \term{,} \nterm{binningInterval} \} \term{)} \\
+\end{tabularx}
+\end{framedgram}
+
+Each interval is written as a standard mathematical interval. A round bracket \term{(} or \term{)} denotes an open (exclusive) bound; a square bracket \term{[} or \term{]} denotes a closed (inclusive) bound. The limits \term{-inf} and \term{inf} represent $-\infty$ and $+\infty$ respectively. The \term{AS} target specifies the value the expression is replaced with when it falls within the interval; the target may be a numeric literal or a string.
+
+\begin{frameddef}[Binning Interval]
+Let $\mathbb{U}_{\infty} = \{ \infty, -\infty \}$ with $\forall_{x \in \mathbb{R}}\ -\infty < x < \infty$. Let $\mathbb{U}_{bounds} = (\mathbb{R} \cup \mathbb{U}_{\infty}) \times \{ <, \leq \}$ and $\mathbb{U}_{intv} = \mathbb{U}_{bounds} \times \mathbb{U}_{bounds}$.
+
+The function $ininterval : \mathbb{R} \times \mathbb{U}_{bounds} \times \mathbb{U}_{bounds} \to \mathbb{U}_{bool}$ determines whether a value is within bounds:
+\[
+ininterval(v, ((n, \circ), (m, \circ'))) = \begin{cases}
+True & \text{if } n \circ v \circ' m \\
+False & \text{otherwise}
+\end{cases}
+\]
+\end{frameddef}
+
+An open bracket maps to the strict relation $<$; a closed bracket maps to $\leq$. For example, \texttt{[0, 10)} produces bounds $((0, \leq), (10, <))$, matching values $v$ with $0 \leq v < 10$.
+
+\begin{frameddef}[Binning]
+The universe of binnings is $\mathbb{U}_{binnings} = (\mathbb{U}_{intv} \times (\mathbb{R} \cup \Sigma^*))^*$. The function $bin : \mathbb{R} \times \mathbb{U}_{binnings} \nrightarrow \mathbb{R} \cup \Sigma^*$ maps a value to the target of the first matching interval:
+\[
+bin(v, ((i_1, t_1), \dots, (i_n, t_n))) = \begin{cases}
+t_j & \text{if } ininterval(v, i_j) \land \not\exists_{k < j}\ ininterval(v, i_k) \\
+None & \text{otherwise}
+\end{cases}
+\]
+\end{frameddef}
+
+Intervals are evaluated in the order they appear; the first match determines the result. A value matched by no interval evaluates to $None$. Overlapping intervals are permitted; the first one listed takes precedence. Binning may only be applied to numeric expressions; applying it to a non-numeric value is undefined.

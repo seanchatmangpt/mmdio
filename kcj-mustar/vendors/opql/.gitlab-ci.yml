@@ -1,0 +1,120 @@
+stages:
+  - build
+  - lint
+  - test
+  - release
+  
+variables:
+  ANTLR_VERSION: "4.13.1"
+  # setuptools-scm derives the package version from git tags; GitLab's default
+  # shallow clone has none, which would silently yield the fallback version.
+  GIT_DEPTH: 0
+
+generate-bindings:
+  stage: build
+  image: python:3.12
+  before_script:
+    - apt-get update && apt-get install -y default-jre antlr4
+  script:
+    - rm -rf opql/lang/grammar 
+    - mkdir -p opql/lang/grammar 
+    - curl -sSLo antlr.jar https://www.antlr.org/download/antlr-${ANTLR_VERSION}-complete.jar
+    - find .
+    # generate directly into package
+    - cd opql/lang
+    - java -jar ../../antlr.jar -Dlanguage=Python3 -visitor -no-listener OPQL.g4 -o grammar 
+
+  artifacts:
+    paths:
+      - opql/lang/grammar
+      
+lint:
+  stage: lint
+  image: pipelinecomponents/ruff
+  dependencies:
+    - generate-bindings
+  script:
+    - ruff check .
+
+test:
+  stage: test
+  image: python:3.12
+  dependencies:
+    - generate-bindings
+  script:
+    - pwd
+    - find .
+    # TODO: this version must also be matched in pyproject.toml when deploying!
+    - pip install pytest antlr4-python3-runtime==${ANTLR_VERSION}
+    - pip install -e .
+    - pytest
+  
+auto-tag:
+  stage: release
+  image: alpine:latest
+  rules:
+    # Only run when a merge request is merged into master
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  before_script:
+    - apk add --no-cache git curl jq
+    # Configure git to use the Project Access Token for pushing
+    - git config --global user.email "ci-bot@gitlab.com"
+    - git config --global user.name "CI Bot"
+    - git remote set-url origin "https://oauth2:${SEMVER_TOKEN_VAL}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+  script:
+    - git fetch --tags
+
+    # 1. Get the latest tag (e.g., v1.2.3)
+    - LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+    - echo "Current version is $LATEST_TAG"
+
+    # 2. Parse the version numbers
+    - VERSION=$(echo $LATEST_TAG | sed 's/v//')
+    - MAJOR=$(echo $VERSION | cut -d. -f1)
+    - MINOR=$(echo $VERSION | cut -d. -f2)
+    - PATCH=$(echo $VERSION | cut -d. -f3)
+
+    # 3. Fetch the MR that introduced this commit and check for the 'feature' label.
+    #    CI_MERGE_REQUEST_IID is not available in push pipelines, so we look it up via the API.
+    - |
+      MR_IID=$(curl --silent --header "PRIVATE-TOKEN: $SEMVER_TOKEN_VAL" \
+        "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA/merge_requests" \
+        | jq -r '.[0].iid')
+
+      echo "Resolved MR IID: $MR_IID"
+
+      if [ -z "$MR_IID" ] || [ "$MR_IID" = "null" ]; then
+        echo "No associated MR found — defaulting to patch increment."
+        IS_FEATURE="false"
+      else
+        MR_LABELS=$(curl --silent --header "PRIVATE-TOKEN: $SEMVER_TOKEN_VAL" \
+          "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$MR_IID" \
+          | jq -r '.labels[]')
+
+        echo "MR labels: $MR_LABELS"
+
+        if echo "$MR_LABELS" | grep -q "^feature$"; then
+          echo "Label 'feature' found — incrementing minor version."
+          IS_FEATURE="true"
+        else
+          echo "Label 'feature' not found — incrementing patch version."
+          IS_FEATURE="false"
+        fi
+      fi
+
+    # 4. Determine the new tag based on the label check
+    - |
+      if [ "$IS_FEATURE" = "true" ]; then
+        NEW_MINOR=$((MINOR + 1))
+        NEW_TAG="v$MAJOR.$NEW_MINOR.0"
+        echo "Feature detected. Incrementing Minor version."
+      else
+        NEW_PATCH=$((PATCH + 1))
+        NEW_TAG="v$MAJOR.$MINOR.$NEW_PATCH"
+        echo "Fix/Patch detected. Incrementing Patch version."
+      fi
+
+    # 5. Create and push the tag
+    - echo "Tagging as $NEW_TAG"
+    - git tag $NEW_TAG
+    - git push origin $NEW_TAG

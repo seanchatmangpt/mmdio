@@ -1,0 +1,154 @@
+\section{Patterns}
+
+Patterns define structural constraints over subgraphs of events, objects, and their qualified relations. A PATTERN clause matches all subgraphs of the event log that satisfy the pattern and binds the matched entities to symbolic names, producing one new record extension per match.
+
+\subsection{Events and Objects}
+
+Events and objects are the two entity types in an OCEL. A pattern node represents one such entity: it may carry a symbolic name (by which the entity is referenced in subsequent clauses), a type qualifier (constraining which event or object types are accepted), or both, or neither.
+
+\begin{frameddef}[Events, Objects]
+A tuple $v$ defines how an entity shall be queried:
+\[
+v = (t, s, q)
+\]
+with $t \in \{ event, object \}$, $s \in \mathbb{U}_{sym} \cup \{ None \}$, $q \in \Sigma^* \cup \{ None \}$.
+
+The elements are referred to as $\pi_t(v)$, $\pi_s(v)$, and $\pi_q(v)$. The universe of entities is $\mathbb{U}_{entity} = \{ event, object \} \times (\mathbb{U}_{sym} \cup \{ None \}) \times (\Sigma^* \cup \{ None \})$.
+\end{frameddef}
+
+\begin{framedgram}[Event, Object]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{event} & = & \term{E(} [ \nterm{symbolicName} ] [ \term{:} \nterm{string} ] \term{)} \\
+\nterm{object} & = & \term{O(} [ \nterm{symbolicName} ] [ \term{:} \nterm{string} ] \term{)} \\
+\end{tabularx}
+\end{framedgram}
+
+The optional symbolic name encodes $s$; the optional string literal (preceded by \term{:}) encodes $q$, the required event or object type. The value of $t$ is determined by whether \nterm{event} or \nterm{object} is used. If no symbolic name is given, a globally unique implementation-defined name is assigned so that the entity participates in relation constraints without being accessible by name.
+
+\subsection{Relations}
+
+Relations connect pattern nodes. Three directional forms are available, corresponding to OCEL event-to-object and object-to-object relations, with direction indicating which entity in the pair is considered the source.
+
+\begin{frameddef}[Relations]
+A relation is a tuple $r = (d, s, q)$ with $d \in \{ \rightarrow, \leftarrow, \rightleftarrows \}$, $s \in \mathbb{U}_{sym} \cup \{ None \}$, $q \in \Sigma^* \cup \{ None \}$.
+
+The universe of relations is $\mathbb{U}_{relation} = \{ \rightarrow, \leftarrow, \rightleftarrows \} \times (\mathbb{U}_{sym} \cup \{ None \}) \times (\Sigma^* \cup \{ None \})$. Elements are referred to as $\pi_d(r)$, $\pi_s(r)$, and $\pi_q(r)$.
+\end{frameddef}
+
+\begin{framedgram}[Relations]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{relationLeft} & = & \term{<-[} [ \nterm{symbolicName} ] [ \term{:} \nterm{string} ] \term{]-} \\
+\nterm{relationRight} & = & \term{-[} [ \nterm{symbolicName} ] [ \term{:} \nterm{string} ] \term{]->} \\
+\nterm{relationAny} & = & \term{-[} [ \nterm{symbolicName} ] [ \term{:} \nterm{string} ] \term{]-} \\
+\end{tabularx}
+\end{framedgram}
+
+\nterm{relationLeft} encodes $\leftarrow$, \nterm{relationRight} encodes $\rightarrow$, and \nterm{relationAny} encodes $\rightleftarrows$. The direction of event-to-object relations indicates which side carries the event: $\rightarrow$ means the left node is the event; $\leftarrow$ means the right node is the event. Object-to-object relations use $\rightarrow$ and $\leftarrow$ to express directed O2O relationships, and $\rightleftarrows$ to match either direction. The optional string after \term{:} constrains the relation qualifier $q$.
+
+\subsection{Pattern Composition}
+
+A pattern is a chain of alternating entities and relations. The grammar restricts which combinations are valid: object-to-event direction is not permitted in event-to-object connections, and direct event-to-event connections are not permitted at all (events interact only through shared objects).
+
+\begin{frameddef}[Patterns]
+A pattern is a finite, alternating sequence
+\[
+\sigma = \langle v_1, r_1, v_2, r_2, \dots, r_{n-1}, v_n \rangle,\ n \in \mathbb{N},\ v_i \in \mathbb{U}_{entity},\ r_i \in \mathbb{U}_{relation}
+\]
+such that:
+\[
+\forall_{i \in \{1,\dots,n\}}\ v_i r_i v_{i+1} \neq (object, s, q)(\rightarrow, s', q')(event, s'', q'')
+\]
+\[
+\land\ \forall_{i \in \{1,\dots,n\}}\ v_i r_i v_{i+1} \neq (event, s, q)(\leftarrow, s', q')(object, s'', q'')),
+\]
+i.e., event-to-object relations never directionally point from objects to events, and no event-to-event relations are permitted. The universe of all such patterns is $\mathbb{U}_{pattern}$.
+\end{frameddef}
+
+\begin{framedgram}[Pattern]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{patternObject} & = & \nterm{object} \textbar\ \\
+& & (\nterm{object}, (\nterm{relationLeft} \textbar\ \nterm{relationAny}), \nterm{pattern}) \textbar\ \\
+& & (\nterm{object}, \nterm{relationRight}, \nterm{patternObject}) \\
+\nterm{pattern} & = & \nterm{event} \textbar\ \nterm{object} \textbar\ \\
+& & (\nterm{event}, (\nterm{relationRight} \textbar\ \nterm{relationAny}), \nterm{patternObject}) \textbar\ \\
+& & (\nterm{object}, (\nterm{relationAny} \textbar\ \nterm{relationLeft}), \nterm{pattern}) \textbar\ \\
+& & (\nterm{object}, \nterm{relationRight}, \nterm{patternObject}) \\
+\end{tabularx}
+\end{framedgram}
+
+The grammar encodes the sequence structure as a recursive right-expansion. Each pattern starts with a \nterm{pattern} node, which may be an event or object optionally followed by a relation and further nodes. Patterns starting with an event may only continue into \nterm{patternObject} chains (no events reachable from an event); patterns starting with an object may continue to either another object or an event.
+
+\subsection{Pattern Constraints}
+
+Given a log $L$ and a record $b$, a pattern imposes three classes of constraint on the values bound to its symbolic names: type constraints on individual entities, directional constraints on event-to-object relations, and directional constraints on object-to-object relations.
+
+\begin{frameddef}[Entity Constraints]
+Let $L \in \mathbb{U}_{OCEL}$ and $\sigma \in \mathbb{U}_{pattern}$. The constraints that entities $v \in \mathbb{U}_{entity}$ in $\sigma$ impose on values $c(b, \pi_s(v))$ bound to symbolic names in a record $b \in \mathbb{U}_B$ are given by $R_{EO} : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_{pattern} \to \mathbb{U}_{bool}$:
+\[
+\begin{array}{rcrl}
+R_{EO}(L, b, \sigma) = & & \displaystyle \bigwedge_{i \in Ev(\sigma)} & c(b, \pi_s(v_i)) \in E_L \\
+& \land & \displaystyle \bigwedge_{i \in Ev(\sigma)} & (\pi_q(v_i) = None \oplus \pi_q(v_i) = evtype(c(b, \pi_s(v_i)))) \\
+& \land & \displaystyle \bigwedge_{i \in Ob(\sigma)} & c(b, \pi_s(v_i)) \in O_L \\
+& \land & \displaystyle \bigwedge_{i \in Ob(\sigma)} & (\pi_q(v_i) = None \oplus \pi_q(v_i) = objtype(c(b, \pi_s(v_i))))
+\end{array}
+\]
+with $Ev(\sigma) = \{ i \mid v_i \in \sigma \land \pi_t(v_i) = event \}$ and $Ob(\sigma) = \{ i \mid v_i \in \sigma \land \pi_t(v_i) = object \}$.
+\end{frameddef}
+
+Each event node must be bound to an event in $E_L$ and, if a type qualifier is given, the event's type must match. Object nodes are constrained analogously. The XOR $\oplus$ in the type qualifier condition encodes that either no qualifier is present or the qualifier matches (but not both simultaneously being absent/mismatched).
+
+\begin{frameddef}[Event-to-Object Constraints]
+Let $L \in \mathbb{U}_{OCEL}$, $b \in \mathbb{U}_B$, $\sigma \in \mathbb{U}_{pattern}$. Event-to-object relations constrain records via $R_{E2O} : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_{pattern} \to \mathbb{U}_{bool}$:
+\[
+\begin{array}{rrrl}
+R_{E2O}(L, b, \sigma) = & & \displaystyle \bigwedge_{i \in E2O_{\leftarrow}(\sigma)} & (c(b, \pi_s(v_i)), c(b, \pi_s(r_i)), c(b, \pi_s(v_{i+1}))) \in E2O_L \\
+& \land & \displaystyle \bigwedge_{i \in E2O_{\rightarrow}(\sigma)} & (c(b, \pi_s(v_{i+1})), c(b, \pi_s(r_i)), c(b, \pi_s(v_i))) \in E2O_L \\
+& \land & \displaystyle \bigwedge_{i \in E2O(\sigma)} & (\pi_q(r_i) = None \oplus \pi_q(r_i) = c(b, \pi_s(r_i)))
+\end{array}
+\]
+with $E2O(\sigma) = \{ i \mid v_i \in \sigma \land \pi_t(v_i) = event \} \cup \{ i \mid v_{i+1} \in \sigma \land \pi_t(v_{i+1}) = event \}$, $E2O_{\leftarrow}(\sigma) = \{ i \in E2O(\sigma) \mid \pi_t(v_i) = event \}$, $E2O_{\rightarrow}(\sigma) = \{ i \in E2O(\sigma) \mid \pi_t(v_{i+1}) = event \}$.
+\end{frameddef}
+
+For a \nterm{relationRight} edge pointing from event to object, the E2O triple must exist in $E2O_L$ with the event as the first element. For a \nterm{relationLeft} edge (object side on the left of the syntax, event on the right), the triple is reversed accordingly. The qualifier constraint uses the same XOR logic as entity type constraints.
+
+\begin{frameddef}[Object-to-Object Constraints]
+Let $L \in \mathbb{U}_{OCEL}$, $b \in \mathbb{U}_B$, $\sigma \in \mathbb{U}_{pattern}$. Object-to-object relations constrain records via $R_{O2O} : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_{pattern} \to \mathbb{U}_{bool}$:
+\[
+\begin{array}{rrrl}
+R_{O2O}(L, b, \sigma) = & & \displaystyle \bigwedge_{i \in O2O_{\leftarrow}(\sigma)} & (c(b, \pi_s(v_i)), c(b, \pi_s(r_i)), c(b, \pi_s(v_{i+1}))) \in O2O_L \\
+& \land & \displaystyle \bigwedge_{i \in O2O_{\rightarrow}(\sigma)} & (c(b, \pi_s(v_{i+1})), c(b, \pi_s(r_i)), c(b, \pi_s(v_i))) \in O2O_L \\
+& \land & \displaystyle \bigwedge_{i \in O2O_{\rightleftarrows}(\sigma)} & \begin{gathered} (c(b, \pi_s(v_i)), c(b, \pi_s(r_i)), c(b, \pi_s(v_{i+1}))) \in O2O_L \\ \lor\ (c(b, \pi_s(v_{i+1})), c(b, \pi_s(r_i)), c(b, \pi_s(v_i))) \in O2O_L \end{gathered} \\
+& \land & \displaystyle \bigwedge_{i \in O2O(\sigma)} & (\pi_q(r_i) = None \oplus \pi_q(r_i) = c(b, \pi_s(r_i)))
+\end{array}
+\]
+with $O2O(\sigma) = \{ i \mid v_i, v_{i+1} \in \sigma \land \pi_t(v_i) = \pi_t(v_{i+1}) = object \}$, $O2O_{\leftarrow}(\sigma) = \{ i \in O2O(\sigma) \mid \pi_d(r_i) = \leftarrow \}$, $O2O_{\rightarrow}(\sigma) = \{ i \in O2O(\sigma) \mid \pi_d(r_i) = \rightarrow \}$, $O2O_{\rightleftarrows}(\sigma) = \{ i \in O2O(\sigma) \mid \pi_d(r_i) = \rightleftarrows \}$.
+\end{frameddef}
+
+The undirected relation $\rightleftarrows$ is satisfied if the O2O triple exists in either direction. Directed relations $\rightarrow$ and $\leftarrow$ require the triple to exist with the specified orientation.
+
+\begin{frameddef}[Pattern Constraints]
+Let $L \in \mathbb{U}_{OCEL}$. A sequence $\sigma \in \mathbb{U}_{pattern}$ encodes the criteria $R(L, b, \sigma)$ any record $b \in \mathbb{U}_B$ must fulfill:
+\[
+R(L, b, \sigma) = R_{EO}(L, b, \sigma) \land R_{E2O}(L, b, \sigma) \land R_{O2O}(L, b, \sigma).
+\]
+\end{frameddef}
+
+\subsection{PATTERN Clause}
+
+A PATTERN clause specifies one or more patterns that must all be satisfied simultaneously by the same record extension. Each combination of OCEL entities that satisfies all patterns and is compatible with the existing record produces one new record in the output table.
+
+\begin{framedgram}[PATTERN Clause]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{patternList} & = & \nterm{pattern} \{ \term{,} \nterm{pattern} \} \\
+\nterm{patternClause} & = & \term{PATTERN} \nterm{patternList} [ \term{SUBJECTTO} | \term{ST} \nterm{expression} ] \\
+\end{tabularx}
+\end{framedgram}
+
+\begin{frameddef}[PATTERN Clause Evaluation]
+The universe of PATTERN clauses is $\mathbb{U}_{pC} = \mathbb{P}(\mathbb{U}_{pattern})$. The function $eval_{pC} : \mathbb{U}_{OCEL} \times \mathbb{U}_T \times \mathbb{U}_{pC} \to \mathbb{U}_T$ evaluates a PATTERN clause:
+\[
+eval_{pC}(L, \mathcal{B}, \{ \sigma_1, \dots, \sigma_n \}) = \biguplus_{b \in \mathcal{B}} [\, b \sqcup b' \mid R(L, b \sqcup b', \sigma_i)\ \forall i \in \{1 \dots n\},\ b' \in \mathbb{U}_B \,].
+\]
+\end{frameddef}
+
+For each existing record $b$ in the table, every binding $b'$ that extends $b$ to satisfy all $n$ patterns simultaneously is added. One input record may expand into many output records. Patterns in the list are evaluated conjunctively: a single binding $b'$ must satisfy all of them, not just one.

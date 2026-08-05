@@ -1,0 +1,103 @@
+\section{Lexical Structure}
+
+This section defines the lexical tokens of OPQL. Whitespace and comments are recognized but discarded during lexical analysis.
+
+\subsection{Keywords}
+
+The following reserved keywords are recognized case-sensitively:
+
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+Keyword & Alternatives & Keyword & Alternatives \\
+\midrule
+\term{PATTERN} & & \term{FILTER} & \\
+\term{SUBJECTTO} & \term{ST} & \term{RETURN} & \\
+\term{OCEL} & & \term{KEEP} & \\
+\term{DISTINCT} & & \term{ORDERBY} & \\
+\term{ASC} & \term{ASCENDING} & \term{DESC} & \term{DESCENDING} \\
+\term{LIMIT} & & \term{BINNED} & \\
+\term{WHEN} & & \term{AS} & \\
+\term{MATERIALIZED} & & & \\
+\term{True} & & \term{False} & \\
+\term{None} & & \term{E} & \\
+\term{O} & & \term{T} & \\
+\term{D} & & \term{OR} & \\
+\term{XOR} & & \term{AND} & \\
+\term{NOT} & & & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Symbolic Names}
+
+A symbolic name is an identifier used to bind values. It must start with a letter (uppercase or lowercase), followed by any sequence of letters, digits, or underscores.
+
+\begin{framedgram}[Symbolic Names]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{symbolicName} & = & (\term{a}..\term{z} | \term{A}..\term{Z}) \{ \term{a}..\term{z} | \term{A}..\term{Z} | \term{0}..\term{9} | \term{\_} \} \\
+\end{tabularx}
+\end{framedgram}
+
+The set of all valid symbolic names is denoted $\mathbb{U}_{sym}$.
+
+\subsection{Strings}
+
+A string literal is a sequence of characters enclosed in double quotation marks (\term{"}). The following escape sequences are recognized:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Escape & Meaning \\
+\midrule
+\term{\textbackslash"} & Double quotation mark \\
+\term{\textbackslash\textbackslash} & Backslash \\
+\term{\textbackslash/} & Forward slash \\
+\term{\textbackslash b} & Backspace \\
+\term{\textbackslash f} & Form feed \\
+\term{\textbackslash n} & Newline \\
+\term{\textbackslash r} & Carriage return \\
+\term{\textbackslash t} & Tab \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Punctuation and Operators}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Token & Name & Usage \\
+\midrule
+\term{,} & Comma & Separator \\
+\term{:} & Colon & Type specifier \\
+\term{(} \term{)} & Parentheses & Grouping, function calls \\
+\term{[} \term{]} & Square brackets & Property lookup, relations \\
+\term{*} & Asterisk & Wildcard, multiplication \\
+\term{@} & At-sign & Timestamp qualifier for properties \\
+\term{==} & Equal to & Comparison \\
+\term{!=} & Not equal & Comparison \\
+\term{<=} & Less than or equal & Comparison \\
+\term{>=} & Greater than or equal & Comparison \\
+\term{<} & Less than & Comparison, left-directed relation \\
+\term{>} & Greater than & Comparison, right-directed relation \\
+\term{+} & Plus & Addition, unary positive \\
+\term{-} & Minus & Subtraction, unary negative, relation anchor \\
+\term{/} & Slash & Division \\
+\term{\%} & Percent & Modulo \\
+\term{\textasciicircum} & Caret & Exponentiation \\
+\term{->} & Right arrow & Right-directed relation \\
+\term{<-} & Left arrow & Left-directed relation \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Whitespace and Comments}
+
+Whitespace (spaces, tabs, line breaks, and Unicode whitespace characters) is ignored except where needed to separate tokens.
+
+Comments are supported in two forms:
+\begin{itemize}
+    \item Line comments: \term{//} followed by any characters until end of line
+    \item Block comments: \term{/*} followed by any characters until \term{*/}
+\end{itemize}

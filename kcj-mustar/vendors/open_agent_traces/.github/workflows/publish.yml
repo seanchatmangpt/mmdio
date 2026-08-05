@@ -1,0 +1,261 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+# Prevent concurrent releases
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # ── 1. Validate the tag ──────────────────────────────────────────────
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      is_prerelease: ${{ steps.meta.outputs.is_prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version metadata
+        id: meta
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION="${TAG#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+          # Check if pre-release (rc, dev, alpha, beta)
+          if [[ "$VERSION" =~ (rc|dev|alpha|beta) ]]; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify tag matches pyproject.toml version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          TAG_VERSION="${TAG#v}"
+          TOML_VERSION=$(python3 -c "
+          import re
+          with open('pyproject.toml') as f:
+              content = f.read()
+          match = re.search(r'^version\s*=\s*\"(.+?)\"', content, re.MULTILINE)
+          print(match.group(1))
+          ")
+          if [ "$TAG_VERSION" != "$TOML_VERSION" ]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match pyproject.toml version ($TOML_VERSION)"
+            exit 1
+          fi
+          echo "✓ Tag v${TAG_VERSION} matches pyproject.toml"
+
+  # ── 2. Full test matrix ──────────────────────────────────────────────
+  test:
+    needs: preflight
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Lint
+        run: uv run ruff check src tests
+
+      - name: Format check
+        run: uv run ruff format --check src tests
+
+      - name: Type check
+        run: uv run mypy src
+
+      - name: Test with coverage
+        run: uv run pytest tests/ -v --tb=short -m "not network" --cov=src/ocelgen --cov-fail-under=90
+
+  # ── 3. Build and verify the package ──────────────────────────────────
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - name: Verify package contents
+        run: |
+          uv venv /tmp/verify-env
+          VIRTUAL_ENV=/tmp/verify-env uv pip install dist/*.whl
+          /tmp/verify-env/bin/python -c "import ocelgen; print('ocelgen imported successfully')"
+          /tmp/verify-env/bin/python -c "from ocelgen.validation import validate_referential_integrity; print('validators OK')"
+          /tmp/verify-env/bin/ocelgen --help
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 5
+
+  # ── 4a. Publish to TestPyPI (pre-releases) ───────────────────────────
+  publish-testpypi:
+    needs: [preflight, build]
+    if: needs.preflight.outputs.is_prerelease == 'true'
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to TestPyPI
+        # v1.12.4 — pinned to SHA for supply chain security
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  # ── 4b. Publish to PyPI (stable releases) ────────────────────────────
+  publish-pypi:
+    needs: [preflight, build]
+    if: needs.preflight.outputs.is_prerelease == 'false'
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        # v1.12.4 — pinned to SHA for supply chain security
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b
+
+  # ── 5. Create GitHub Release ─────────────────────────────────────────
+  github-release:
+    needs: [preflight, build, publish-pypi, publish-testpypi]
+    # Run after whichever publish job ran (the other is skipped)
+    if: always() && needs.build.result == 'success' && (needs.publish-pypi.result == 'success' || needs.publish-testpypi.result == 'success')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for changelog
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Generate changelog
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          VERSION: ${{ needs.preflight.outputs.version }}
+        run: |
+          # Find the previous tag
+          PREV_TAG=$(git tag --sort=-creatordate | grep -v "^${REF_NAME}$" | head -1)
+          if [ -z "$PREV_TAG" ]; then
+            PREV_TAG=$(git rev-list --max-parents=0 HEAD)
+            RANGE="${PREV_TAG}..HEAD"
+          else
+            RANGE="${PREV_TAG}..${REF_NAME}"
+          fi
+
+          echo "Generating changelog for ${RANGE}"
+
+          # Get subject lines only (no body) to avoid false grep matches
+          git log "$RANGE" --pretty=format:"%s" --no-merges > /tmp/subjects.txt
+
+          # Group commits by conventional commit prefix (subject line only)
+          {
+            echo "## What's Changed"
+            echo ""
+
+            FEATS=$(grep -E "^feat" /tmp/subjects.txt | sed 's/^/- /' || true)
+            if [ -n "$FEATS" ]; then
+              echo "### Features"
+              echo "$FEATS"
+              echo ""
+            fi
+
+            FIXES=$(grep -E "^fix" /tmp/subjects.txt | sed 's/^/- /' || true)
+            if [ -n "$FIXES" ]; then
+              echo "### Bug Fixes"
+              echo "$FIXES"
+              echo ""
+            fi
+
+            TESTS=$(grep -E "^test" /tmp/subjects.txt | sed 's/^/- /' || true)
+            if [ -n "$TESTS" ]; then
+              echo "### Tests"
+              echo "$TESTS"
+              echo ""
+            fi
+
+            DOCS=$(grep -E "^docs" /tmp/subjects.txt | sed 's/^/- /' || true)
+            if [ -n "$DOCS" ]; then
+              echo "### Documentation"
+              echo "$DOCS"
+              echo ""
+            fi
+
+            CHORES=$(grep -E "^chore" /tmp/subjects.txt | sed 's/^/- /' || true)
+            if [ -n "$CHORES" ]; then
+              echo "### Maintenance"
+              echo "$CHORES"
+              echo ""
+            fi
+
+            OTHER=$(grep -v -E "^(feat|fix|test|docs|chore)" /tmp/subjects.txt | sed 's/^/- /' || true)
+            if [ -n "$OTHER" ]; then
+              echo "### Other"
+              echo "$OTHER"
+              echo ""
+            fi
+
+            echo "---"
+            echo ""
+            echo "**Install:** \`pip install open-agent-traces==${VERSION}\`"
+            echo ""
+            echo "**Dataset:** [juliensimon/open-agent-traces](https://huggingface.co/datasets/juliensimon/open-agent-traces)"
+          } > /tmp/changelog.md
+
+          cat /tmp/changelog.md
+
+      - name: Create GitHub Release
+        env:
+          VERSION: ${{ needs.preflight.outputs.version }}
+          IS_PRERELEASE: ${{ needs.preflight.outputs.is_prerelease }}
+        # v2.3.2 — pinned to SHA for supply chain security
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe
+        with:
+          name: "v${{ needs.preflight.outputs.version }}"
+          body_path: /tmp/changelog.md
+          prerelease: ${{ needs.preflight.outputs.is_prerelease == 'true' }}
+          files: dist/*
+          fail_on_unmatched_files: true
+          generate_release_notes: false

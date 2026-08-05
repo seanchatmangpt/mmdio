@@ -1,0 +1,116 @@
+\section{Complete Grammar Reference}\label{sec:grammar-ref}
+
+This section presents the complete OPQL grammar in EBNF. Terminals are shown in blue typewriter font via \term{...}; non-terminals in \textit{italic} via \nterm{...}. Concatenation is implicit (juxtaposition), alternatives use $|$, optionals use $[ \dots ]$, repetitions use $\{ \dots \}$, and grouping uses $( \dots )$.
+
+\begin{framedgram}[Query Structure]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{entryPoint}     & = & \nterm{fullQuery} \\
+\nterm{fullQuery}      & = & \{ \nterm{contextRule} \} \nterm{returnRule} \\
+\nterm{contextRule}    & = & \nterm{patternRule} | \nterm{filterRule} | \nterm{keepRule} | \nterm{whenRule} \\
+\end{tabularx}
+\end{framedgram}
+
+\begin{framedgram}[Pattern Syntax]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{patternRule}       & = & \term{PATTERN} \nterm{graphPatternList} [ \nterm{propositionalRule} ] \\
+\nterm{graphPatternList}  & = & \nterm{graph} \{ \term{,} \nterm{graph} \} \\
+\nterm{graph}             & = & \nterm{event} [ (\nterm{relationAny} | \nterm{relationRd}) \nterm{graphWithoutEvent} ] \\
+                          & | & \nterm{object} [ (\nterm{relationAny} | \nterm{relationLd}) \nterm{graph} | \nterm{relationRd} \nterm{graphWithoutEvent} ] \\
+\nterm{graphWithoutEvent} & = & \nterm{object} [ (\nterm{relationAny} | \nterm{relationLd}) \nterm{graph} ] \\
+\nterm{event}             & = & \term{E(} [ \nterm{tag} ] [ \term{:} \nterm{name} ] \term{)} \\
+\nterm{object}            & = & \term{O(} [ \nterm{tag} ] [ \term{:} \nterm{name} ] \term{)} \\
+\nterm{relationAny}       & = & \term{-[} [ \nterm{tag} ] [ \term{:} \nterm{name} ] \term{]-} \\
+\nterm{relationRd}        & = & \term{-[} [ \nterm{tag} ] [ \term{:} \nterm{name} ] \term{]->} \\
+\nterm{relationLd}        & = & \term{<-[} [ \nterm{tag} ] [ \term{:} \nterm{name} ] \term{]-} \\
+\nterm{tag}               & = & \nterm{symbolicName} \\
+\nterm{name}              & = & \nterm{string} \\
+\end{tabularx}
+\end{framedgram}
+
+\begin{framedgram}[Clauses]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{filterRule}        & = & \term{FILTER} \nterm{symbolicName} \{ \term{,} \nterm{symbolicName} \} \\
+\nterm{keepRule}          & = & \term{KEEP} \nterm{projection} [ \nterm{propositionalRule} ] \\
+\nterm{returnRule}        & = & \term{RETURN} \term{OCEL} \\
+                          & | & \term{RETURN} \nterm{projection} [ \nterm{propositionalRule} ] \\
+\nterm{whenRule}          & = & \term{WHEN} \nterm{expression} \term{AS} \nterm{symbolicName} \\
+                          & & \quad [ \nterm{propositionalRule} ] \\
+\nterm{propositionalRule} & = & (\term{SUBJECTTO} | \term{ST}) \nterm{expression} \\
+\end{tabularx}
+\end{framedgram}
+
+\begin{framedgram}[Projection]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{projection}     & = & [ \term{DISTINCT} ] \term{*} [ \nterm{order} ] [ \nterm{limit} ] \\
+                       & | & [ \term{DISTINCT} ] [ \term{*} \term{,} ] \nterm{projectionItem} \{ \term{,} \nterm{projectionItem} \} \\
+                       & & \quad [ \nterm{order} ] [ \nterm{limit} ] \\
+\nterm{projectionItem} & = & \nterm{sname} [ \nterm{binning} ] \\
+\nterm{sname}          & = & \nterm{expression} [ \term{AS} \nterm{symbolicName} ] \\
+\end{tabularx}
+\end{framedgram}
+
+\begin{framedgram}[Order and Limit]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{order}     & = & \term{ORDERBY} \nterm{orderItem} \{ \term{,} \nterm{orderItem} \} \\
+\nterm{orderItem} & = & \nterm{expression} [ (\term{ASC} | \term{ASCENDING} | \term{DESC} | \term{DESCENDING}) ] \\
+\nterm{limit}     & = & \term{LIMIT} \nterm{int} \\
+\end{tabularx}
+\end{framedgram}
+
+\begin{framedgram}[Binning]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{binning}         & = & \term{BINNED(} \nterm{binningInterval} \{ \term{,} \nterm{binningInterval} \} \term{)} \\
+\nterm{binningInterval} & = & (\term{(} | \term{[}) \nterm{intervalLimit} \term{,} \nterm{intervalLimit} \\
+                        & & \quad (\term{)} | \term{]}) \term{AS} \nterm{intervalTarget} \\
+\nterm{intervalLimit}   & = & \nterm{int} | \nterm{float} | \term{-inf} | [ \term{+} ] \term{inf} \\
+\nterm{intervalTarget}  & = & \nterm{int} | \nterm{float} | \nterm{string} \\
+\end{tabularx}
+\end{framedgram}
+
+\begin{framedgram}[Expressions]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{expression}  & = & \term{+} \nterm{expression} | \term{-} \nterm{expression} \\
+                    & | & \nterm{expression} \term{\textasciicircum} \nterm{expression} \\
+                    & | & \nterm{expression} (\term{*} | \term{/} | \term{\%}) \nterm{expression} \\
+                    & | & \nterm{expression} (\term{+} | \term{-}) \nterm{expression} \\
+                    & | & \nterm{expression} \nterm{compareSign} \nterm{expression} \\
+                    & | & \term{NOT} \nterm{expression} \\
+                    & | & \nterm{expression} \term{AND} \nterm{expression} \\
+                    & | & \nterm{expression} \term{XOR} \nterm{expression} \\
+                    & | & \nterm{expression} \term{OR} \nterm{expression} \\
+                    & | & \term{(} \nterm{expression} \term{)} \\
+                    & | & \nterm{valueType} \\
+\nterm{compareSign} & = & \term{==} | \term{<=} | \term{>=} | \term{>} | \term{<} | \term{!=} \\
+\end{tabularx}
+\end{framedgram}
+
+\begin{framedgram}[Values]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{valueType}         & = & \nterm{eoProperty} | \nterm{int} | \nterm{float} | \nterm{constantBool} | \term{None} \\
+                          & | & \nterm{string} | \nterm{timestamp} | \nterm{duration} \\
+                          & | & \nterm{symbolicName} | \nterm{rvFunctionCall} | \nterm{subquery} \\
+\nterm{subquery}          & = & [ \term{MATERIALIZED} ] \term{(} \nterm{fullQuery} \term{)} \\
+                          & | & \term{NOT MATERIALIZED} \term{(} \nterm{fullQuery} \term{)} \\
+\nterm{eoProperty}        & = & \nterm{symbolicName} \term{[} \nterm{string} [ \term{@} \nterm{propertyTimestamp} ] \term{]} \\
+\nterm{propertyTimestamp} & = & \nterm{symbolicName} | \nterm{timestamp} \\
+\nterm{timestamp}         & = & \term{T(} \nterm{string} \term{)} \\
+\nterm{duration}          & = & \term{D(} \nterm{int} \term{,} \nterm{int} \term{,} \nterm{int} \term{,} (\nterm{int} | \nterm{float}) \term{)} \\
+\nterm{constantBool}      & = & \term{True} | \term{False} \\
+\end{tabularx}
+\end{framedgram}
+
+\begin{framedgram}[Functions]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{rvFunctionCall} & = & \nterm{symbolicName}\term{(} \nterm{rvFunctionArg} \{ \term{,} \nterm{rvFunctionArg} \} \term{)} \\
+\nterm{rvFunctionArg}  & = & \nterm{expression} | \nterm{fullQuery} \\
+\end{tabularx}
+\end{framedgram}
+
+\begin{framedgram}[Lexical Elements]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{symbolicName} & = & (\term{a}..\term{z} | \term{A}..\term{Z}) \{ \term{a}..\term{z} | \term{A}..\term{Z} | \term{0}..\term{9} | \term{\_} \} \\
+\nterm{string}       & = & \term{"} \{ \text{any encodable character} | \text{escape sequence} \} \term{"} \\
+\nterm{int}          & = & \term{0} | (\term{1}..\term{9}) \{ \term{0}..\term{9} \} \\
+\nterm{float}        & = & \nterm{int} \term{.} (\term{0}..\term{9}) \{ \term{0}..\term{9} \} \\
+\end{tabularx}
+\end{framedgram}

@@ -1,0 +1,17 @@
+\section{Order and Limit}
+
+Ordering and limiting are projection modifiers available in KEEP and RETURN clauses.
+
+\begin{framedgram}[Order and Limit]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{order} & = & \opqltoken{ORDERBY} \nterm{orderItem} $\{ \term{,} \nterm{orderItem} \}$ \\
+\nterm{orderItem} & = & \nterm{expression} [ (\opqltoken{ASC} | \opqltoken{ASCENDING} | \opqltoken{DESC} | \opqltoken{DESCENDING}) ] \\
+\nterm{limit} & = & \opqltoken{LIMIT} \nterm{int} \\
+\end{tabularx}
+\end{framedgram}
+
+An \nterm{order} clause specifies one or more sort keys. Each \nterm{orderItem} consists of an expression and an optional direction (ascending or descending). If no direction is specified, ascending order is the default. Multiple order items are applied in sequence: records that are indistinguishable under the first sort key are ordered by the second, and so on. If records remain indistinguishable after all sort keys, their relative order is implementation-defined.
+
+A \nterm{limit} clause restricts the number of records in the result to the specified integer. Ordering is applied before limiting.
+
+Both ordering and limiting operate on the table after all expressions in the projection have been evaluated and all filtering (via SUBJECTTO) has been applied.

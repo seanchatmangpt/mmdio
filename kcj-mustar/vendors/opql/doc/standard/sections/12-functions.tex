@@ -1,0 +1,95 @@
+\section{Functions}
+
+Functions are named subroutines callable within expressions. A function call takes one or more arguments, each of which is either an expression or a full subquery. When a subquery is passed, it is evaluated starting from the current record as context, allowing it to reference values bound in the enclosing scope.
+
+\begin{framedgram}[Function Calls]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{rvFunctionArg} & = & \nterm{expression} | \nterm{fullQuery} \\
+\nterm{rvFunctionCall} & = & \nterm{symbolicName} \term{(} \nterm{rvFunctionArg} \{ \term{,} \nterm{rvFunctionArg} \} \term{)} \\
+\end{tabularx}
+\end{framedgram}
+
+\subsection{Aggregation Functions}
+
+Aggregation functions operate on a table produced by a subquery argument and reduce it to a scalar. The subquery must return a single-column table; the aggregation is performed over the values in that column. Subqueries passed to aggregation functions are evaluated in the context of the current record, so they may reference symbolic names bound by enclosing clauses.
+
+\begin{frameddef}[count]
+$count : \mathbb{U}_T \nrightarrow \mathbb{N}$ returns the number of records in the table:
+\[
+count(\mathcal{B}) = |\mathcal{B}|.
+\]
+\end{frameddef}
+
+\begin{frameddef}[sum]
+$sum : \mathbb{U}_T \nrightarrow \mathbb{R} \cup \mathbb{U}_{duration}$ adds all values in a single-column table:
+\[
+sum(\mathcal{B}) = \sum_{v \in [\, v \mid (a, v) \in [\, b \in \mathcal{B} \mid |b| = 1 \,] \,]} v.
+\]
+\end{frameddef}
+
+\begin{frameddef}[min, max]
+$min, max : \mathbb{U}_T \nrightarrow \mathbb{R}$ return the minimum and maximum value in a single-column table:
+\[
+max(\mathcal{B}) = \max(\{ v \mid (a, v) \in \{ b \in \mathcal{B} \mid |b| = 1 \} \})
+\]
+\[
+min(\mathcal{B}) = \min(\{ v \mid (a, v) \in \{ b \in \mathcal{B} \mid |b| = 1 \} \}).
+\]
+\end{frameddef}
+
+\begin{frameddef}[avg]
+$avg : \mathbb{U}_T \nrightarrow \mathbb{R} \cup \mathbb{U}_{duration}$ returns the arithmetic mean of a single-column table:
+\[
+avg(\mathcal{B}) = \frac{sum(\mathcal{B})}{count(\mathcal{B})}.
+\]
+\end{frameddef}
+
+\begin{frameddef}[stddev]
+$stddev : \mathbb{U}_T \nrightarrow \mathbb{R}$ returns the sample standard deviation of a single-column table:
+\[
+stddev(\mathcal{B}) = \left( \frac{\sum_{v} (v - avg(\mathcal{B}))^2}{count(\mathcal{B}) - 1} \right)^{0.5}
+\]
+where $v$ ranges over all values in the single-column table $\mathcal{B}$.
+\end{frameddef}
+
+\subsection{Temporal Functions}
+
+Temporal functions navigate the event history of objects. They look up events that are temporally adjacent to a given event within the scope of a shared object.
+
+\begin{frameddef}[olag, olead]
+Let $L \in \mathbb{U}_{OCEL}$, $e \in E_L$, $o \in O_L$. The function $laglead(L, e, o, e', \circ)$ with $\circ \in \{ >, < \}$ yields $True$ if event $e'$ is associated with object $o$ (i.e., $(e', q, o) \in E2O_L$ for some qualifier $q$) and $time(e') \circ time(e)$.
+
+$olag(L, b, e, o)$ returns the $ocel\_id$ of the most recent event strictly preceding $e$ that is associated with object $o$, or $None$ if no such event exists. $olead(L, b, e, o)$ returns the $ocel\_id$ of the earliest event strictly succeeding $e$ that is associated with object $o$, or $None$ if no such event exists.
+
+Both functions accept an optional fifth argument $s \in \mathbb{U}_\Sigma$ filtering by event type: $olag(L, b, e, o, s)$ considers only preceding events of type $s$, and $olead(L, b, e, o, s)$ considers only succeeding events of type $s$.
+
+The arguments $e$ and $o$ are symbolic names bound to an event and an object respectively in the current record.
+\end{frameddef}
+
+\subsection{Introspection}
+
+\begin{frameddef}[isnone]
+$isnone : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_V \to \mathbb{U}_{bool}$ tests whether a value is $None$:
+\[
+isnone(L, b, v) = \begin{cases}
+True & \text{if } v = None \\
+False & \text{otherwise}
+\end{cases}
+\]
+\end{frameddef}
+
+$isnone$ is the standard way to test whether a property access, temporal function, or other partial computation yielded no value. It returns a boolean and does not propagate $None$ as other operations do.
+
+\subsection{Function Evaluation}
+
+\begin{frameddef}[Function Evaluation]
+Let $\mathbb{U}_{function} = \{ count, sum, min, max, avg, stddev, olag, olead, isnone \}$. The evaluation $eval_{function} : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_{function} \times ((\mathbb{U}_{lExpr})^* \cup \mathbb{U}_{opql}) \nrightarrow \mathbb{U}_V$ is:
+\[
+eval_{function}(L, b, f, p) = \begin{cases}
+f(eval_{opql}(L, [b], p)) & \text{if } p \in \mathbb{U}_{opql} \\
+f(L, (eval_{lExpr}(L, b, p_1), \dots, eval_{lExpr}(L, b, p_n))) & \text{if } p \in (\mathbb{U}_{lExpr})^*
+\end{cases}
+\]
+\end{frameddef}
+
+where $n = |p|$ in the second case. When a subquery is passed as argument, it is evaluated starting with the singleton table $[b]$ containing the current record, so the subquery may reference any name currently in scope. When expression arguments are passed, all are evaluated against the current record before the function is applied.

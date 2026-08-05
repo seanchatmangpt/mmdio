@@ -1,0 +1,119 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{mdframed}
+\usepackage{microtype}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{geometry}
+
+\geometry{margin=1in}
+
+% Number sets
+\newcommand*{\N}{\mathbb N}
+\newcommand*{\Z}{\mathbb Z}
+\newcommand*{\Q}{\mathbb Q}
+\newcommand*{\R}{\mathbb R}
+
+% Math operators
+\DeclareMathOperator*{\dom}{dom}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+% Delimiters
+\DeclarePairedDelimiter\abs\lvert\rvert
+\DeclarePairedDelimiter\seq\langle\rangle
+\providecommand\given{}
+\newcommand\SetSymbol[1][]{%
+	\nonscript\:#1\vert
+	\allowbreak
+	\nonscript\:
+	\mathopen{}}
+\DeclarePairedDelimiterX\Set[1]\lbrace\rbrace{%
+	\renewcommand\given{\SetSymbol[\delimsize]}
+	#1
+}
+
+% Counters for framed environments, reset per section
+\newcounter{defcount}[section]
+\renewcommand{\thedefcount}{\thesection.\arabic{defcount}}
+\newcounter{gramcount}[section]
+\renewcommand{\thegramcount}{\thesection.\arabic{gramcount}}
+
+% Framed environments
+\mdfdefinestyle{definitionstyle}{%
+  linecolor=black,linewidth=1pt,%
+  backgroundcolor=yellow!10,
+  innertopmargin=6pt,
+  innerbottommargin=8pt,
+  roundcorner=5pt,
+}
+
+\mdfdefinestyle{grammarstyle}{%
+  linecolor=black,linewidth=1pt,%
+  backgroundcolor=lightgray!5,
+  innertopmargin=6pt,
+  innerbottommargin=8pt,
+  roundcorner=5pt,
+  font=\normalfont,
+}
+
+\newenvironment{frameddef}[1][]{%
+  \stepcounter{defcount}%
+  \begin{mdframed}[style=definitionstyle]%
+  {\normalfont\bfseries Definition~\thedefcount\ifx\relax#1\relax\else\ (#1)\fi.}\par\vspace{4pt}\noindent\ignorespaces
+}{%
+  \end{mdframed}%
+}
+
+\newenvironment{framedgram}[1][]{%
+  \stepcounter{gramcount}%
+  \begin{mdframed}[style=grammarstyle]%
+  {\normalfont\bfseries Grammar~\thegramcount\ifx\relax#1\relax\else\ (#1)\fi.}\par\vspace{4pt}\noindent\ignorespaces
+}{%
+  \end{mdframed}%
+}
+
+% OPQL syntax highlighting commands
+\newcommand{\opqltoken}[1]{\textcolor{teal}{#1}}
+\newcommand{\opqlevent}[1]{\textcolor{orange}{E(}\textcolor{black}{#1}\textcolor{orange}{)}}
+\newcommand{\opqlobject}[1]{\textcolor{cyan}{O(}\textcolor{black}{#1}\textcolor{cyan}{)}}
+\newcommand{\opqlrela}[1]{\textcolor{gray}{-[}\textcolor{black}{#1}\textcolor{gray}{]-}}
+\newcommand{\opqlrelr}[1]{\textcolor{gray}{-[}\textcolor{black}{#1}\textcolor{gray}{]->}}
+\newcommand{\opqlrell}[1]{\textcolor{gray}{<-[}\textcolor{black}{#1}\textcolor{gray}{]-}}
+
+\newcommand{\nterm}[1]{\textit{#1}}
+\newcommand{\term}[1]{\texttt{\color{blue}#1}}
+
+% Title
+\title{OPQL Language Standard}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-preliminaries}
+\input{sections/03-lexical-structure}
+\input{sections/04-data-types}
+\input{sections/05-records-and-tables}
+\input{sections/06-patterns}
+\input{sections/07-expressions}
+\input{sections/08-binning}
+\input{sections/09-query-clauses}
+\input{sections/10-return-statement}
+\input{sections/11-query-composition}
+\input{sections/12-functions}
+\input{sections/13-grammar-reference}
+\input{sections/14-order-and-limit}
+
+\end{document}

@@ -1,0 +1,133 @@
+\section{Query Clauses}
+
+\subsection{KEEP Clause}
+
+\begin{framedgram}[KEEP Clause]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{sname} & = & \nterm{expression} [ \term{AS} \nterm{symbolicName} ] \\
+\nterm{projectionItem} & = & \nterm{sname} [ \nterm{binning} ] \\
+\nterm{projection} & = & [ \term{DISTINCT} ] \term{*} [ \nterm{order} ] [ \nterm{limit} ] \\
+& | & [ \term{DISTINCT} ] [ \term{*} \term{,} ] \nterm{projectionItem} \{ \term{,} \nterm{projectionItem} \} \\
+& & \quad [ \nterm{order} ] [ \nterm{limit} ] \\
+\nterm{keepClause} & = & \term{KEEP} \nterm{projection} [ \term{SUBJECTTO} | \term{ST} \nterm{expression} ] \\
+\end{tabularx}
+\end{framedgram}
+
+A KEEP clause evaluates expressions and binds their results to symbolic names in the current table. The optional \term{AS} clause assigns an explicit alias; when omitted, the column name is derived from the string representation of the expression via ValueReference.
+
+The \term{*} wildcard indicates that previously bound values in each record are retained. Without it, only the newly computed values appear in the result. The \term{DISTINCT} keyword deduplicates the resulting table.
+
+\begin{frameddef}[Deduplication]
+Let $\mathcal{B} \in \mathbb{U}_T$ and $S(\mathcal{B}) = \{ b \mid b \in \mathcal{B} \}$. The deduplication function $\epsilon : \mathbb{U}_T \to \mathbb{U}_T$ is:
+\[
+\epsilon(\mathcal{B}) = [\, b \mid b \in S(\mathcal{B}) \,].
+\]
+\end{frameddef}
+
+\begin{frameddef}[KEEP Clause Evaluation]
+Let $\mathbb{U}_{proI} = \mathbb{U}_{sym} \times \mathbb{U}_{lExpr} \times (\mathbb{U}_{binnings} \cup \{ None \})$ be the universe of projection items. The universe of KEEP clauses is $\mathbb{U}_{kC} = \mathbb{U}_{bool} \times \mathbb{U}_{bool} \times \mathbb{P}(\mathbb{U}_{proI})$, where the first boolean indicates deduplication and the second indicates retention of previous values.
+
+The function $eval_{namedEx} : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{P}(\mathbb{U}_{proI}) \nrightarrow \mathbb{U}_B$ builds a new record:
+\begin{align*}
+eval_{namedEx}(L, b, P) = & \ \{ (a, eval_{lExpr}(L, b, e)) \mid (a, e, b') \in P \land b' = None \} \\
+& \cup \{ (a, bin(eval_{lExpr}(L, b, e), b')) \mid (a, e, b') \in P \land b' \in \mathbb{U}_{binnings} \}
+\end{align*}
+
+The evaluation $eval_{kC} : \mathbb{U}_{OCEL} \times \mathbb{U}_T \times \mathbb{U}_{kC} \nrightarrow \mathbb{U}_T$ is:
+\[
+eval_{kC}(L, \mathcal{B}, (d, h, P)) = \begin{cases}
+\biguplus_{b \in \mathcal{B}} [\, b \sqcup eval_{namedEx}(L, b, P) \,] & \text{if } \neg d \land h \\
+\epsilon(\biguplus_{b \in \mathcal{B}} [\, b \sqcup eval_{namedEx}(L, b, P) \,]) & \text{if } d \land h \\
+\biguplus_{b \in \mathcal{B}} [\, eval_{namedEx}(L, b, P) \,] & \text{if } \neg d \land \neg h \\
+\epsilon(\biguplus_{b \in \mathcal{B}} [\, eval_{namedEx}(L, b, P) \,]) & \text{if } d \land \neg h
+\end{cases}
+\]
+
+All expressions in $P$ are evaluated under the input record $b$, not under records augmented with results of sibling expressions. This allows parallel evaluation.
+\end{frameddef}
+
+\subsection{WHEN Clause}
+
+\begin{framedgram}[WHEN Clause]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{whenClause} & = & \term{WHEN} \nterm{expression} \term{AS} \nterm{symbolicName} \\
+& & \quad [ \term{SUBJECTTO} | \term{ST} \nterm{expression} ] \\
+\end{tabularx}
+\end{framedgram}
+
+A WHEN clause finds timestamps at which a given expression becomes $True$, and binds each such timestamp to a symbolic name. The search is driven by the version history of object attributes referenced in the expression: the candidate timestamps are exactly the timestamps at which some object attribute mentioned in the expression changes value. For each candidate, the expression is re-evaluated with the symbolic name bound to that timestamp; matching timestamps each produce one output record.
+
+\begin{frameddef}[Candidate Timestamps]
+Let $L \in \mathbb{U}_{OCEL}$, $b \in \mathbb{U}_B$, $\tau \in \mathbb{U}_{lExpr}$, $a' \in \mathbb{U}_{sym}$. The function $candidate : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_{lExpr} \times \mathbb{U}_{sym} \nrightarrow \mathbb{P}(\mathbb{U}_{time})$ yields the set of candidate timestamps:
+\[
+candidate(L, b, \tau, a') = \biguplus_{\rho \in extract_{arEx}(\tau)} \left[ t^* \middle\vert \begin{array}{l} (e, a, t) \in extract_{oa}(L, b, \rho, a') \\ \land (c(b, e), a, t^*) \in \dom(oaval) \end{array} \right]
+\]
+where $extract_{arEx}(\tau)$ enumerates the arithmetic sub-expressions of $\tau$, and $extract_{oa}(L, b, \rho, a')$ yields the object-attribute-timestamp triples $(e, a, t)$ referenced in $\rho$ that use $a'$ as their timestamp variable.
+\end{frameddef}
+
+The candidate set covers every timestamp at which any object attribute accessed via the symbolic name $a'$ has a recorded value. Evaluating the expression at each such timestamp identifies those timestamps at which the expression is $True$.
+
+\begin{frameddef}[WHEN Clause Evaluation]
+The universe of WHEN clauses is $\mathbb{U}_{wC} = \mathbb{U}_{lExpr} \times \mathbb{U}_{sym}$. The function $eval_{aT} : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_{wC} \nrightarrow \mathbb{U}_T$ yields timestamps for which the expression evaluates to $True$:
+\[
+eval_{aT}(L, b, (\tau, a)) = \left[ \{(a, t)\} \middle\vert \begin{array}{l} t \in candidate(L, b, \tau, a) \\ \land eval_{lExpr}(L, b \sqcup \{(a, t)\}) = True \end{array} \right]
+\]
+
+The evaluation $eval_{wC} : \mathbb{U}_{OCEL} \times \mathbb{U}_T \times \mathbb{U}_{wC} \nrightarrow \mathbb{U}_T$ is:
+\[
+eval_{wC}(L, \mathcal{B}, (\tau, a)) = \begin{cases}
+\biguplus_{b \in \mathcal{B}} [\, b \sqcup \{(a, None)\} \,] & \text{if } |eval_{aT}(L, b, (\tau, a))| = 0 \\
+\biguplus_{b \in \mathcal{B}} [\, b \sqcup \{(a, t)\} \mid t \in eval_{aT}(L, b, (\tau, a)) \,] & \text{otherwise}
+\end{cases}
+\]
+
+If no timestamp satisfies the expression, the symbolic name is bound to $None$ rather than dropping the record.
+\end{frameddef}
+
+One input record may expand into multiple output records — one per matching timestamp. This mirrors the fan-out behavior of PATTERN clauses.
+
+\subsection{FILTER Clause}
+
+\begin{framedgram}[FILTER Clause]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{filterClause} & = & \term{FILTER} \nterm{symbolicName} \{ \term{,} \nterm{symbolicName} \} \\
+\end{tabularx}
+\end{framedgram}
+
+A FILTER clause removes entities from the underlying event log. The symbolic names in the argument list are looked up in each current record; the entities they are bound to are removed from the log, along with all E2O and O2O relations they participate in. After a FILTER clause executes, the table is reset to a single empty record so that subsequent clauses operate on the filtered log from a clean state.
+
+\begin{frameddef}[FILTER Clause Evaluation]
+The universe of FILTER clauses is $\mathbb{U}_{fC} = \mathbb{P}(\mathbb{U}_{sym})$. The evaluation $eval_{fC} : \mathbb{U}_{OCEL} \times \mathbb{U}_T \times \mathbb{U}_{fC} \nrightarrow \mathbb{U}_{OCEL}$ yields a filtered event log $L'$:
+\[
+eval_{fC}(L, \mathcal{B}, A) = L'
+\]
+with
+\begin{multline*}
+L' = (E_L \setminus F_E,\ O_L \setminus F_O,\ EA_L,\ OA_L,\ evtype_L,\ time_L,\ objtype_L,\\
+\quad eatype_L,\ oatype_L,\ eaval_L,\ oaval_L,\ E2O_L \setminus F_{E2O},\ O2O_L \setminus F_{O2O})
+\end{multline*}
+where:
+\begin{itemize}
+    \item $F = \{ c(b, a) \mid \exists_{a \in A, v \in \mathbb{U}_V}\ (a, v) \in b \}$
+    \item $F_E = E_L \cap F$, $F_O = O_L \cap F$
+    \item $F_{E2O} = \{ (e, q, o) \in E2O_L \mid e \in F_E \lor o \in F_O \}$
+    \item $F_{O2O} = \{ (o_1, q, o_2) \in O2O_L \mid o_1 \in F_O \lor o_2 \in F_O \}$
+\end{itemize}
+\end{frameddef}
+
+\subsection{SUBJECTTO Subclause}
+
+\begin{framedgram}[SUBJECTTO Subclause]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{subjectTo} & = & (\term{SUBJECTTO} | \term{ST}) \nterm{expression} \\
+\end{tabularx}
+\end{framedgram}
+
+A SUBJECTTO subclause is a guard attached to the clause it accompanies. It is evaluated after the clause produces its output table, and retains only records for which the expression is $True$. Records evaluating to $False$, $None$, or any non-boolean value are dropped. SUBJECTTO may be attached to PATTERN, KEEP, WHEN, and RETURN clauses.
+
+\begin{frameddef}[SUBJECTTO Subclause Evaluation]
+The universe of SUBJECTTO subclauses is $\mathbb{U}_{stS} = \mathbb{U}_{lExpr}$. The evaluation $eval_{stS} : \mathbb{U}_{OCEL} \times \mathbb{U}_T \times \mathbb{U}_{stS} \nrightarrow \mathbb{U}_T$ is:
+\[
+eval_{stS}(L, \mathcal{B}, \tau) = [\, b \in \mathcal{B} \mid eval_{lExpr}(L, b, \tau) = True \,].
+\]
+\end{frameddef}

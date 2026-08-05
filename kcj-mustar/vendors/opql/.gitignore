@@ -1,0 +1,20 @@
+.idea
+grammar
+__pycache__
+*.egg-info
+.venv
+dist
+build
+*.pyc
+.pytest_cache
+
+# LaTeX build artifacts
+doc/standard/*.pdf
+doc/standard/*.aux
+doc/standard/*.log
+doc/standard/*.out
+doc/standard/*.toc
+doc/standard/*.fls
+doc/standard/*.fdb_latexmk
+doc/standard/*.synctex.gz
+local

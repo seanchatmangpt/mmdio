@@ -1,0 +1,183 @@
+\section{Expressions}
+
+Expressions compute values from the current record. They may reference bound symbolic names, constant literals, event and object properties, and function calls. The expression language is stratified: arithmetic expressions form the base, comparisons build on them, and propositional connectives combine comparisons.
+
+\subsection{Value References}
+
+A bare symbolic name in an expression refers to the value bound to that name in the current record. A property reference accesses a named attribute of an event or object. Object attributes are versioned: their value depends on the timestamp at which they are evaluated, and a timestamp must be supplied via \term{@}. Event attributes are not versioned and do not require a timestamp.
+
+\begin{framedgram}[Value References]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{propertyTimestamp} & = & \nterm{symbolicName} | \nterm{timestamp} \\
+\nterm{property} & = & \nterm{symbolicName} \term{[} \nterm{string} [ \term{@} \nterm{propertyTimestamp} ] \term{]} \\
+\end{tabularx}
+\end{framedgram}
+
+The \term{@} qualifier may be a symbolic name bound to an event (whose event time is then used) or a literal timestamp. Accessing an object attribute without a \term{@} qualifier is undefined, except for the special attributes \texttt{"ocel\_type"} and \texttt{"ocel\_id"}.
+
+\begin{frameddef}[Evaluation of Properties]
+Let $L \in \mathbb{U}_{OCEL}$, $b \in \mathbb{U}_B$. A property encodes a tuple $(e, a, t) \in \mathbb{U}_{prop}$ with universe $\mathbb{U}_{prop} = \mathbb{U}_{sym} \times \mathbb{U}_\Sigma \times (\mathbb{U}_{sym} \cup \mathbb{U}_{time} \cup \{ None \})$.
+
+The evaluation $eval_{prop} : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_{prop} \nrightarrow \mathbb{U}_V$ dispatches on whether the symbolic name is bound to an event or an object:
+\[
+eval_{prop}(L, b, (e, a, t)) = \begin{cases}
+eval_{eprop}(L, b, (e, a, t)) & \text{if } c(b, e) \in E_L \\
+eval_{oprop}(L, b, (e, a, t)) & \text{if } c(b, e) \in O_L
+\end{cases}
+\]
+with $eval_{eprop} : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_{prop} \nrightarrow \mathbb{U}_V$:
+\[
+eval_{eprop}(L, b, (e, a, t)) = \begin{cases}
+evtype(c(b, e)) & \text{if } a = \text{"ocel\_type"} \\
+time(c(b, e)) & \text{if } a = \text{"ocel\_time"} \\
+eaval_a(c(b, e)) & \text{otherwise}
+\end{cases}
+\]
+and $eval_{oprop} : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_{prop} \nrightarrow \mathbb{U}_V$:
+\[
+eval_{oprop}(L, b, (e, a, t)) = \begin{cases}
+objtype(c(b, e)) & \text{if } a = \text{"ocel\_type"} \\
+oaval_a^t(c(b, e)) & \text{if } t \in \mathbb{U}_{time} \\
+oaval_a^{resolve_t(L, b, t)}(c(b, e)) & \text{if } t \in \mathbb{U}_{sym}
+\end{cases}
+\]
+where $resolve_t$ resolves a symbolic timestamp qualifier:
+\[
+resolve_t(L, b, t) = \begin{cases}
+c(b, t) & \text{if } c(b, t) \in \mathbb{U}_{time} \\
+time(c(b, t)) & \text{if } c(b, t) \in E_L
+\end{cases}
+\]
+\end{frameddef}
+
+The special attribute names \texttt{"ocel\_type"} and \texttt{"ocel\_time"} are handled by the evaluation functions rather than looked up in the attribute tables. The \term{@} qualifier resolves to a timestamp in one of two ways: if the symbolic name is bound to a timestamp value (e.g., one computed by a prior KEEP clause), that timestamp is used directly; if the symbolic name is bound to an event, the event's \texttt{ocel\_time} is used as shorthand --- this is syntactic sugar equivalent to explicitly writing the event's timestamp.
+
+\subsection{Subquery Expressions}
+
+A subquery expression embeds a full query as a value. The query is enclosed in parentheses and may be prefixed with a materialization hint. Subquery expressions are primarily useful in KEEP clauses, where the result is bound to a symbolic name and can be referenced by subsequent clauses or the RETURN statement.
+
+\begin{framedgram}[Subquery Expressions]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{subquery} & = & [ \term{MATERIALIZED} ] \term{(} \nterm{fullQuery} \term{)} \\
+                 & | & \term{NOT MATERIALIZED} \term{(} \nterm{fullQuery} \term{)} \\
+\end{tabularx}
+\end{framedgram}
+
+A subquery expression is unambiguous with the grouping parentheses of arithmetic expressions (\term{(} \nterm{expression} \term{)}), because a \nterm{fullQuery} begins with a clause keyword (\term{PATTERN}, \term{FILTER}, \term{KEEP}, \term{WHEN}) or \term{RETURN}, none of which are valid expression starts.
+
+\begin{frameddef}[Materialization]
+A subquery expression carries a materialization mode $m \in \{ eager, lazy \}$:
+\begin{itemize}
+    \item \textbf{Eager} (default, or explicit \term{MATERIALIZED}): the subquery is evaluated immediately when the enclosing expression is evaluated. The result is a table $\mathcal{B} \in \mathbb{U}_T$.
+    \item \textbf{Lazy} (\term{NOT MATERIALIZED}): the subquery is stored as an unevaluated AST node. It is evaluated each time the bound symbolic name is referenced.
+\end{itemize}
+
+Let $Q \in \mathbb{U}_{opql}$ be the embedded query. The evaluation $eval_{sq} : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_{opql} \times \{eager, lazy\} \nrightarrow \mathbb{U}_T \cup \mathbb{U}_{opql}$ is:
+\[
+eval_{sq}(L, b, Q, m) = \begin{cases}
+eval_{opql}(L, [\{\}], Q) & \text{if } m = eager \\
+Q & \text{if } m = lazy
+\end{cases}
+\]
+
+When a lazy subquery is later referenced via a symbolic name lookup and the bound value is an unevaluated query $Q$, evaluation proceeds as $eval_{opql}(L, [\{\}], Q)$.
+\end{frameddef}
+
+An eager subquery is evaluated once and its result stored; referencing the bound name multiple times does not re-execute the query. A lazy subquery is re-executed on each reference.
+
+\paragraph{Note on current equivalence.} Under the current language, the materialization mode has no observable effect on query results. The only clause that mutates the event log is FILTER, but FILTER also clears all context bindings (see Section~9), so a lazy subquery can never be referenced after the log it would execute against has changed. Since OPQL does not permit rebinding of symbolic names, the inputs to a lazy subquery are always identical across references within the same scope. The distinction is retained in anticipation of future log-editing operations (e.g., clauses that add events, objects, or relations to the log without clearing context), at which point a lazy subquery would re-execute against the modified log while an eager subquery would retain its original result. Whether FILTER's full context reset remains the appropriate design once such operations exist is an open question.
+
+\paragraph{Undefined usage.} Subquery expressions evaluate to tables, not scalar values. This standard defines their behaviour only when consumed by aggregation functions or bound via KEEP for later aggregation. Using a table-valued subquery expression in a context that expects a scalar (e.g., as a bare RETURN column, as an operand in arithmetic, or in a comparison) is undefined. The behaviour of the reference implementation in such cases is not authoritative.
+
+\subsection{Arithmetic Expressions}
+
+Arithmetic expressions compute numeric, temporal, and duration values. Unary \term{+} and \term{-} apply to a single operand; all binary operators apply to two operands.
+
+\begin{framedgram}[Arithmetic Expressions]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{value} & = & \nterm{symbolicName} | \nterm{constValue} | \nterm{property} | \nterm{functionCall} | \nterm{subquery} \\
+\nterm{arExpr} & = & \nterm{value} | \\
+& & \term{+} \nterm{arExpr} | \term{-} \nterm{arExpr} | \\
+& & \nterm{arExpr} \term{+} \nterm{arExpr} | \nterm{arExpr} \term{-} \nterm{arExpr} | \\
+& & \nterm{arExpr} \term{*} \nterm{arExpr} | \nterm{arExpr} \term{/} \nterm{arExpr} | \nterm{arExpr} \term{\%} \nterm{arExpr} | \\
+& & \nterm{arExpr} \term{\textasciicircum} \nterm{arExpr} \\
+\end{tabularx}
+\end{framedgram}
+
+\begin{frameddef}[Arithmetic Operations]
+The operations $\mathbb{U}_{ops} = \{ +, -, *, /, \%, \wedge \}$ are defined on:
+\begin{center}
+\begin{tabular}{ll}
+$+ : \mathbb{R} \times \mathbb{R} \to \mathbb{R}$ & $- : \mathbb{R} \times \mathbb{R} \to \mathbb{R}$ \\
+$+ : \mathbb{U}_{time} \times \mathbb{U}_{duration} \to \mathbb{U}_{time}$ & $- : \mathbb{U}_{time} \times \mathbb{U}_{time} \to \mathbb{U}_{duration}$ \\
+$+ : \mathbb{U}_{duration} \times \mathbb{U}_{time} \to \mathbb{U}_{time}$ & $- : \mathbb{U}_{time} \times \mathbb{U}_{duration} \to \mathbb{U}_{time}$ \\
+$* : \mathbb{R} \times \mathbb{R} \to \mathbb{R}$ & $/ : \mathbb{R} \times \mathbb{R} \to \mathbb{R}$ \\
+$* : \mathbb{U}_{duration} \times \mathbb{R} \to \mathbb{U}_{duration}$ & $/ : \mathbb{U}_{duration} \times \mathbb{R} \to \mathbb{U}_{duration}$ \\
+$* : \mathbb{R} \times \mathbb{U}_{duration} \to \mathbb{U}_{duration}$ & $/ : \mathbb{U}_{duration} \times \mathbb{U}_{duration} \to \mathbb{R}$ \\
+$\% : \mathbb{N} \times \mathbb{N} \to \mathbb{N}$ & $\wedge : \mathbb{R} \times \mathbb{R} \to \mathbb{R}$
+\end{tabular}
+\end{center}
+Binding priority $bp : \mathbb{U}_{ops} \to \mathbb{N}$: $\{ (\wedge, 3), (*, 2), (/, 2), (\%, 2), (+, 1), (-, 1) \}$. Operators with equal binding priority associate left-to-right; $\wedge$ is right-associative.
+\end{frameddef}
+
+An operation applied to operands not listed in the type table above is undefined and yields $None$. Any arithmetic operation with a $None$ operand yields $None$. Timestamps may be shifted by adding or subtracting a duration; subtracting two timestamps yields the duration between them. Durations may be scaled by a real number, and dividing two durations yields a real number.
+
+\subsection{Comparisons}
+
+Comparisons produce boolean values by comparing two arithmetic expressions. They are building blocks for propositional logic expressions.
+
+\begin{frameddef}[Comparisons]
+The universe of relations is $\mathbb{U}_{rel} = \{ =, \leq, \geq, <, >, \neq \}$. Relations are functions $\circ : V \times V \to \mathbb{U}_{bool}$ for $V \in \{ \mathbb{R}, \mathbb{U}_{time}, \mathbb{U}_{duration}, \mathbb{U}_{bool}, \mathbb{U}_\Sigma \}$.
+
+A comparison expression $(c_1, \circ, c_2)$ with $c_1, c_2 \in \mathbb{U}_{arEx}$, $\circ \in \mathbb{U}_{rel} \cup \{ None \}$ evaluates as:
+\[
+eval_{comp}(L, b, (c_1, \circ, c_2)) = \begin{cases}
+eval_{arEx}(L, b, c_1) \circ eval_{arEx}(L, b, c_2) & \text{if } \circ \neq None \\
+eval_{arEx}(L, b, c_1) & \text{if } \circ = c_2 = None
+\end{cases}
+\]
+\end{frameddef}
+
+The second case ($\circ = None$) occurs when a comparison expression reduces to a bare arithmetic expression — for example, a bare boolean value or a function returning a boolean. Comparing values of incompatible types is undefined and yields $None$. Any comparison involving a $None$ operand yields $None$.
+
+\subsection{Propositional Logic}
+
+Propositional logic expressions combine comparisons using the three boolean connectives \term{AND}, \term{XOR}, and \term{OR}, and the unary \term{NOT}. A \emph{logical atom} $l \in \mathbb{U}_{logA}$ is either a comparison expression or a comparison expression preceded by \term{NOT}.
+
+\begin{framedgram}[Logical Expressions]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{expr} & = & \nterm{cExpr} | \term{NOT} \nterm{cExpr} | \\
+& & \nterm{expr} \term{AND} \nterm{expr} | \nterm{expr} \term{XOR} \nterm{expr} | \nterm{expr} \term{OR} \nterm{expr} \\
+\end{tabularx}
+\end{framedgram}
+
+\begin{frameddef}[Logical Connectives]
+The universe of logical connectives is $\mathbb{U}_{logCon} = \{ \land, \lor, \oplus \} \subset (\mathbb{U}_{bool} \times \mathbb{U}_{bool} \to \mathbb{U}_{bool})$. Binding priority $bp : \mathbb{U}_{logCon} \to \mathbb{N}$: $\{ (\land, 3), (\oplus, 2), (\lor, 1) \}$.
+\end{frameddef}
+
+\term{AND} binds more tightly than \term{XOR}, which binds more tightly than \term{OR}. All three connectives are left-associative (chains of the same connective associate left-to-right).
+
+\begin{frameddef}[Logical Atom Evaluation]
+The evaluation $eval_{logA} : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_{logA} \nrightarrow \mathbb{U}_{bool}$ is:
+\[
+eval_{logA}(L, b, l) = \begin{cases}
+eval_{comp}(L, b, c) & \text{if } l = c \in \mathbb{U}_{comp} \\
+\lnot\, eval_{comp}(L, b, c) & \text{if } l = (\text{NOT},\ c),\ c \in \mathbb{U}_{comp}
+\end{cases}
+\]
+\end{frameddef}
+
+\begin{frameddef}[Logical Expression Evaluation]
+Grammar encodes logical expressions as sequences $\tau = \langle l_1, \circ_1, l_2, \dots, \circ_{n-1}, l_n \rangle$ with $l_i \in \mathbb{U}_{logA}$, $\circ_i \in \mathbb{U}_{logCon}$.
+
+The evaluation $eval_{lExpr} : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_{lExpr} \nrightarrow \mathbb{U}_V$ proceeds recursively, pivoting on the rightmost operator with the lowest binding priority:
+\[
+eval_{lExpr}(L, b, \tau) = \begin{cases}
+eval_{logA}(L, b, l) & \text{if } \tau = \langle l \rangle \\
+eval_{lExpr}(L, b, \tau_L) \circ_i\, eval_{lExpr}(L, b, \tau_R) & \text{otherwise}
+\end{cases}
+\]
+where $i = \max(\{ j \mid \not\exists k \neq j : bp(\circ_k) < bp(\circ_j) \})$, $\tau_L = \langle l_1, \dots, \circ_{i-1}, l_i \rangle$, and $\tau_R = \langle l_{i+1}, \dots, \circ_{n-1}, l_n \rangle$.
+\end{frameddef}
+
+The pivot $i$ selects the rightmost operator that is outermost in the expression tree (lowest binding priority = loosest binding = last evaluated). This produces standard left-to-right evaluation for chains of equal-priority operators: $A \text{ AND } B \text{ AND } C$ evaluates as $(A \text{ AND } B) \text{ AND } C$. The \term{AND}-before-\term{XOR}-before-\term{OR} precedence mirrors standard boolean algebra.

@@ -1,0 +1,48 @@
+\section{Data Types}
+
+The universe of values OPQL operates on is:
+\[
+\mathbb{U}_V = \mathbb{U}_\Sigma \cup \mathbb{R} \cup \mathbb{U}_{time} \cup \mathbb{U}_{duration} \cup \mathbb{U}_{bool} \cup \{ None \}
+\]
+where $\mathbb{U}_\Sigma$ is the universe of strings, $\mathbb{R}$ the real numbers, $\mathbb{U}_{time}$ the universe of timestamps, $\mathbb{U}_{duration}$ the universe of durations, $\mathbb{U}_{bool} = \{ True, False \}$ the universe of booleans, and $None$ the non-value.
+
+\subsection{Strings}
+
+Strings are sequences of encodable characters enclosed in double quotation marks. The characters \term{"} and \term{\textbackslash} must be escaped as \term{\textbackslash"} and \term{\textbackslash\textbackslash} respectively.
+
+\subsection{Integers and Floats}
+
+\begin{framedgram}[Numeric Literals]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{int} & = & \term{0} | (\term{1}..\term{9}) \{ \term{0}..\term{9} \} \\
+\nterm{float} & = & \nterm{int} \term{.} (\term{0}..\term{9}) \{ \term{0}..\term{9} \} \\
+\end{tabularx}
+\end{framedgram}
+
+Integers are either zero or a non-zero digit followed by any number of digits. Leading zeros are not permitted. Floats are an integer part optionally followed by a decimal point and at least one digit.
+
+\subsection{Booleans}
+
+Constant booleans are the keywords \term{True} and \term{False}.
+
+\subsection{Timestamps}
+
+A timestamp literal is encoded as \term{T(}\nterm{string}\term{)} where the string is an ISO 8601 conformant timestamp. The format is \texttt{YYYY-MM-DDThh:mm:ss[.sss]I}, where:
+\begin{itemize}
+    \item \texttt{YYYY-MM-DD} is the date (year, month, day separated by dashes)
+    \item \texttt{hh:mm:ss} is the time (hours, minutes, seconds separated by colons)
+    \item \texttt{.sss} is an optional fractional seconds component
+    \item \texttt{I} is timezone information: either \texttt{Z} for UTC or an offset $\pm$\texttt{hh:mm}
+\end{itemize}
+
+\subsection{Durations}
+
+A duration literal is encoded as \term{D(}\nterm{int}\term{,} \nterm{int}\term{,} \nterm{int}\term{,} \nterm{int} | \nterm{float}\term{)} representing days, hours, minutes, and seconds respectively. Values exceeding their natural bounds overflow into the next larger unit (e.g., 90 seconds becomes 1 minute 30 seconds).
+
+\subsection{None}
+
+The keyword \term{None} represents the absence of a value (the bottom element $\bot$ of partial functions).
+
+\subsection{Symbolic Names as Values}
+
+A bare symbolic name in an expression context refers to a value bound to that name in the current record. The string representation of an expression without an explicit alias (via \term{AS}) is used as the column name through a \term{ValueReference} mechanism.

@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=61", "setuptools-scm>=8", "antlr4-tools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "OPQL"
+dynamic = ["version"]
+authors = [
+  { name="Patric Mai", email="patric.mai@gmx.de" },
+]
+description = "An Object-Centric Process Query Language"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pandas",
+    "antlr4-python3-runtime==4.13.1",
+]
+
+[tool.setuptools_scm]
+# Installs from a source tarball have no .git to read tags from.
+fallback_version = "0.0.0"
+
+[tool.setuptools.packages.find]
+include = ["opql*"]
+
+[tool.setuptools.package-data]
+"opql.lang" = ["OPQL.g4", "grammar/*.py", "grammar/*.tokens", "grammar/*.interp"]
+[project.urls]
+Homepage = "https://gitlab.com/p.mai/opql"
+Issues = "https://gitlab.com/p.mai/opql/issues"
+[project.scripts]
+opql-cli = "opql.cli.cli:main"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "RUF", # ruff-specific
+    "SIM",  # flake8-simplify
+    "PERF", # performance antipatterns
+    "PTH",  # flake8-use-pathlib
+    "T20",  # flake8-print
+]

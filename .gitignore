@@ -67,3 +67,4 @@ dist/
 
 # VS Code
 .vscode/
+kcj-mustar/.venv

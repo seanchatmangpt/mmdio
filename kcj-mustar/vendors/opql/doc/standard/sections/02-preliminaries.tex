@@ -1,0 +1,67 @@
+\section{Preliminaries}
+
+This section establishes the mathematical foundations and the OCEL 2.0 metamodel upon which OPQL operates.
+
+\subsection{Sets and Multisets}
+
+A \emph{set} is a collection of distinct elements. We denote sets using curly braces $\{ \dots \}$. The \emph{powerset} of a set $A$, denoted $\mathbb{P}(A)$, is the set of all subsets of $A$.
+
+A \emph{multiset} (or bag) over a set $M$ is a tuple $\mathcal{M} = (M, f)$ where $f : M \to \mathbb{N}$ is a multiplicity function. We denote multisets using square brackets $[ \dots ]$. The \emph{bag union} of multisets $\mathcal{M} = (M, f)$ and $\mathcal{N} = (M, g)$ is $\mathcal{M} \uplus \mathcal{N} = (M, h)$ with $h(x) = f(x) + g(x)$.
+
+\subsection{Partial Functions}
+
+A \emph{partial function} $f : X \nrightarrow Y$ is a function from a subset $S \subseteq X$ to $Y$. For $a \in X \setminus S$, we write $f(a) = \bot$. In OPQL, $\bot$ is denoted as $None$. Partial functions arise wherever a lookup may have no result: an event may not have a particular attribute, an object attribute may not be defined at a given timestamp, and so on.
+
+\subsection{OCEL 2.0 Universes}
+
+Let $\mathbb{U}_\Sigma$ be the universe of strings. The following pairwise disjoint universes are defined:
+
+\begin{itemize}
+    \item $\mathbb{U}_{ev} \subseteq \mathbb{U}_\Sigma$ --- universe of event identifiers
+    \item $\mathbb{U}_{etype} \subseteq \mathbb{U}_\Sigma$ --- universe of event types
+    \item $\mathbb{U}_{obj} \subseteq \mathbb{U}_\Sigma$ --- universe of object identifiers
+    \item $\mathbb{U}_{otype} \subseteq \mathbb{U}_\Sigma$ --- universe of object types
+    \item $\mathbb{U}_{attr} \subseteq \mathbb{U}_\Sigma$ --- universe of attribute names
+    \item $\mathbb{U}_{val}$ --- universe of attribute values
+    \item $\mathbb{U}_{time}$ --- universe of timestamps (with $0 \in \mathbb{U}_{time}$ as the smallest element and $\infty \in \mathbb{U}_{time}$ as the largest)
+    \item $\mathbb{U}_{qual} \subseteq \mathbb{U}_\Sigma$ --- universe of relation qualifiers
+\end{itemize}
+
+\subsection{Object-Centric Event Log}
+
+An Object-Centric Event Log (OCEL) is a tuple
+\[
+L = (E, O, EA, OA, evtype, time, objtype, eatype, oatype, eaval, oaval, E2O, O2O)
+\]
+with:
+\begin{itemize}
+    \item $E \subseteq \mathbb{U}_{ev}$ --- set of events
+    \item $O \subseteq \mathbb{U}_{obj}$ --- set of objects
+    \item $EA \subseteq \mathbb{U}_{attr}$ --- set of event attributes
+    \item $OA \subseteq \mathbb{U}_{attr}$ --- set of object attributes
+    \item $evtype : E \to \mathbb{U}_{etype}$ --- assigns types to events
+    \item $time : E \to \mathbb{U}_{time}$ --- assigns timestamps to events
+    \item $objtype : O \to \mathbb{U}_{otype}$ --- assigns types to objects
+    \item $eatype : EA \to \mathbb{U}_{etype}$ --- assigns event types to event attributes
+    \item $oatype : OA \to \mathbb{U}_{otype}$ --- assigns object types to object attributes
+    \item $eaval : (E \times EA) \nrightarrow \mathbb{U}_{val}$ --- assigns values to event attributes
+    \item $oaval : (O \times OA \times \mathbb{U}_{time}) \nrightarrow \mathbb{U}_{val}$ --- assigns values to object attributes at a given timestamp
+    \item $E2O \subseteq E \times \mathbb{U}_{qual} \times O$ --- qualified event-to-object relations
+    \item $O2O \subseteq O \times \mathbb{U}_{qual} \times O$ --- qualified object-to-object relations
+\end{itemize}
+
+such that:
+\begin{itemize}
+    \item $\dom(eaval) \subseteq \{ (e, ea) \in E \times EA \mid evtype(e) = eatype(ea) \}$
+    \item $\dom(oaval) \subseteq \{ (o, oa, t) \in O \times OA \times \mathbb{U}_{time} \mid objtype(o) = oatype(oa) \}$
+\end{itemize}
+
+The domain constraints ensure that event attributes are only defined for events of the matching type, and object attributes are only defined for objects of the matching type. Object attributes are versioned: $oaval(o, oa, t)$ gives the value of attribute $oa$ for object $o$ at time $t$; a new entry appears whenever the attribute changes. Relations in $E2O$ associate events with the objects they involve; the qualifier in the triple carries the relationship type (e.g., role of the object in the event). Relations in $O2O$ express direct connections between objects, similarly qualified.
+
+\subsection{Durations}
+
+A duration is the signed difference between two points in time:
+\[
+\mathbb{U}_{duration} = \{ t_1 - t_2 \mid t_1, t_2 \in \mathbb{U}_{time} \}.
+\]
+Durations support addition, subtraction, and scaling (multiplication and division by real numbers). A timestamp may be offset by adding or subtracting a duration, yielding a new timestamp. Dividing two durations yields a real number.

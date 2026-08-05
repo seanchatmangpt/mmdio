@@ -1,0 +1,165 @@
+# Changelog
+
+## Unreleased
+
+- Fixed a regression in OC-DECLARE discovery/conformance runtime performance:
+  - Now builds and construct a reverse-E2O index grouped by event type
+  - OC-DECLARE internals are no longer public; their arguments could only be produced by other internals (**Breaking**)
+    - `conformance::oc_declare::{get_evs_with_objs_perf, get_for_ev_perf, get_for_all_evs_perf, get_for_all_evs_perf_thresh}`
+    - `discovery::object_centric::oc_declare::{get_oi_labels, combine_constraints}`
+    - Per-arc checking is unchanged: `oc_declare_conformance`, `OCDeclareArc::violation_fraction`, `OCDeclareArc::satisfies_threshold`
+  - `OCDeclareArc::get_for_all_evs_perf` -> `violation_fraction`, `OCDeclareArc::get_for_all_evs_perf_thresh` -> `satisfies_threshold` (**Breaking**)
+  - Fixed `ANY` object involvements counting a target event once per referenced object instead of once
+
+## 0.6.0
+
+- Optimal Petri net alignments (`conformance::alignments`):
+  - `align_log` / `align_projection` / `align_trace` / `align_empty_trace` compute cost-optimal alignments via Dijkstra over a synchronous product net
+  - `compute_fitness` derives log/trace fitness for pre-computed alignments
+  - Configurable `AlignmentOptions` (`CostFunction`, `max_states`)
+  - Exposed as bindings
+- Generic, reusable state-space search in `utils::dijkstra_search` (`SearchProblem` trait + `search`)
+- `register_binding` macro accepts slice arguments (`&[T]` extracted as `Vec<T>`)
+- New `ReadableOCEL` and `AppendableOCEL` traits; OCEL exporters (CSV, XML, SQL, JSON) and the JSON importer are generic over them
+- `SlimLinkedOCEL` implements `AppendableOCEL`, with auto-declare types, auto-grow attributes, and value coercion via new `OCELAttributeValue::try_coerce_to`; misordered streams are buffered and resolved on `finalize`
+- `import_ocel_json_into` and `import_ocel_xml_into` stream JSON / XML directly into any `AppendableOCEL` (e.g., `SlimLinkedOCEL`) without materializing an `OCEL` first; `SlimLinkedOCEL::import_from_*` uses the streaming paths automatically
+- `ReadableOCEL::iter_events_of_type` / `iter_objects_of_type` (default filters; `SlimLinkedOCEL` overrides via per-type indices, avoiding a full scan per type in SQL export)
+- New `OCELAttributeType::as_type_str` returns `&'static str` (cheaper than `to_type_string`)
+- `EventIndex` / `ObjectIndex` are now `u32`-backed; `into_inner` returns `u32` (**Breaking**)
+- `SlimLinkedOCEL`, `SlimOCELEvent`, `SlimOCELObject` no longer derive `Deserialize` (still serialize); construct via `Importable` or `AppendableOCEL` (**Breaking**)
+- `SlimOCELEvent::relationships` and `SlimOCELObject::relationships` are now `Vec<(QualifierIdx, ObjectIndex)>` (was `Vec<(String, ObjectIndex)>`); resolve qualifier strings via `SlimLinkedOCEL::qualifier_str` (**Breaking**)
+- CSV exporter streams rows instead of buffering all rows; tracks `(time, object_id)` pairs in a `HashSet` to skip redundant object-attribute rows
+- `SlimLinkedOCEL::from_ocel` now goes through `AppendableOCEL`, so it shares attribute coercion, schema-grow, and duplicate-id detection with the streaming import paths. Behavior changes: events/objects with attribute names not in the declared type schema grow the schema (before they were silently dropped); duplicate event/object ids are skipped with a warning (before they were kept but unreachable); references to undeclared types auto-create the type (before they were dropped with warning)
+- `try_json_to_ocel` returning `Result<OCEL, serde_json::Error>` added alongside the existing panicking `json_to_ocel`
+- `SlimLinkedOCEL::get_o2o_rev_obs_of_obtype` / `get_e2o_rev_evs_of_evtype`: qualifier-optional reverse-relation getters filtered by type
+- New public object-centric analysis functions (also exposed as bindings): per-event sojourn and synchronization times with optional `top_k` (`analysis::object_centric::oc_performance`), E2O `(event_type, object_type)` counts and `source -> target` conversion rate (`analysis::object_centric::oc_statistics`), and per-object-type directly-follows graph and activity-trace variants (`discovery::object_centric::dfg` / `variants`)
+- Fix SQL export/import of floats and timestamps: floats are written as `DOUBLE PRECISION` (full f64 precision) and timestamps as naive UTC (avoids a double-applied timezone offset); import maps `DOUBLE` / `DOUBLE PRECISION` columns back to float, so round-trips no longer drop float attributes
+- New direct dependency on `hashbrown` for the slim per-id hash tables
+
+## 0.5.6
+
+- Translate a `ProcessTree` into a `PetriNet`:
+  - `ProcessTree::to_petri_net` returns a workflow net with initial and final marking set
+  - `add_to_petri_net` on `Node` / `Operator` / `Leaf` for recursive insertion into an existing net
+  - `From<ProcessTree> for PetriNet`
+- Bump MSRV to 1.88
+- Update dependencies (pin `cxx-build` to match `kuzu`'s `cxx`, refresh `cargo deny` license allowlist)
+- Add Criterion + dhat benchmarks for event log import (+ DataFrame conversion)
+
+## 0.5.5
+
+- `SlimLinkedOCEL` and bindings:
+  - `add_event` / `add_object` pad or truncate `attributes` to the declared length with a warning, instead of causing out-of-bounds panics later
+  - `add_e2o` / `add_o2o` / `delete_e2o` / `delete_o2o` return `bool`; invalid indices warn and return `false` instead of panicking
+  - Multiple qualifiers between the same `(event, object)` or `(from, to)` pair are kept, and reverse lookups return every qualifier
+  - `fat_ev` / `fat_ob` fall back to `Null` / empty attribute on missing positional values
+  - Drop `unwrap()`s on unknown type names in reverse-type lookups
+  - Expanded docstrings on `slim_ocel_bindings` for the auto-generated Python API docs
+- `Importable` / `Exportable` for `SlimLinkedOCEL` aligned with the `OCEL` versions
+- OCEL import/export supports `.gz` for all formats
+- Better defaults for OCEL 2.0 CSV export
+
+## 0.5.4
+
+- Add `stream_xes_bufread` function for streaming XES traces from a `BufRead` (supports gzipped input)
+- Remove noisy `println!` in OCEL XML import for extended OCELs
+
+## 0.5.3
+
+- Parse XES version from log element
+- Fix some missing unescapes in XML-based imports (XES, PNML)
+
+## 0.5.2
+
+- New `analysis` module with reusable analysis functions (also exposed as bindings ;))
+  - `analysis::case_centric::dotted_chart`: Configurable multi-axis dotted chart generation (`DottedChartOptions`)
+  - `analysis::case_centric::event_timestamp_histogram`: Aggregate event timestamps into bins grouped by activity (`EventTimestampOptions`)
+  - `analysis::object_centric::object_attribute_changes`: Extract time-stamped attribute change history for an OCEL object
+
+## 0.5.1
+- Rename bindings function for SlimLinkedOCEL bindings (not breaking, as 0.5.0 bindings were not published yet)
+
+## 0.5.0
+- Fix SlimLinkedOCEL addObject function (previously did not correctly expand the reverse E2O/O2O reference array)
+- Change error type of OCEL XML import to `OCELIOError` 
+(**Breaking**), return error if XML does not contain any event or object types
+  - Added related test (`test_xes_as_ocel_xml_import`) to ensure xes files are not correctly imported as OCEL
+- Implement `Default` for SlimLinkedOCEL, add `new` function for SlimLinkedOCEL
+- Expose SlimLinkedOCEL binding functions (e.g., for adding events/objects, getting relations, etc.)
+- Implement From<...> for (bi-directional) conversion between (XES) `AttributeValue`s to `OCELAttributeValue`s
+- Remove `Hash` derive from `OCELType` (**Breaking**)
+
+## 0.4.4
+- Fix version mismatch in macros crate
+
+## 0.4.3
+- Fix: typo in function name: `oc_declare_conformace` -> `oc_declare_conformance` (**Breaking**)
+
+## 0.4.2
+- **New OCEL CSV Format**
+  - Added CSV format support for OCEL:
+  - Added Importer/Exporter for CSV OCEL file format
+  - Added CSV file format to OCEL io trait + known formats (as `.ocel.csv`)
+- **Bindings Improvements**:
+  - Exposed OC-DECLARE conformance function (`oc_declare_conformace`) to bindings
+  - Renamed `discover_oc-declare` binding to `discover_oc_declare` (**Breaking for Bindings**)
+  - Renamed `discover_dfg_from_locel` to `discover_dfg_from_ocel` (**Breaking**)
+  - Added `SlimLinkedOCEL` <-> `OCEL` conversion support in bindings
+  - Implemented `LinkedOCELAccess` trait support in bindings macro for more generic functions
+  - Added `ocel_type_stats` binding to compute event/object type statistics
+  - Exposed `flatten_ocel_on` function to bindings for flattening OCEL on object types
+  - Exposed `add_init_exit_events_to_ocel` function to bindings
+- **Other Fixes and Improvements**:
+  - Fixed SQLite/DuckDB export to remove existing file before export (prevents UNIQUE constraint errors)
+  - Combined/Deduped timestamp-related parsing functionality across files
+  - Implemented `Null` as default `OCELAttributeValue`
+- **Internal Improvements**:
+  - Updated `rusqlite` and related dependencies
+  - Improved CLI in `r4pm`
+
+### Breaking Changes / Migration Guide
+- The `From<OCELAttributeValue>` implementation for `OCELAttributeType` was removed. Instead, use the `get_type` function on `OCELAttributeValue` to retrieve its type.
+- Updates related to io module for CSV parsing (e.g., new error variant in `OCELIOError`)
+- Renamed binding `discover_oc-declare` to `discover_oc_declare`
+
+## 0.4.1
+- Added `verbose` option to `XESImportOptions`, defaulting to true
+  - Note: Technically this is a breaking change, however the recommended way to use `XESImportOptions` is non-exhaustive with default fallback:
+    - e.g., ```XESImportOptions {verbose: false, ..Default::default()}```
+
+## 0.4.0
+
+### Restructuring (Current)
+- **Unified IO Traits**: Introduced `Importable` and `Exportable` traits in `process_mining::core::io` to standardize import and export operations across different data structures.
+- **EventLog IO**: Implemented `Importable` and `Exportable` for `EventLog`, supporting JSON (`.json`), XES (`.xes`), and Gzipped XES (`.xes.gz`) formats.
+- **PetriNet IO**: Implemented `Importable` and `Exportable` for `PetriNet`, supporting PNML (`.pnml`) format.
+- **OCEL IO**: Implemented `Importable` and `Exportable` for Object-Centric Event Logs (OCEL), including support for SQLite and DuckDB (if features enabled).
+- **Format Inference**: Added automatic format inference based on file extensions (e.g., `.xes`, `.xes.gz`, `.pnml`).
+- **Auto-Bindings**: Added auto-binding functionality to facilitate Python bindings generation.
+- **Module Restructuring**:
+    - Moved Alpha+++ discovery to `process_mining::discovery`.
+    - Moved Petri nets to `process_mining::core::process_models`.
+    - Moved DFG discovery to `process_mining::discovery`.
+- **API Simplification**: Users can now use generic `import_from_path` and `export_to_path` methods. These methods now strictly rely on file extension for format inference, removing the optional format argument.
+
+### Features (Unreleased on crates.io)
+- **KuzuDB Support**: Added initial support for OCEL export to KuzuDB.
+- **DuckDB Support**: Added example for OCEL export to DuckDB.
+- **Polars Export**: Added OCEL to Polars DataFrame export.
+- **Object-Centric Process Trees**: Added implementation of object-centric process trees and abstraction-based conformance checking.
+- **Token-Based Replay**: Implemented token-based replay on Petri nets.
+- **Incidence Matrices**: Added incidence matrices for Petri nets.
+- **Event Log Macros**: Implemented macros for easier event log creation.
+- **OC-DECLARE**: Object-centric declarative process models, with discovery and conformance checking.
+
+### Changed
+- **Exposed Fields**: Exposed `OCLanguageAbstraction` fields.
+
+### Migration Guide
+- **Importing Event Logs**:
+  - Old: `import_xes_file("log.xes")`
+  - New: `EventLog::import_from_path("log.xes")`
+- **Exporting Event Logs**:
+  - New: `log.export_to_path("log.xes")`
+- **Traits**: Ensure `process_mining::Importable` and `process_mining::Exportable` are in scope if you need to use the traits generically.
+- **Format Specification**: If you need to specify a format explicitly (e.g., reading from a stream or non-standard extension), use `import_from_reader` or `export_to_writer` which still accept a format string.

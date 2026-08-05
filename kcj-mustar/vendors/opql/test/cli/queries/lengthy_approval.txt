@@ -1,0 +1,18 @@
+    KEEP avg(
+        PATTERN E(cpr:"Create Purchase Requisition")-[pr_r]-O(pr:"purchase_requisition")
+        KEEP cpr AS cpr, olead(cpr,pr,"Approve Purchase Requisition") AS ap_purch_req
+        SUBJECTTO NOT isnone(ap_purch_req)
+        RETURN ap_purch_req["ocel_time"] - cpr["ocel_time"] AS approval_duration
+    ) AS avg_approval_time,
+    stddev(
+        PATTERN E(cpr:"Create Purchase Requisition")-[pr_r]-O(pr:"purchase_requisition")
+        KEEP cpr AS cpr, olead(cpr,pr,"Approve Purchase Requisition") AS ap_purch_req
+        SUBJECTTO NOT isnone(ap_purch_req)
+        RETURN ap_purch_req["ocel_time"] - cpr["ocel_time"] AS approval_duration
+    ) AS approval_time_stddev
+    KEEP *, avg_approval_time + approval_time_stddev AS upper_limit
+
+    PATTERN E(cpr:"Create Purchase Requisition")-[pr_r]-O(pr:"purchase_requisition")
+    KEEP upper_limit AS upper_limit, cpr AS cpr, olead(cpr,pr,"Approve Purchase Requisition") AS ap_purch_req
+    SUBJECTTO NOT isnone(ap_purch_req)
+    RETURN ap_purch_req["ocel_time"] - cpr["ocel_time"] AS approval_duration, approval_duration > upper_limit AS needs_review

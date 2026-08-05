@@ -1,0 +1,66 @@
+\section{Query Composition}
+
+\begin{framedgram}[Complete Query]
+\begin{tabularx}{\linewidth}{l c X}
+\nterm{contextRule} & = & \nterm{patternClause} | \nterm{filterClause} | \nterm{keepClause} | \nterm{whenClause} \\
+\nterm{fullQuery} & = & \{ \nterm{contextRule} \} \nterm{returnRule} \\
+\end{tabularx}
+\end{framedgram}
+
+A query is a sequence of zero or more context clauses followed by exactly one RETURN statement. Clauses are evaluated sequentially; each clause receives the current state (event log $L$ and table $\mathcal{B}$) and produces a new state for the next clause. PATTERN, KEEP, and WHEN clauses transform only the table; FILTER clauses transform only the event log and reset the table. The RETURN statement terminates evaluation and produces the final result.
+
+\begin{frameddef}[Clause Evaluation]
+Let $\mathbb{U}_{bC} = \mathbb{U}_{pC} \cup \mathbb{U}_{kC} \cup \mathbb{U}_{wC}$. The function $eval_{bC} : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_{bC} \nrightarrow \mathbb{U}_T$ evaluates clauses:
+\[
+eval_{bC}(L, \mathcal{B}, c) = \begin{cases}
+eval_{pC}(L, \mathcal{B}, c) & \text{if } c \in \mathbb{U}_{pC} \\
+eval_{kC}(L, \mathcal{B}, c) & \text{if } c \in \mathbb{U}_{kC} \\
+eval_{wC}(L, \mathcal{B}, c) & \text{if } c \in \mathbb{U}_{wC}
+\end{cases}
+\]
+
+Let $\mathbb{U}_{cC} = \mathbb{U}_{bC} \times (\mathbb{U}_{stS} \cup \{ None \})$ be the universe of clauses with optional SUBJECTTO subclauses. The evaluation $eval_{cC} : \mathbb{U}_{OCEL} \times \mathbb{U}_B \times \mathbb{U}_{cC} \nrightarrow \mathbb{U}_T$ is:
+\[
+eval_{cC}(L, \mathcal{B}, (c, s)) = \begin{cases}
+eval_{bC}(L, \mathcal{B}, c) & \text{if } s = None \\
+eval_{stS}(L, eval_{bC}(L, \mathcal{B}, c), s) & \text{otherwise}
+\end{cases}
+\]
+\end{frameddef}
+
+\begin{frameddef}[Query Evaluation]
+The universe of all OPQL queries is $\mathbb{U}_{opql} = (\mathbb{U}_{cC} \cup \mathbb{U}_{fC})^* \times \mathbb{U}_{rS}$.
+
+The function $eval_{opql}$ evaluates a full query $(\langle C_1, \dots, C_n \rangle, R)$:
+\[
+eval_{opql}(L, \mathcal{B}, (\langle C_1, \dots, C_n \rangle, R)) = \begin{cases}
+eval_{rS}(L, \mathcal{B}, R) & \text{if } n = 0 \\
+eval_{opql}(L', [\{ \}], (\langle C_2, \dots, C_n \rangle, R)) & \text{if } C_1 \in \mathbb{U}_{fC} \\
+eval_{opql}(L, \mathcal{B}', (\langle C_2, \dots, C_n \rangle, R)) & \text{otherwise}
+\end{cases}
+\]
+
+where $L' = eval_{fC}(L, \mathcal{B}, C_1)$ and $\mathcal{B}' = eval_{cC}(L, \mathcal{B}, C_1)$.
+
+The entry point is $query : \mathbb{U}_{OCEL} \times \mathbb{U}_{opql} \to \mathbb{U}_T \cup \mathbb{U}_{OCEL}$:
+\[
+query(L, Q) = eval_{opql}(L, [\{ \}], Q).
+\]
+\end{frameddef}
+
+FILTER clauses reset the context: the filtered event log $L'$ is passed forward and the table is reset to a single empty record $[\{ \}]$. This prevents dangling references to filtered-out entities. All other clauses manipulate only the table $\mathcal{B}$, passing the event log unchanged.
+
+\subsection{Common Table Expressions}
+
+A common table expression (CTE) names the result of a subquery so it can be referenced by symbolic name in subsequent clauses. CTEs are expressed using a KEEP clause with a subquery expression:
+
+\begin{verbatim}
+KEEP (PATTERN E(e) RETURN e["cost"]) AS costs
+RETURN avg(costs), count(costs), max(costs)
+\end{verbatim}
+
+The subquery \texttt{(PATTERN E(e) RETURN e["cost"])} is a subquery expression (see Section~7) that evaluates to a table. The KEEP clause binds this table to the symbolic name \texttt{costs}. Subsequent references to \texttt{costs} --- whether in aggregation functions, other KEEP clauses, or the RETURN statement --- resolve to the stored table.
+
+No special clause syntax is required: a CTE is simply a KEEP projection item whose expression is a subquery. The existing KEEP evaluation rules apply without modification.
+
+\paragraph{Materialization.} By default, or with an explicit \term{MATERIALIZED} prefix, the subquery is evaluated eagerly during KEEP processing. The \term{NOT MATERIALIZED} prefix defers evaluation: the query AST is stored as-is, and evaluated each time the symbolic name is referenced. See Definition~7.2 for formal semantics. Note that under the current language the two modes are observationally equivalent, since no operation can mutate the event log without also clearing context bindings (see the note in Section~7).

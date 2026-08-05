@@ -1,0 +1,8 @@
+        PATTERN E(cgr:"Create Purchase Order")-[]-O(quot:"quotation")-[]-O(pr:"purchase_requisition")
+        SUBJECTTO count(PATTERN O(pr)-[]-E(cpr:"Create Purchase Requisition")
+                        RETURN cpr AS cpr
+        ) == 0 
+        RETURN cgr AS cgr, 
+               quot AS quot, 
+               pr AS pr,
+               apo AS apo
