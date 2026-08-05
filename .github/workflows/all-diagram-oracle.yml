@@ -65,7 +65,9 @@ jobs:
       - name: Verify ontology and projection closure
         env:
           PYTHONPATH: src
-        run: python scripts/verify_universal_projection.py | tee /tmp/projection-receipt.json
+        run: |
+          set -o pipefail
+          python scripts/verify_universal_projection.py | tee /tmp/projection-receipt.json
 
       - name: Execute Python capability, CLI, and API tests
         env:
@@ -81,7 +83,9 @@ jobs:
       - name: Execute all 39 against Mermaid 11.16.0
         env:
           PYTHONPATH: src
-        run: node tests/oracle/catalog_oracle.mjs _oracle/mermaid | tee /tmp/js-oracle-receipt.json
+        run: |
+          set -o pipefail
+          node tests/oracle/catalog_oracle.mjs _oracle/mermaid | tee /tmp/js-oracle-receipt.json
 
       - name: Execute full repository test suite
         env:
