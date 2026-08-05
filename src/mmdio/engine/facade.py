@@ -1,4 +1,4 @@
-"""Public all-dialect facade with optional legacy deep-AST projections."""
+"""Public all-dialect facade with explicit optional deep-AST projections."""
 
 from __future__ import annotations
 
@@ -31,23 +31,13 @@ _DEEP_PROJECTION = {
 }
 
 
-def parse_mermaid(text: str) -> Any:
-    """Parse all 39 types, retaining compatible deep ASTs when available."""
-    diagram_type = detect_document_type(text)
-    internal_id = _DEEP_PROJECTION.get(diagram_type)
-    if internal_id is not None:
-        try:
-            parser = import_module("mmdio.engine.parser")
-        except ModuleNotFoundError as exc:
-            if exc.name != "lark":
-                raise
-        else:
-            return getattr(parser, f"parse_{internal_id}")(text)
-    return parse_document(text, diagram_type)
+def parse_mermaid(text: str) -> MermaidDocument:
+    """Parse every registered type through the uniform lossless CST contract."""
+    return parse_document(text)
 
 
 def parse_structured_mermaid(text: str) -> Any:
-    """Parse through a deep transformer; requires the ``all`` extra."""
+    """Parse through an optional deep transformer; requires the ``all`` extra."""
     diagram_type = detect_document_type(text)
     internal_id = _DEEP_PROJECTION.get(diagram_type)
     if internal_id is None:
@@ -57,14 +47,14 @@ def parse_structured_mermaid(text: str) -> Any:
 
 
 def render_diagram(diagram: Any) -> str:
-    """Render either a universal document or a legacy deep AST."""
+    """Render either a universal document or an explicit legacy deep AST."""
     if isinstance(diagram, MermaidDocument):
         return render_document(diagram)
     return import_module("mmdio.engine.render").render_diagram(diagram)
 
 
 def schema_for_type(diagram_type: str) -> dict[str, Any]:
-    """Return the deep schema where available, otherwise the universal schema."""
+    """Return a deep schema where present, otherwise the universal schema."""
     try:
         return import_module("mmdio.engine.schemas").schema_for_type(diagram_type)
     except (ModuleNotFoundError, ValueError):

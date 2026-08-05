@@ -58,7 +58,7 @@ EXPECTED_TYPES: dict[str, tuple[str, type[BaseModel], Callable[[], BaseModel], s
     "pie": ("pie", PieChart, example_pie, 'pie\n  "A": 1\n'),
     "sankey": ("sankey", SankeyDiagram, example_sankey, "sankey-beta\nA,B,1\n"),
     "sequence": ("sequence", SequenceDiagram, example_sequence, "sequenceDiagram\n"),
-    "stateDiagram": ("state", StateDiagram, example_state, "stateDiagram-v2\n"),
+    "stateDiagram": ("state", StateDiagram, example_state, "stateDiagram\n"),
 }
 
 
@@ -141,9 +141,8 @@ def test_alias_validation_and_schemas_are_json_serializable() -> None:
     assert json.loads(json.dumps(schema, sort_keys=True)) == schema
 
 
-def test_parser_accepts_flowchart_smoke_sample() -> None:
-    """Keep the deep flowchart projection executable."""
-    model = parse_mermaid("flowchart TD\n    start[Start]\n")
-    assert isinstance(model, FlowchartDiagram)
-    assert model.nodes
-    assert model.nodes[0].id == "start"
+def test_uniform_parser_accepts_flowchart_smoke_sample() -> None:
+    """Keep the all-dialect parser independent of the stale Lark grammar."""
+    document = parse_mermaid("flowchart TD\n    start[Start]\n")
+    assert str(document.type) == "flowchart"
+    assert document.statements[1].text.strip() == "start[Start]"

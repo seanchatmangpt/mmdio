@@ -36,7 +36,7 @@ receipt = issue_receipt(document)
 assert verify_receipt(receipt) == document
 ```
 
-Use `parse_mermaid(source)` for compatibility with the original deep AST parsers when their grammar is installed. Use `parse_document(source, diagram_type=...)` for a uniform all-dialect return contract.
+`parse_mermaid(source)` and `parse_document(source, diagram_type=...)` both return the uniform all-dialect document contract. `parse_structured_mermaid(source)` explicitly requests one of the optional legacy deep AST projections and requires its Lark grammar to admit the source.
 
 ## CLI
 
