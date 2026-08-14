@@ -1,0 +1,64 @@
+{
+  "formalism": "ppddl",
+  "subject": "enterprise workload migration",
+  "nodes": [
+    {
+      "id": "migrate",
+      "kind": "action",
+      "label": "Migrate workload",
+      "attributes": {
+        "start": 0,
+        "duration": 30,
+        "actor": "Platform",
+        "target_actor": "Cloud"
+      }
+    },
+    {
+      "id": "success",
+      "kind": "state",
+      "label": "Migration success",
+      "attributes": {}
+    },
+    {
+      "id": "degraded",
+      "kind": "state",
+      "label": "Migration degraded",
+      "attributes": {}
+    },
+    {
+      "id": "goal",
+      "kind": "goal",
+      "label": "Service healthy",
+      "attributes": {
+        "risk": "high",
+        "verify": "test"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "migrate",
+      "target": "success",
+      "kind": "probabilistic",
+      "label": "success",
+      "attributes": {"probability": 0.94}
+    },
+    {
+      "source": "migrate",
+      "target": "degraded",
+      "kind": "probabilistic",
+      "label": "degraded",
+      "attributes": {"probability": 0.06}
+    },
+    {
+      "source": "success",
+      "target": "goal",
+      "kind": "effect",
+      "label": "verify",
+      "attributes": {}
+    }
+  ],
+  "metadata": {
+    "profile": "enterprise-demo"
+  }
+}
