@@ -1,0 +1,489 @@
+---
+to: "platform/mmdio_paas/lib/mmdio_paas.ex"
+force: true
+sparql:
+  service: |
+    PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+    SELECT ?maxBytes ?adapterVersion ?ashRef ?ggenRef WHERE {
+      paas:service paas:maxSourceBytes ?maxBytes ;
+        paas:adapterVersion ?adapterVersion ;
+        paas:ashR2RMLRef ?ashRef ;
+        paas:ggenRef ?ggenRef .
+    }
+  content_types: |
+    PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+    SELECT ?contentType WHERE { paas:service paas:contentType ?contentType . } ORDER BY ?contentType
+---
+# GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+defmodule MmdioPaaS.Refusal do
+  @moduledoc false
+  defexception [:code, :message, evidence: %{}]
+end
+
+defmodule MmdioPaaS.Receipt do
+  @moduledoc false
+
+  @fields [
+    :schema,
+    :status,
+    :refusal_type,
+    :subject_sha256,
+    :semantic_sha256,
+    :rendered_sha256,
+    :exit_code,
+    :adapter,
+    :command_identity,
+    :ash_r2rml_ref,
+    :ggen_ref,
+    :semantic_contract
+  ]
+
+  def seal(fields) do
+    normalized =
+      @fields
+      |> Map.new(fn key -> {key, Map.get(fields, key)} end)
+
+    canonical =
+      @fields
+      |> Enum.map_join("\n", fn key ->
+        "#{key}=#{canonical_value(Map.fetch!(normalized, key))}"
+      end)
+
+    Map.put(normalized, :receipt_sha256, sha256(canonical))
+  end
+
+  def sha256(value) when is_binary(value) do
+    :crypto.hash(:sha256, value)
+    |> Base.encode16(case: :lower)
+  end
+
+  defp canonical_value(nil), do: "-"
+  defp canonical_value(value), do: to_string(value)
+end
+
+defmodule MmdioPaaS.AdmitStep do
+  @moduledoc false
+  use Reactor.Step
+
+{% for row in service %}  @max_source_bytes {{ row.maxBytes }}
+{% endfor %}  @content_types [
+{% for row in content_types %}    "{{ row.contentType }}",
+{% endfor %}  ]
+
+  @impl Reactor.Step
+  def run(%{source: source, content_type: content_type}, _context, _options)
+      when is_binary(source) and is_binary(content_type) do
+    bytes = byte_size(source)
+
+    cond do
+      bytes == 0 ->
+        {:error,
+         %MmdioPaaS.Refusal{
+           code: :empty_subject,
+           message: "Mermaid source must not be empty",
+           evidence: %{bytes: bytes}
+         }}
+
+      bytes > @max_source_bytes ->
+        {:error,
+         %MmdioPaaS.Refusal{
+           code: :subject_too_large,
+           message: "Mermaid source exceeds admitted byte ceiling",
+           evidence: %{bytes: bytes, max_bytes: @max_source_bytes}
+         }}
+
+      content_type not in @content_types ->
+        {:error,
+         %MmdioPaaS.Refusal{
+           code: :unsupported_content_type,
+           message: "Content type is outside the admitted service contract",
+           evidence: %{content_type: content_type, admitted: @content_types}
+         }}
+
+      true ->
+        {:ok,
+         %{
+           source: source,
+           content_type: content_type,
+           subject_sha256: MmdioPaaS.Receipt.sha256(source),
+           bytes: bytes
+         }}
+    end
+  end
+
+  def run(arguments, _context, _options) do
+    {:error,
+     %MmdioPaaS.Refusal{
+       code: :invalid_intent,
+       message: "Render intent requires binary source and content_type",
+       evidence: %{arguments: inspect(arguments)}
+     }}
+  end
+end
+
+defmodule MmdioPaaS.SemanticStep do
+  @moduledoc false
+  use Reactor.Step
+
+  @impl Reactor.Step
+  def run(%{resources: resources}, _context, _options) do
+    Reactor.run(AshR2RML.Reactor.Pipeline, %{
+      resources: resources,
+      actor: nil,
+      observations: [],
+      metadata: %{consumer: "mmdio-paas"}
+    })
+  end
+end
+
+defmodule MmdioPaaS.BRCE.RenderStep do
+  @moduledoc false
+  use Reactor.Step
+
+{% for row in service %}  @adapter "{{ row.adapterVersion }}"
+  @ash_r2rml_ref "{{ row.ashRef }}"
+  @ggen_ref "{{ row.ggenRef }}"
+{% endfor %}  @semantic_contract "PROV-O|DCTERMS|DCAT|SKOS|SHACL|R2RML"
+  @command_identity "python:mmdio.engine.parse_mermaid+validate_topology+render_model"
+
+  @python_adapter """
+  import base64, json, sys
+  from mmdio.engine import parse_mermaid, render_model, validate_topology
+
+  source = base64.b64decode(sys.argv[1]).decode("utf-8")
+  try:
+      model = parse_mermaid(source)
+      issues = validate_topology(model)
+      if issues:
+          print(json.dumps({"status": "REFUSED", "refusal_type": "TOPOLOGY", "issues": issues}, sort_keys=True))
+          raise SystemExit(2)
+      rendered = render_model(model)
+      print(json.dumps({"status": "ALIVE", "model_type": type(model).__name__, "rendered": rendered}, sort_keys=True))
+  except SystemExit:
+      raise
+  except Exception as exc:
+      print(json.dumps({"status": "REFUSED", "refusal_type": "MERMAID_SEMANTICS", "error": str(exc)}, sort_keys=True))
+      raise SystemExit(3)
+  """
+
+  @impl Reactor.Step
+  def run(
+        %{admitted: admitted, semantic_turtle: semantic_turtle, python: python},
+        _context,
+        _options
+      ) do
+    semantic_sha256 = MmdioPaaS.Receipt.sha256(semantic_turtle)
+
+    case System.find_executable(python) do
+      nil ->
+        result =
+          receipt_result(
+            admitted,
+            semantic_sha256,
+            "BLOCKED",
+            "PYTHON_EXECUTABLE",
+            nil,
+            nil,
+            nil,
+            "Python executable #{inspect(python)} is not available"
+          )
+
+        {:ok, result}
+
+      executable ->
+        execute(executable, admitted, semantic_sha256)
+    end
+  end
+
+  defp execute(executable, admitted, semantic_sha256) do
+    encoded = Base.encode64(admitted.source)
+
+    try do
+      {output, exit_code} =
+        System.cmd(executable, ["-c", @python_adapter, encoded],
+          stderr_to_stdout: true,
+          env: [{"PYTHONHASHSEED", "0"}]
+        )
+
+      decoded = decode_output(output)
+      rendered = Map.get(decoded, "rendered")
+      status = Map.get(decoded, "status", if(exit_code == 0, do: "ALIVE", else: "BUILD_BROKEN"))
+      refusal_type = Map.get(decoded, "refusal_type")
+
+      result =
+        receipt_result(
+          admitted,
+          semantic_sha256,
+          status,
+          refusal_type,
+          rendered,
+          exit_code,
+          decoded,
+          nil
+        )
+
+      {:ok, result}
+    rescue
+      exception ->
+        result =
+          receipt_result(
+            admitted,
+            semantic_sha256,
+            "BUILD_BROKEN",
+            "PYTHON_ADAPTER_EXCEPTION",
+            nil,
+            nil,
+            nil,
+            Exception.message(exception)
+          )
+
+        {:ok, result}
+    end
+  end
+
+  defp decode_output(output) do
+    line =
+      output
+      |> String.split("\n", trim: true)
+      |> List.last()
+
+    case line do
+      nil ->
+        %{}
+
+      line ->
+        case Jason.decode(line) do
+          {:ok, decoded} -> decoded
+          {:error, _} -> %{"status" => "BUILD_BROKEN", "refusal_type" => "NON_JSON_ADAPTER_OUTPUT"}
+        end
+    end
+  end
+
+  defp receipt_result(
+         admitted,
+         semantic_sha256,
+         status,
+         refusal_type,
+         rendered,
+         exit_code,
+         adapter_payload,
+         adapter_error
+       ) do
+    rendered_sha256 = if is_binary(rendered), do: MmdioPaaS.Receipt.sha256(rendered), else: nil
+
+    receipt =
+      MmdioPaaS.Receipt.seal(%{
+        schema: "mmdio-paas-receipt/v1",
+        status: status,
+        refusal_type: refusal_type,
+        subject_sha256: admitted.subject_sha256,
+        semantic_sha256: semantic_sha256,
+        rendered_sha256: rendered_sha256,
+        exit_code: exit_code,
+        adapter: @adapter,
+        command_identity: @command_identity,
+        ash_r2rml_ref: @ash_r2rml_ref,
+        ggen_ref: @ggen_ref,
+        semantic_contract: @semantic_contract
+      })
+
+    %{
+      status: status,
+      rendered: rendered,
+      receipt: receipt,
+      adapter_payload: adapter_payload,
+      adapter_error: adapter_error
+    }
+  end
+end
+
+defmodule MmdioPaaS.VerifyStep do
+  @moduledoc false
+  use Reactor.Step
+
+  @impl Reactor.Step
+  def run(%{result: result}, _context, _options) do
+    expected =
+      if is_binary(result.rendered),
+        do: MmdioPaaS.Receipt.sha256(result.rendered),
+        else: nil
+
+    if expected == result.receipt.rendered_sha256 do
+      {:ok, Map.put(result, :verified, true)}
+    else
+      {:error,
+       %MmdioPaaS.Refusal{
+         code: :receipt_verification_failed,
+         message: "Rendered payload no longer matches the sealed receipt",
+         evidence: %{expected: expected, receipt: result.receipt.rendered_sha256}
+       }}
+    end
+  end
+end
+
+defmodule MmdioPaaS.Workflow do
+  @moduledoc false
+  use Reactor
+
+  input(:source)
+  input(:content_type)
+  input(:python)
+  input(:resources)
+
+  step :admit, MmdioPaaS.AdmitStep do
+    argument :source, input(:source)
+    argument :content_type, input(:content_type)
+  end
+
+  step :semantic_contract, MmdioPaaS.SemanticStep do
+    argument :resources, input(:resources)
+  end
+
+  step :actuate, MmdioPaaS.BRCE.RenderStep do
+    argument :admitted, result(:admit)
+    argument :semantic_turtle, result(:semantic_contract)
+    argument :python, input(:python)
+  end
+
+  step :verify, MmdioPaaS.VerifyStep do
+    argument :result, result(:actuate)
+  end
+
+  return :verify
+end
+
+defmodule MmdioPaaS.RenderRequest do
+  @moduledoc false
+  use Ash.Resource,
+    domain: MmdioPaaS.Domain,
+    data_layer: Ash.DataLayer.Ets,
+    extensions: [AshR2RML, AshJsonApi.Resource]
+
+  r2rml do
+    class_iri("https://seanchatmangpt.github.io/ontology/mmdio/paas#RenderIntent")
+    subject_template("https://seanchatmangpt.github.io/resource/mmdio/render-intent/{id}")
+    table_name("mmdio_render_intents")
+
+    attribute_mappings([
+      {:source_sha256, "http://purl.org/dc/terms/identifier"},
+      {:content_type, "http://purl.org/dc/terms/format"},
+      {:standing, "http://www.w3.org/2004/02/skos/core#notation"},
+      {:receipt_sha256, "https://seanchatmangpt.github.io/ontology/mmdio/paas#receiptDigest"}
+    ])
+  end
+
+  attributes do
+    uuid_primary_key :id
+    attribute :source_sha256, :string, public?: true
+    attribute :content_type, :string, public?: true
+    attribute :standing, :string, public?: true
+    attribute :receipt_sha256, :string, public?: true
+  end
+
+  actions do
+    action :render, :map do
+      argument :source, :string, allow_nil?: false
+      argument :content_type, :string, allow_nil?: false, default: "text/vnd.mermaid"
+
+      run fn input, _context ->
+        MmdioPaaS.render(
+          Ash.ActionInput.get_argument(input, :source),
+          Ash.ActionInput.get_argument(input, :content_type)
+        )
+      end
+    end
+  end
+
+  json_api do
+    type "render-request"
+  end
+end
+
+defmodule MmdioPaaS.Domain do
+  @moduledoc false
+  use Ash.Domain, extensions: [AshJsonApi.Domain]
+
+  resources do
+    resource MmdioPaaS.RenderRequest
+  end
+
+  json_api do
+    routes do
+      base_route "/render", MmdioPaaS.RenderRequest do
+        post :render
+      end
+    end
+  end
+end
+
+defmodule MmdioPaaS.Router do
+  @moduledoc false
+  use AshJsonApi.Router,
+    domains: [MmdioPaaS.Domain],
+    prefix: "/api"
+end
+
+defmodule MmdioPaaS.Application do
+  @moduledoc false
+  use Application
+
+  @impl true
+  def start(_type, _args) do
+    children =
+      if Application.get_env(:mmdio_paas, :serve, true) do
+        port = Application.fetch_env!(:mmdio_paas, :port)
+        [{Bandit, plug: MmdioPaaS.Router, port: port}]
+      else
+        []
+      end
+
+    Supervisor.start_link(children, strategy: :one_for_one, name: MmdioPaaS.Supervisor)
+  end
+end
+
+defmodule MmdioPaaS do
+  @moduledoc """
+  Ash/Reactor PaaS control plane for the ggen-generated mmdio Mermaid engine.
+
+  SELECT and CONSTRUCT are handled by Ash + AshR2RML. `MmdioPaaS.Workflow` is the
+  only DO route; the bounded Python adapter always seals an attempted actuation in
+  a receipt before returning. The Python engine remains the Mermaid semantic authority.
+  """
+
+  def render(source, content_type \\ "text/vnd.mermaid") do
+    python = Application.get_env(:mmdio_paas, :python, "python3")
+
+    case Reactor.run(MmdioPaaS.Workflow, %{
+           source: source,
+           content_type: content_type,
+           python: python,
+           resources: [MmdioPaaS.RenderRequest]
+         }) do
+      {:ok, result} ->
+        {:ok, result}
+
+      {:error, error} ->
+        {:error, MmdioPaaS.ReactorDomainErrorNormalizer.normalize(error)}
+    end
+  end
+end
+
+defmodule MmdioPaaS.ReactorDomainErrorNormalizer do
+  @moduledoc """
+  Consumer projection of the ggen-marketplace
+  `ash-reactor-domain-error-contract-pack`: preserve typed domain refusals instead
+  of collapsing them into a generic Reactor failure.
+  """
+
+  def normalize(%Reactor.Error.Invalid{errors: errors} = original) do
+    case Enum.find_value(errors, &domain_error/1) do
+      nil -> {:reactor_failed, original}
+      error -> error
+    end
+  end
+
+  def normalize(other), do: {:reactor_failed, other}
+
+  defp domain_error(%Reactor.Error.Invalid.RunStepError{error: error}), do: error
+  defp domain_error(_), do: nil
+end
