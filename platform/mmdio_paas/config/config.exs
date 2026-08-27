@@ -1,0 +1,11 @@
+# GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+import Config
+
+config :mime, :types, %{
+  "application/vnd.api+json" => ["json-api"]
+}
+
+config :mmdio_paas,
+  serve: config_env() != :test,
+  port: String.to_integer(System.get_env("PORT") || "4000"),
+  python: System.get_env("MMDIO_PYTHON") || "python3"
