@@ -45,7 +45,6 @@ jobs:
         run: |
           python - <<'PY'
           from rdflib import Graph, Namespace, RDF
-          from pathlib import Path
 
           graph = Graph().parse("packs/mmdio-paas-pack/ontology.ttl", format="turtle")
           PAAS = Namespace("https://seanchatmangpt.github.io/ontology/mmdio/paas#")
@@ -80,11 +79,11 @@ jobs:
             platform/mmdio_paas \
             packs/mmdio-paas-pack
 
-      - name: Install OTP and Elixir
+      - name: Install OTP and Elixir from ash_r2rml toolchain capsule
         uses: erlef/setup-beam@v1
         with:
-          otp-version: "29.0.2"
-          elixir-version: "1.19.4"
+          otp-version: "27.2.4"
+          elixir-version: "1.18.4-otp-27"
 
       - name: Compile PaaS with warnings as errors
         working-directory: platform/mmdio_paas
@@ -133,6 +132,6 @@ jobs:
               "ggen_receipt_present": generation_receipt.exists(),
               "ash_r2rml_ref": "067954ad406fd637fd47646bdb10c4580809c79d",
               "ggen_ref": "1e9fcb9679a61460fbd641415cb72511c7e50b33",
-              "claim_ceiling": "MMdio_PAAS_EXACT_HEAD_ASH_R2RML_REACTOR_BRCE_ONLY"
+              "claim_ceiling": "MMDIO_PAAS_EXACT_HEAD_ASH_R2RML_REACTOR_BRCE_ONLY"
           }, sort_keys=True))
           PY
