@@ -1,0 +1,4 @@
+[pack]
+name = "mmdio-paas-pack"
+version = "26.8.26"
+description = "Manufactures the Ash + AshR2RML + Reactor service plane around mmdio's ggen-generated Mermaid engine."
