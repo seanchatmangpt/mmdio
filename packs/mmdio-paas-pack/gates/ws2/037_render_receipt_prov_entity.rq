@@ -1,0 +1,4 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:RenderReceipt rdfs:subClassOf prov:Entity . } BIND("RENDER_RECEIPT_PROV_ENTITY" AS ?violation) }
