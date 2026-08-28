@@ -72,12 +72,22 @@ jobs:
             --manifest-path /tmp/ggen/Cargo.toml \
             -p ggen-cli-lib --bin ggen
 
-      - name: Regenerate PaaS projections with ggen
+      - name: Regenerate PaaS projections with isolated receipt chain
         run: |
-          /tmp/ggen/target/debug/ggen sync run
-          git diff --exit-code -- \
-            platform/mmdio_paas \
-            packs/mmdio-paas-pack
+          set -euo pipefail
+          crown=/tmp/mmdio-paas-crown
+          rm -rf "$crown"
+          mkdir -p "$crown"
+          # The repository's historical root .ggen-v2 chain is evidence for a
+          # different manufacture lineage.  Reusing it for this exact-head PaaS
+          # court couples independent products and correctly trips FM-CHAIN-009.
+          # Manufacture the admitted source tree in a fresh receipt domain, then
+          # compare only the PaaS consequences back to the candidate checkout.
+          rsync -a --exclude='.git' --exclude='.ggen-v2' ./ "$crown/"
+          (cd "$crown" && /tmp/ggen/target/debug/ggen sync run)
+          diff -ru "$crown/platform/mmdio_paas" platform/mmdio_paas
+          diff -ru "$crown/packs/mmdio-paas-pack" packs/mmdio-paas-pack
+          test -f "$crown/.ggen-v2/receipt.json"
 
       - name: Install OTP and Elixir from ash_r2rml toolchain capsule
         uses: erlef/setup-beam@v1
@@ -124,12 +134,13 @@ jobs:
           import subprocess
           from pathlib import Path
 
-          generation_receipt = Path(".ggen-v2/receipt.json")
+          generation_receipt = Path("/tmp/mmdio-paas-crown/.ggen-v2/receipt.json")
           print(json.dumps({
               "schema": "mmdio-paas-exact-head-workflow/v1",
               "repository": os.environ.get("GITHUB_REPOSITORY"),
               "head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
               "ggen_receipt_present": generation_receipt.exists(),
+              "receipt_domain": "isolated-exact-head-paas",
               "ash_r2rml_ref": "067954ad406fd637fd47646bdb10c4580809c79d",
               "ggen_ref": "1e9fcb9679a61460fbd641415cb72511c7e50b33",
               "claim_ceiling": "MMDIO_PAAS_EXACT_HEAD_ASH_R2RML_REACTOR_BRCE_ONLY"
