@@ -1,0 +1,2 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:service paas:ggenRef "1e9fcb9679a61460fbd641415cb72511c7e50b33" . } BIND("SERVICE_GGEN_REF" AS ?violation) }
