@@ -1,0 +1,3 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:RenderActivity skos:prefLabel "Render activity" . } BIND("RENDER_ACTIVITY_LABEL" AS ?violation) }
