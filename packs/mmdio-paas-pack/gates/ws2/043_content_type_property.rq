@@ -1,0 +1,3 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:contentType a rdf:Property . } BIND("CONTENT_TYPE_PROPERTY" AS ?violation) }
