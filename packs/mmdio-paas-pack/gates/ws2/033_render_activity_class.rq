@@ -1,0 +1,3 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:RenderActivity a owl:Class . } BIND("RENDER_ACTIVITY_CLASS" AS ?violation) }
