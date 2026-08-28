@@ -1,0 +1,3 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+PREFIX dct: <http://purl.org/dc/terms/>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:ontology dct:conformsTo <http://www.w3.org/ns/r2rml#> . } BIND("ONTOLOGY_R2RML_CONFORMANCE" AS ?violation) }
