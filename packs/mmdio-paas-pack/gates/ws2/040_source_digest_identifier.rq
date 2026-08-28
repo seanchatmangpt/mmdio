@@ -1,0 +1,4 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dct: <http://purl.org/dc/terms/>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:sourceDigest rdfs:subPropertyOf dct:identifier . } BIND("SOURCE_DIGEST_IDENTIFIER" AS ?violation) }
