@@ -1,0 +1,3 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+PREFIX dcat: <http://www.w3.org/ns/dcat#>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:semanticContract a dcat:Dataset . } BIND("DATASET_TYPE" AS ?violation) }
