@@ -1,0 +1,3 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+PREFIX dct: <http://purl.org/dc/terms/>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:semanticContract dct:title "mmdio PaaS semantic contract" . } BIND("DATASET_TITLE" AS ?violation) }
