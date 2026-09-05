@@ -395,7 +395,7 @@ defmodule MmdioPaaS.Domain do
   json_api do
     routes do
       base_route "/render", MmdioPaaS.RenderRequest do
-        post :render
+        route :post, "/", :render
       end
     end
   end
