@@ -1,0 +1,2 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:service paas:maxSourceBytes 65536 . } BIND("SERVICE_MAX_SOURCE_BYTES" AS ?violation) }

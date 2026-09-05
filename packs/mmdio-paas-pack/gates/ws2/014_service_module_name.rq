@@ -1,0 +1,2 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:service paas:moduleName "MmdioPaaS" . } BIND("SERVICE_MODULE_NAME" AS ?violation) }

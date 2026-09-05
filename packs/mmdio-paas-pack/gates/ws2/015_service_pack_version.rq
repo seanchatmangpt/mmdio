@@ -1,0 +1,2 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:service paas:packVersion "26.8.26" . } BIND("SERVICE_PACK_VERSION" AS ?violation) }

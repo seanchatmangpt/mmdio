@@ -1,0 +1,2 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:service paas:adapterVersion "mmdio-engine-v1" . } BIND("SERVICE_ADAPTER_VERSION" AS ?violation) }

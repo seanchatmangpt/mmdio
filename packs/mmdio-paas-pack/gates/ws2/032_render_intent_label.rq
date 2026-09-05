@@ -1,0 +1,3 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:RenderIntent skos:prefLabel "Render intent" . } BIND("RENDER_INTENT_LABEL" AS ?violation) }

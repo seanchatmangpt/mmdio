@@ -1,0 +1,4 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:RenderIntent rdfs:subClassOf prov:Plan . } BIND("RENDER_INTENT_PROV_PLAN" AS ?violation) }

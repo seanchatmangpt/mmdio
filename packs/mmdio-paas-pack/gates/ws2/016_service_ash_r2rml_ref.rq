@@ -1,0 +1,2 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:service paas:ashR2RMLRef "067954ad406fd637fd47646bdb10c4580809c79d" . } BIND("SERVICE_ASH_R2RML_REF" AS ?violation) }

@@ -1,0 +1,3 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?violation WHERE { FILTER NOT EXISTS { paas:contentType rdfs:domain paas:RenderIntent . } BIND("CONTENT_TYPE_DOMAIN" AS ?violation) }
