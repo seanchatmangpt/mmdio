@@ -1,0 +1,40 @@
+flowchart TB
+    subgraph PAPER["Kushnir et al. — observed paper architecture"]
+        direction LR
+        P1["Natural-language design docs"] --> P2["Machine-discovered dependency DAG"]
+        P2 --> P3["Dependency-ordered traversal"]
+        P3 --> P4["Specialized coding sub-agents"]
+        P4 --> P5["Regenerated implementation"]
+        P5 --> P6["Generated tests"]
+        P6 --> P7["Reference-model reconciliation"]
+        P7 --> P8["Replacement build"]
+    end
+
+    FENCE{{"Attribution fence"}}
+
+    subgraph MMDIO["mmdio / Chatman extension — hypothesis to verify"]
+        direction LR
+        M0["Natural-language projection / query"] -.-> M1["Public ontology"]
+        M1 --> M2["Canonical semantic / capability graph"]
+        M2 --> M3{"Formal admission"}
+        M3 -->|ADMITTED| M4["ggen manufacture μ(O*)"]
+        M3 -->|REFUSED| MREF["Typed refusal"]
+        M4 --> M5["Generated projections"]
+        M5 --> M6["Runtime"]
+        M6 --> M7{"BRCE authority boundary"}
+        M7 -->|AUTHORIZED| M8["Actuation"]
+        M7 -->|REFUSED| MREF2["Typed refusal"]
+        M8 --> M9["Receipt R"]
+        M9 --> M10["Replay / release"]
+    end
+
+    PAPER --> FENCE --> MMDIO
+
+    Q["Research question: If code is not the durable artifact, why should prose be?"]
+    Q -.-> M1
+
+    E1["Worked examples / concrete traces"] -. "constrain semantics" .-> P1
+    E2["Examples + executable verification"] -. "evidence, not authority" .-> M3
+
+    A["A = μ(O*)"] -.-> M4
+    R["Generation does not imply authority to DO"] -.-> M7
