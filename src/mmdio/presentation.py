@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Sean Chatman
 """Deterministic Slidev projection for receipt-bearing planning bundles."""
 
 from __future__ import annotations
@@ -7,8 +8,10 @@ from hashlib import sha256
 import json
 from pathlib import Path
 import re
+from typing import TYPE_CHECKING
 
-from mmdio.planning.bundle import PlanningDocumentationBundle
+if TYPE_CHECKING:
+    from mmdio.planning.bundle import PlanningDocumentationBundle
 
 
 PRESENTATION_SCHEMA = "mmdio.slidev-presentation/1"
@@ -28,7 +31,8 @@ class SlidevPresentation:
         """Verify that the deck remains bound to the exact planning/DFCM subject."""
         self.bundle.verify()
         if not self.bundle.documents:
-            raise ValueError("MMDIO-PRESENT-001 presentation requires at least one admitted document")
+            message = "MMDIO-PRESENT-001 presentation requires at least one admitted document"
+            raise ValueError(message)
 
     def slides_markdown(self) -> str:
         """Render deterministic Slidev Markdown from admitted DFCM projections only."""
@@ -60,8 +64,7 @@ class SlidevPresentation:
             "",
         ]
         receipts_by_name = {
-            receipt.document_name: receipt
-            for receipt in self.bundle.receipts
+            receipt.document_name: receipt for receipt in self.bundle.receipts
         }
         for document in self.bundle.documents:
             receipt = receipts_by_name[document.name]
@@ -79,7 +82,10 @@ class SlidevPresentation:
                     document.content.rstrip("\n"),
                     "```",
                     "",
-                    f"<div class=\"pt-4 text-xs opacity-50\">receipt {receipt.digest()}</div>",
+                    (
+                        '<div class="pt-4 text-xs opacity-50">'
+                        f"receipt {receipt.digest()}</div>"
+                    ),
                     "",
                 )
             )
@@ -104,7 +110,7 @@ class SlidevPresentation:
         return "\n".join(lines)
 
     def package_json(self) -> str:
-        """Return the minimal Slidev project manifest, following the admitted marketplace precedent."""
+        """Return a minimal Slidev project manifest using the marketplace precedent."""
         self.verify()
         package = {
             "name": _package_name(self.bundle.graph.subject),
@@ -164,7 +170,7 @@ def write_slidev_presentation(
     presentation: SlidevPresentation,
     output_dir: str | Path,
 ) -> tuple[Path, ...]:
-    """Write deterministic Slidev projection files without running Node or actuating anything."""
+    """Write deterministic Slidev projection files without running Node or actuating."""
     presentation.verify()
     root = Path(output_dir)
     root.mkdir(parents=True, exist_ok=True)
