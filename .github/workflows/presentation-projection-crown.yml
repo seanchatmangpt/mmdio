@@ -1,0 +1,70 @@
+name: Presentation projection crown
+
+on:
+  pull_request:
+    paths:
+      - "src/mmdio/presentation.py"
+      - "src/mmdio/cli.py"
+      - "tests/test_presentation.py"
+      - "tests/test_presentation_cli_integration.py"
+      - ".github/workflows/presentation-projection-crown.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  crown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Assert exact subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install Python court
+        run: uv sync --all-extras
+
+      - name: Focused semantic presentation court
+        run: |
+          uv run pytest             tests/test_presentation.py             tests/test_presentation_cli_integration.py             tests/test_planning.py             tests/test_planning_dfcm.py             tests/test_planning_cli_integration.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Manufacture sample deck
+        shell: bash
+        run: |
+          cat > /tmp/presentation-graph.json <<'JSON'
+          {
+            "formalism": "pddl",
+            "subject": "presentation-crown",
+            "nodes": [
+              {"id": "start", "kind": "state", "label": "Start", "attributes": {}},
+              {"id": "goal", "kind": "goal", "label": "Done", "attributes": {}}
+            ],
+            "edges": [
+              {"source": "start", "target": "goal", "kind": "transition", "label": "verify", "attributes": {}}
+            ],
+            "metadata": {}
+          }
+          JSON
+          uv run mmdio presentation /tmp/presentation-graph.json --output /tmp/presentation-deck
+
+      - name: Slidev backend oracle
+        working-directory: /tmp/presentation-deck
+        run: |
+          npm install --package-lock=false
+          npm run build
