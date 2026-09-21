@@ -1,13 +1,17 @@
+# Copyright (c) 2026 Sean Chatman
 """Primary Typer CLI integration for semantic presentation projection."""
 
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from typer.testing import CliRunner
 
 from mmdio.cli import app
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 runner = CliRunner()
