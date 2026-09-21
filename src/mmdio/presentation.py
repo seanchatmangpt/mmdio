@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 
 PRESENTATION_SCHEMA = "mmdio.slidev-presentation/1"
 PRESENTATION_CLAIM_CEILING = "SEMANTIC_PRESENTATION_PROJECTION_ONLY"
+GENERATOR_CAPABILITY = "UNSUPPORTED(ggen-marketplace,generic-planning-to-slidev)"
+SLIDEV_PRIOR_ART = "ggen-marketplace/packs/slidev-iaas-paas-saas-pack"
 SLIDEV_CLI_VERSION = "^0.49.0"
 SLIDEV_THEME_VERSION = "^0.25.0"
 VUE_VERSION = "^3.4.0"
@@ -147,6 +149,11 @@ class SlidevPresentation:
             ],
             "claim_ceiling": PRESENTATION_CLAIM_CEILING,
             "authority": "none",
+            "manufacture": {
+                "implementation": "HANDWRITTEN_PROJECTION_ADAPTER",
+                "generator_capability": GENERATOR_CAPABILITY,
+                "prior_art": SLIDEV_PRIOR_ART,
+            },
         }
 
     def manifest_json(self) -> str:
