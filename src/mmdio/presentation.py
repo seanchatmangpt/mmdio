@@ -3,11 +3,11 @@
 
 from __future__ import annotations
 
+import json
+import re
 from dataclasses import dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
-import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -63,9 +63,7 @@ class SlidevPresentation:
             f"- Claim ceiling: `{PRESENTATION_CLAIM_CEILING}`",
             "",
         ]
-        receipts_by_name = {
-            receipt.document_name: receipt for receipt in self.bundle.receipts
-        }
+        receipts_by_name = {receipt.document_name: receipt for receipt in self.bundle.receipts}
         for document in self.bundle.documents:
             receipt = receipts_by_name[document.name]
             lines.extend(
@@ -82,10 +80,7 @@ class SlidevPresentation:
                     document.content.rstrip("\n"),
                     "```",
                     "",
-                    (
-                        '<div class="pt-4 text-xs opacity-50">'
-                        f"receipt {receipt.digest()}</div>"
-                    ),
+                    (f'<div class="pt-4 text-xs opacity-50">receipt {receipt.digest()}</div>'),
                     "",
                 )
             )
