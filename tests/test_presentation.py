@@ -59,6 +59,11 @@ def test_slidev_projection_binds_exact_planning_and_dfcm_identity(tmp_path: Path
     assert manifest["dfcm_digest"] == bundle.dfcm_matrix().digest()
     assert manifest["claim_ceiling"] == PRESENTATION_CLAIM_CEILING
     assert manifest["authority"] == "none"
+    assert manifest["manufacture"]["implementation"] == "HANDWRITTEN_PROJECTION_ADAPTER"
+    assert (
+        manifest["manufacture"]["generator_capability"]
+        == "UNSUPPORTED(ggen-marketplace,generic-planning-to-slidev)"
+    )
     assert len(manifest["document_receipts"]) == len(bundle.documents)
     assert "This deck is a projection, not authority." in first.slides_markdown()
 
