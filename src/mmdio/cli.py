@@ -1,6 +1,7 @@
 """mmdio CLI."""
 
 from pathlib import Path
+from typing import Annotated
 
 import typer
 from rich import print as rprint
@@ -32,8 +33,14 @@ def planning(
 
 @app.command()
 def presentation(
-    graph: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
-    output: Path = typer.Option(..., "--output", "-o", file_okay=False),
+    graph: Annotated[
+        Path,
+        typer.Argument(exists=True, dir_okay=False, readable=True),
+    ],
+    output: Annotated[
+        Path,
+        typer.Option("--output", "-o", file_okay=False),
+    ],
 ) -> None:
     """Project an exact planning/DFCM bundle into a powerless Slidev deck."""
     subject = load_planning_graph(graph)
