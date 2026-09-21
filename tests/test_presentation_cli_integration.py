@@ -24,9 +24,7 @@ def test_primary_cli_generates_slidev_projection(tmp_path: Path) -> None:
             {
                 "formalism": "pddl",
                 "subject": "presentation-cli",
-                "nodes": [
-                    {"id": "goal", "kind": "goal", "label": "Done", "attributes": {}}
-                ],
+                "nodes": [{"id": "goal", "kind": "goal", "label": "Done", "attributes": {}}],
                 "edges": [],
                 "metadata": {},
             }
