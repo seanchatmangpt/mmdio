@@ -1,9 +1,10 @@
+# Copyright (c) 2026 Sean Chatman
 """Tests for deterministic Slidev presentation projection."""
 
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from mmdio.planning import generate_planning_bundle, load_planning_graph
 from mmdio.presentation import (
@@ -11,6 +12,9 @@ from mmdio.presentation import (
     generate_slidev_presentation,
     write_slidev_presentation,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _source(path: Path) -> Path:
