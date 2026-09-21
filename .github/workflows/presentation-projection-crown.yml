@@ -36,9 +36,26 @@ jobs:
       - name: Install Python court
         run: uv sync --all-extras
 
+      - name: Branch-local presentation lint
+        run: |
+          uv run ruff check \
+            src/mmdio/presentation.py \
+            tests/test_presentation.py \
+            tests/test_presentation_cli_integration.py
+          uv run ruff format --check \
+            src/mmdio/presentation.py \
+            src/mmdio/cli.py \
+            tests/test_presentation.py \
+            tests/test_presentation_cli_integration.py
+
       - name: Focused semantic presentation court
         run: |
-          uv run pytest             tests/test_presentation.py             tests/test_presentation_cli_integration.py             tests/test_planning.py             tests/test_planning_dfcm.py             tests/test_planning_cli_integration.py
+          uv run pytest \
+            tests/test_presentation.py \
+            tests/test_presentation_cli_integration.py \
+            tests/test_planning.py \
+            tests/test_planning_dfcm.py \
+            tests/test_planning_cli_integration.py
 
       - uses: actions/setup-node@v4
         with:
