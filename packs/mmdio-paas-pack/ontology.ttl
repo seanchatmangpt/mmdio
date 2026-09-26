@@ -1,0 +1,118 @@
+@prefix paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rr: <http://www.w3.org/ns/r2rml#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+paas:ontology a owl:Ontology ;
+  dct:title "mmdio PaaS manufacturing ontology" ;
+  dct:description "Public-ontology-aligned contract for an Ash/AshR2RML/Reactor service plane that delegates Mermaid semantics to the ggen-generated mmdio engine." ;
+  dct:conformsTo <http://www.w3.org/ns/prov#>,
+    <http://www.w3.org/ns/dcat#>,
+    <http://www.w3.org/ns/shacl#>,
+    <http://www.w3.org/ns/r2rml#>,
+    <http://www.w3.org/2004/02/skos/core#> .
+
+paas:service a dcat:DataService ;
+  dct:title "mmdio Mermaid IO PaaS" ;
+  dct:description "Receipt-bearing Mermaid parse, topology verification, and canonical render service." ;
+  dcat:endpointURL "/api/render" ;
+  dct:conformsTo <https://jsonapi.org/format/> ;
+  paas:moduleName "MmdioPaaS" ;
+  paas:packVersion "26.8.26" ;
+  paas:ashR2RMLRef "067954ad406fd637fd47646bdb10c4580809c79d" ;
+  paas:ggenRef "1e9fcb9679a61460fbd641415cb72511c7e50b33" ;
+  paas:maxSourceBytes 65536 ;
+  paas:contentType "text/plain", "text/vnd.mermaid" ;
+  paas:adapterVersion "mmdio-engine-v1" ;
+  dcat:servesDataset paas:semanticContract .
+
+paas:semanticContract a dcat:Dataset ;
+  dct:title "mmdio PaaS semantic contract" ;
+  dct:conformsTo <http://www.w3.org/ns/prov#>,
+    <http://www.w3.org/ns/dcat#>,
+    <http://www.w3.org/ns/shacl#>,
+    <http://www.w3.org/ns/r2rml#>,
+    <http://www.w3.org/2004/02/skos/core#> .
+
+paas:RenderIntent a owl:Class ;
+  rdfs:subClassOf prov:Plan ;
+  skos:prefLabel "Render intent" .
+
+paas:RenderActivity a owl:Class ;
+  rdfs:subClassOf prov:Activity ;
+  skos:prefLabel "Render activity" .
+
+paas:RenderReceipt a owl:Class ;
+  rdfs:subClassOf prov:Entity ;
+  skos:prefLabel "Render receipt" .
+
+paas:sourceDigest a rdf:Property ;
+  rdfs:subPropertyOf dct:identifier ;
+  rdfs:domain paas:RenderIntent ;
+  rdfs:range xsd:string .
+
+paas:contentType a rdf:Property ;
+  rdfs:subPropertyOf dct:format ;
+  rdfs:domain paas:RenderIntent ;
+  rdfs:range xsd:string .
+
+paas:standing a rdf:Property ;
+  rdfs:subPropertyOf skos:notation ;
+  rdfs:range xsd:string .
+
+paas:receiptDigest a rdf:Property ;
+  rdfs:subPropertyOf dct:identifier ;
+  rdfs:domain paas:RenderReceipt ;
+  rdfs:range xsd:string .
+
+paas:RenderIntentShape a sh:NodeShape ;
+  sh:targetClass paas:RenderIntent ;
+  sh:property [
+    sh:path paas:sourceDigest ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:pattern "^[0-9a-f]{64}$"
+  ], [
+    sh:path paas:contentType ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:in ("text/plain" "text/vnd.mermaid")
+  ] .
+
+paas:RenderIntentTriplesMap a rr:TriplesMap ;
+  rr:logicalTable [ rr:tableName "mmdio_render_intents" ] ;
+  rr:subjectMap [
+    rr:template "https://seanchatmangpt.github.io/resource/mmdio/render-intent/{id}" ;
+    rr:class paas:RenderIntent
+  ] ;
+  rr:predicateObjectMap [
+    rr:predicate dct:identifier ;
+    rr:objectMap [ rr:column "source_sha256" ]
+  ], [
+    rr:predicate dct:format ;
+    rr:objectMap [ rr:column "content_type" ]
+  ] .
+
+paas:CapabilityRender a skos:Concept ;
+  skos:prefLabel "render" ;
+  skos:definition "Admit Mermaid text, compile its Ash/R2RML service semantics, execute the mmdio engine exactly once, verify the result, and return a replayable receipt." .
+
+paas:CapabilityReplay a skos:Concept ;
+  skos:prefLabel "replay" ;
+  skos:definition "Re-execute an identical admitted subject and compare deterministic receipt identity." .
+
+paas:service dcat:theme paas:CapabilityRender, paas:CapabilityReplay .
+
+paas:moduleName a rdf:Property .
+paas:packVersion a rdf:Property .
+paas:ashR2RMLRef a rdf:Property .
+paas:ggenRef a rdf:Property .
+paas:maxSourceBytes a rdf:Property .
+paas:adapterVersion a rdf:Property .

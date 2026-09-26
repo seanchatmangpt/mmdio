@@ -1,0 +1,26 @@
+PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+PREFIX dcat: <http://www.w3.org/ns/dcat#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rr: <http://www.w3.org/ns/r2rml#>
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+
+SELECT ?subject ?missing WHERE {
+  {
+    BIND(paas:service AS ?subject)
+    FILTER NOT EXISTS { paas:service a dcat:DataService ; paas:moduleName ?module ; paas:packVersion ?version ; paas:ashR2RMLRef ?ash_ref ; paas:ggenRef ?ggen_ref ; paas:maxSourceBytes ?max . }
+    BIND("service manufacturing metadata" AS ?missing)
+  } UNION {
+    BIND(paas:RenderIntent AS ?subject)
+    FILTER NOT EXISTS { paas:RenderIntent rdfs:subClassOf prov:Plan . }
+    BIND("PROV-O RenderIntent alignment" AS ?missing)
+  } UNION {
+    BIND(paas:RenderIntentShape AS ?subject)
+    FILTER NOT EXISTS { paas:RenderIntentShape a sh:NodeShape ; sh:targetClass paas:RenderIntent . }
+    BIND("SHACL admission shape" AS ?missing)
+  } UNION {
+    BIND(paas:RenderIntentTriplesMap AS ?subject)
+    FILTER NOT EXISTS { paas:RenderIntentTriplesMap a rr:TriplesMap . }
+    BIND("R2RML triples map" AS ?missing)
+  }
+}

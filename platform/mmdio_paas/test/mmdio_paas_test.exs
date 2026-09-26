@@ -1,0 +1,64 @@
+# GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+defmodule MmdioPaaSTest do
+  use ExUnit.Case, async: false
+
+  @source """
+  flowchart LR
+    A["Admit"]
+    B["Receipt"]
+    A --> B
+  """
+
+  test "Ash action executes the Reactor/AshR2RML/BRCE path and returns a verified receipt" do
+    input =
+      Ash.ActionInput.for_action(MmdioPaaS.RenderRequest, :render, %{
+        source: @source,
+        content_type: "text/vnd.mermaid"
+      })
+
+    assert {:ok, result} = Ash.run_action(input)
+    assert result.status == "ALIVE"
+    assert result.verified
+    assert is_binary(result.rendered)
+    assert result.receipt.subject_sha256 == MmdioPaaS.Receipt.sha256(@source)
+    assert result.receipt.rendered_sha256 == MmdioPaaS.Receipt.sha256(result.rendered)
+    assert result.receipt.semantic_contract == "PROV-O|DCTERMS|DCAT|SKOS|SHACL|R2RML"
+    assert result.receipt.ash_r2rml_ref == "067954ad406fd637fd47646bdb10c4580809c79d"
+    assert result.receipt.ggen_ref == "1e9fcb9679a61460fbd641415cb72511c7e50b33"
+  end
+
+  test "identical admitted subjects replay to identical runtime receipts" do
+    assert {:ok, first} = MmdioPaaS.render(@source)
+    assert {:ok, second} = MmdioPaaS.render(@source)
+
+    assert first.status == "ALIVE"
+    assert second.status == "ALIVE"
+    assert first.rendered == second.rendered
+    assert first.receipt.receipt_sha256 == second.receipt.receipt_sha256
+  end
+
+  test "admission refuses unsupported content before Python actuation" do
+    assert {:error, %MmdioPaaS.Refusal{code: :unsupported_content_type}} =
+             MmdioPaaS.render(@source, "application/octet-stream")
+  end
+
+  test "post-admission Mermaid semantic refusal is still receipted" do
+    source = """
+    flowchart LR
+      A["Start"]
+      A --> B
+    """
+
+    assert {:ok, result} = MmdioPaaS.render(source)
+    assert result.status == "REFUSED"
+    assert result.verified
+    assert result.receipt.refusal_type == "TOPOLOGY"
+    assert result.receipt.exit_code == 2
+    assert is_binary(result.receipt.receipt_sha256)
+  end
+
+  test "the JSON:API router is a concrete Plug service boundary" do
+    assert function_exported?(MmdioPaaS.Router, :call, 2)
+    assert function_exported?(MmdioPaaS.Router, :init, 1)
+  end
+end

@@ -1,0 +1,41 @@
+---
+to: "platform/mmdio_paas/mix.exs"
+force: true
+sparql:
+  service: |
+    PREFIX paas: <https://seanchatmangpt.github.io/ontology/mmdio/paas#>
+    SELECT ?version ?ashRef WHERE {
+      paas:service paas:packVersion ?version ; paas:ashR2RMLRef ?ashRef .
+    }
+---
+# GENERATED FILE — do not edit by hand. Regenerate with `ggen sync run`.
+defmodule MmdioPaaS.MixProject do
+  use Mix.Project
+
+  def project do
+    [
+      app: :mmdio_paas,
+{% for row in service %}      version: "{{ row.version }}",
+{% endfor %}      elixir: "~> 1.17",
+      start_permanent: Mix.env() == :prod,
+      deps: deps()
+    ]
+  end
+
+  def application do
+    [
+      extra_applications: [:logger, :crypto],
+      mod: {MmdioPaaS.Application, []}
+    ]
+  end
+
+  defp deps do
+    [
+      {:ash, "~> 3.0 and >= 3.28.0"},
+      {:ash_json_api, "~> 1.7"},
+{% for row in service %}      {:ash_r2rml, github: "seanchatmangpt/ash_r2rml", ref: "{{ row.ashRef }}"},
+{% endfor %}      {:reactor, ">= 0.9.0"},
+      {:bandit, "~> 1.0"}
+    ]
+  end
+end
