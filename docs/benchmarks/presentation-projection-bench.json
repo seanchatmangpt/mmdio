@@ -1,0 +1,57 @@
+{
+  "authority": "none",
+  "machine": "arm64",
+  "max_ratio": 3.5,
+  "min_gated_size": 400,
+  "python": "3.13.9",
+  "repeats": 7,
+  "rows": [
+    {
+      "bundle_verify_s": 0.000451,
+      "chain_states": 10,
+      "documents": 4,
+      "nodes": 11,
+      "render_s": 0.000906,
+      "replay_s": 0.001062,
+      "slides_bytes": 3064,
+      "write_over_verify": 3.056,
+      "write_s": 0.001377
+    },
+    {
+      "bundle_verify_s": 0.004088,
+      "chain_states": 100,
+      "documents": 4,
+      "nodes": 101,
+      "render_s": 0.005986,
+      "replay_s": 0.006311,
+      "slides_bytes": 12697,
+      "write_over_verify": 1.687,
+      "write_s": 0.006897
+    },
+    {
+      "bundle_verify_s": 0.014304,
+      "chain_states": 400,
+      "documents": 4,
+      "nodes": 401,
+      "render_s": 0.021703,
+      "replay_s": 0.021558,
+      "slides_bytes": 47497,
+      "write_over_verify": 1.541,
+      "write_s": 0.022046
+    },
+    {
+      "bundle_verify_s": 0.038015,
+      "chain_states": 1000,
+      "documents": 4,
+      "nodes": 1001,
+      "render_s": 0.05019,
+      "replay_s": 0.055384,
+      "slides_bytes": 117100,
+      "write_over_verify": 1.409,
+      "write_s": 0.053564
+    }
+  ],
+  "schema": "mmdio.presentation-benchmark/1",
+  "verdict": "PASS",
+  "worst_write_over_verify": 1.541
+}

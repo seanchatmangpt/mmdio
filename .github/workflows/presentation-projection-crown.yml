@@ -1,0 +1,124 @@
+name: Presentation projection crown
+
+on:
+  pull_request:
+    paths:
+      - "src/mmdio/presentation.py"
+      - "src/mmdio/cli.py"
+      - "tests/test_presentation.py"
+      - "tests/test_presentation_cli_integration.py"
+      - "tests/test_presentation_hardening.py"
+      - "tests/test_presentation_benchmark.py"
+      - "scripts/presentation_bench.py"
+      - ".github/workflows/presentation-projection-crown.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  crown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Assert exact subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install Python court
+        run: uv sync --all-extras
+
+      - name: Branch-local presentation lint
+        run: |
+          uv run ruff check \
+            src/mmdio/presentation.py \
+            scripts/presentation_bench.py \
+            tests/test_presentation.py \
+            tests/test_presentation_cli_integration.py \
+            tests/test_presentation_hardening.py \
+            tests/test_presentation_benchmark.py
+          uv run ruff format --check \
+            src/mmdio/presentation.py \
+            src/mmdio/cli.py \
+            scripts/presentation_bench.py \
+            tests/test_presentation.py \
+            tests/test_presentation_cli_integration.py \
+            tests/test_presentation_hardening.py \
+            tests/test_presentation_benchmark.py
+
+      - name: Focused semantic presentation court
+        run: |
+          uv run pytest \
+            tests/test_presentation.py \
+            tests/test_presentation_cli_integration.py \
+            tests/test_presentation_hardening.py \
+            tests/test_presentation_benchmark.py \
+            tests/test_planning.py \
+            tests/test_planning_dfcm.py \
+            tests/test_planning_cli_integration.py
+
+      - name: Presentation benchmark receipt
+        run: uv run python scripts/presentation_bench.py --repeats 5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Manufacture sample deck
+        shell: bash
+        run: |
+          cat > /tmp/presentation-graph.json <<'JSON'
+          {
+            "formalism": "pddl",
+            "subject": "presentation-crown",
+            "nodes": [
+              {"id": "start", "kind": "state", "label": "Start", "attributes": {}},
+              {"id": "goal", "kind": "goal", "label": "Done", "attributes": {}}
+            ],
+            "edges": [
+              {"source": "start", "target": "goal", "kind": "transition", "label": "verify", "attributes": {}}
+            ],
+            "metadata": {}
+          }
+          JSON
+          uv run mmdio presentation /tmp/presentation-graph.json --output /tmp/presentation-deck
+
+      - name: Slidev backend oracle
+        working-directory: /tmp/presentation-deck
+        run: |
+          npm install --package-lock=false
+          npm run build
+
+      - name: Slidev hostile-subject oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/presentation-hostile.json <<'JSON'
+          {
+            "formalism": "pddl",
+            "subject": "x\n---\nlayout: cover\n---\n# INJ <script>alert(1)</script> {{ $slidev.nav.total }} `c` * _ [a](b) $x$",
+            "nodes": [
+              {"id": "start", "kind": "state", "label": "Start ```", "attributes": {}},
+              {"id": "goal", "kind": "goal", "label": "Done ~~~", "attributes": {}}
+            ],
+            "edges": [
+              {"source": "start", "target": "goal", "kind": "transition", "label": "verify", "attributes": {}}
+            ],
+            "metadata": {}
+          }
+          JSON
+          uv run mmdio presentation /tmp/presentation-hostile.json --output /tmp/presentation-hostile
+          ln -s /tmp/presentation-deck/node_modules /tmp/presentation-hostile/node_modules
+          cd /tmp/presentation-hostile
+          npx slidev build
