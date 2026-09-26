@@ -41,6 +41,13 @@ the exact planning digest, DFCM digest, admitted document receipts, and
 `SEMANTIC_PRESENTATION_PROJECTION_ONLY` claim ceiling. Slidev is the rendering backend, not a
 semantic source or authority boundary.
 
+The subject is rendered as one inert line (no slide breaks, HTML, Vue interpolation or Markdown
+markup), document content that would terminate its mermaid fence is refused
+(`MMDIO-PRESENT-002`), and `verify_written_slidev_presentation` replays a written deck and
+refuses any missing or byte-different file (`MMDIO-PRESENT-003`). The timing benchmark
+`scripts/presentation_bench.py` bounds write cost at 3.5x one bundle verification for graphs
+of 400+ states; its recorded receipt is `docs/benchmarks/presentation-projection-bench.json`.
+
 ## Contributing
 
 <details>
